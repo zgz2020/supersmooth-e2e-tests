@@ -8,6 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
+    baseURL: process.env.BASE_URL || 'https://playwright.dev',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
