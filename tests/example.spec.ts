@@ -1,12 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/index.js';
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-  await expect(page).toHaveTitle(/Playwright/);
+test('has title using web app fixture', async ({ appPage }) => {
+  await expect(appPage).toHaveTitle(/Playwright/);
 });
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-  await page.getByRole('link', { name: 'Get started' }).click();
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+test('get started link using web app fixture', async ({ appPage }) => {
+  await appPage.getByRole('link', { name: 'Get started' }).click();
+  await expect(appPage.getByRole('heading', { name: 'Installation' })).toBeVisible();
 });
