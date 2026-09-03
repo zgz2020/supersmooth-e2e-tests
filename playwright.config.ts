@@ -1,4 +1,7 @@
+import dotenv from 'dotenv';
 import { defineConfig, devices } from '@playwright/test';
+
+dotenv.config();
 
 export default defineConfig({
   testDir: './tests',
@@ -8,7 +11,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: process.env.BASE_URL || 'https://playwright.dev',
+    baseURL: process.env.BASE_URL || 'https://aphelion-app.onrender.com/',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
