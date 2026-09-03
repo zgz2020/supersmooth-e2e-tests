@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# Testing output
+test-results/
+playwright-report/
+blob-report/
+coverage/
+cypress/screenshots/
+cypress/videos/
+
+# Logs
+*.log
+pnpm-debug.log*
+
+# OS and editor files
+.DS_Store
+.vscode/
+.idea/
