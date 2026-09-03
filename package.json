@@ -6,14 +6,22 @@
   "description": "End-to-end testing suite for SOV",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "e2e",
     "testing",
     "playwright",
-    "synpress"
+    "typescript"
   ],
   "author": "zgz2020",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^26.4.1",
+    "typescript": "^7.0.2"
+  }
 }
