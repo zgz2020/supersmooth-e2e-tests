@@ -1,10 +1,9 @@
 import { test, expect } from '../fixtures/index.js';
 
-test('has title using web app fixture', async ({ appPage }) => {
-  await expect(appPage).toHaveTitle(/Playwright/);
+test('navigates to web app baseURL', async ({ appPage }) => {
+  await expect(appPage).toHaveURL(/aphelion-app\.onrender\.com/);
 });
 
-test('get started link using web app fixture', async ({ appPage }) => {
-  await appPage.getByRole('link', { name: 'Get started' }).click();
-  await expect(appPage.getByRole('heading', { name: 'Installation' })).toBeVisible();
+test('web app page loads body element', async ({ appPage }) => {
+  await expect(appPage.locator('body')).toBeVisible();
 });
