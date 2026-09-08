@@ -9,7 +9,7 @@ node_modules/
 
 # Testing output
 test-results/
-playwright-report/
+playwright-reports/
 blob-report/
 coverage/
 cypress/screenshots/
