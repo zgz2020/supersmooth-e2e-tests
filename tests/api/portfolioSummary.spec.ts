@@ -15,7 +15,6 @@ test.describe('Portfolio Summary API', () => {
     });
 
     await expectStatusCode({ actual: response.status(), expected: 200 });
-    expect(response.ok()).toBeTruthy();
 
     const body: PortfolioSummary = await response.json();
     await validateSchema({ schema: portfolioSummarySchema, json: body });
@@ -31,7 +30,6 @@ test.describe('Portfolio Summary API', () => {
     });
 
     await expectStatusCode({ actual: response.status(), expected: 200 });
-    expect(response.ok()).toBeTruthy();
 
     const body: PortfolioSummary = await response.json();
     await validateSchema({ schema: portfolioSummarySchema, json: body });
@@ -47,7 +45,6 @@ test.describe('Portfolio Summary API', () => {
     });
 
     await expectStatusCode({ actual: response.status(), expected: 200 });
-    expect(response.ok()).toBeTruthy();
 
     const body: PortfolioSummary = await response.json();
     await validateSchema({ schema: portfolioSummarySchema, json: body });
