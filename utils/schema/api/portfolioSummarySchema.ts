@@ -1,34 +1,8 @@
 import { JSONSchemaType } from 'ajv';
-
-export interface ChainBreakdown {
-  chainId: number;
-  valueUsd: number;
-  sharePercent: number;
-}
-
-export interface PortfolioSummary {
-  supersmoothPortfolioUsd: number;
-  supersmoothPortfolioChange7d: number;
-  suppliedUsd: number;
-  suppliedChange7d: number;
-  borrowedUsd: number;
-  borrowedChange7d: number;
-  borrowedChange7dUsd: number;
-  chainBreakdown: ChainBreakdown[];
-}
+import { PortfolioSummary } from '../../types/api/portfolioSummary.js';
 
 export const portfolioSummarySchema: JSONSchemaType<PortfolioSummary> = {
   type: 'object',
-  required: [
-    'supersmoothPortfolioUsd',
-    'supersmoothPortfolioChange7d',
-    'suppliedUsd',
-    'suppliedChange7d',
-    'borrowedUsd',
-    'borrowedChange7d',
-    'borrowedChange7dUsd',
-    'chainBreakdown',
-  ],
   properties: {
     supersmoothPortfolioUsd: { type: 'number' },
     supersmoothPortfolioChange7d: { type: 'number' },
@@ -41,13 +15,24 @@ export const portfolioSummarySchema: JSONSchemaType<PortfolioSummary> = {
       type: 'array',
       items: {
         type: 'object',
-        required: ['chainId', 'valueUsd', 'sharePercent'],
         properties: {
           chainId: { type: 'number' },
           valueUsd: { type: 'number' },
           sharePercent: { type: 'number' },
         },
+        required: ['chainId', 'valueUsd', 'sharePercent'],
       },
     },
   },
+  required: [
+    'supersmoothPortfolioUsd',
+    'supersmoothPortfolioChange7d',
+    'suppliedUsd',
+    'suppliedChange7d',
+    'borrowedUsd',
+    'borrowedChange7d',
+    'borrowedChange7dUsd',
+    'chainBreakdown',
+  ],
 };
+
