@@ -18,16 +18,19 @@ End-to-end (E2E) testing suite for the Sovereign (SOV) web3 application using Pl
 Ensure you have Node.js (v20+) and `pnpm` installed on your machine.
 
 If you use `nvm`, switch to the recommended Node version:
+
 ```bash
 nvm use
 ```
 
 Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 Install Playwright browsers (if needed):
+
 ```bash
 pnpm exec playwright install
 ```
@@ -36,12 +39,12 @@ pnpm exec playwright install
 
 ## 📜 Available Scripts
 
-| Script | Description |
-| :--- | :--- |
-| `pnpm test` | Runs all Playwright E2E tests in headless mode |
-| `pnpm test:ui` | Opens the Playwright Interactive UI Mode |
+| Script             | Description                                        |
+| :----------------- | :------------------------------------------------- |
+| `pnpm test`        | Runs all Playwright E2E tests in headless mode     |
+| `pnpm test:ui`     | Opens the Playwright Interactive UI Mode           |
 | `pnpm test:headed` | Runs E2E tests in visible (headed) browser windows |
-| `pnpm typecheck` | Validates TypeScript types across the codebase |
+| `pnpm typecheck`   | Validates TypeScript types across the codebase     |
 
 ---
 
@@ -65,16 +68,19 @@ pnpm exec playwright install
 ## 🧪 Running Tests
 
 ### Headless Mode
+
 ```bash
 pnpm test
 ```
 
 ### Interactive UI Mode
+
 ```bash
 pnpm test:ui
 ```
 
 ### View HTML Test Report
+
 ```bash
 pnpm exec playwright show-report
 ```

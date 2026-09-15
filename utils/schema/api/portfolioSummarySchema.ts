@@ -5,11 +5,11 @@ export const portfolioSummarySchema: JSONSchemaType<PortfolioSummary> = {
   type: 'object',
   properties: {
     supersmoothPortfolioUsd: { type: 'number' },
-    supersmoothPortfolioChange7d: { type: 'number', nullable: true } as any,
+    supersmoothPortfolioChange7d: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
     suppliedUsd: { type: 'number' },
-    suppliedChange7d: { type: 'number', nullable: true } as any,
+    suppliedChange7d: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
     borrowedUsd: { type: 'number' },
-    borrowedChange7d: { type: 'number', nullable: true } as any,
+    borrowedChange7d: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
     borrowedChange7dUsd: { type: 'number' },
     chainBreakdown: {
       type: 'array',
@@ -35,4 +35,3 @@ export const portfolioSummarySchema: JSONSchemaType<PortfolioSummary> = {
     'chainBreakdown',
   ],
 };
-
