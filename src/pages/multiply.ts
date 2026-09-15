@@ -15,9 +15,10 @@ export class Multiply {
 
   @step
   async shouldBeOpened() {
-    await expect(this.page.getByText('Amplify long or short exposure to an asset in a single position', { exact: false })).toBeVisible();
+    await expect(
+      this.page.getByText('Amplify long or short exposure to an asset in a single position', {
+        exact: false,
+      }),
+    ).toBeVisible();
   }
 }
-
-
-

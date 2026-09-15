@@ -17,11 +17,11 @@ export class App {
 
   async pause() {
     const testInfo = test.info();
-    const isHeaded = testInfo ? (testInfo.project.use.headless === false || process.argv.includes('--headed')) : false;
+    const isHeaded = testInfo
+      ? testInfo.project.use.headless === false || process.argv.includes('--headed')
+      : false;
     if (isHeaded) {
       await this.page.pause();
     }
   }
 }
-
-

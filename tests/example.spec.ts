@@ -15,4 +15,3 @@ test('opens multiply page', async ({ page }) => {
   await multiply.open();
   await multiply.shouldBeOpened();
 });
-

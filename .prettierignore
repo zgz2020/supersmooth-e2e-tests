@@ -1,0 +1,5 @@
+node_modules
+playwright-reports
+test-results
+pnpm-lock.yaml
+.env
