@@ -1,8 +1,7 @@
 import test from '@playwright/test';
-import Ajv, { JSONSchemaType, ValidateFunction } from 'ajv';
+import Ajv, { JSONSchemaType } from 'ajv';
 
 const ajv = new Ajv();
-const schemaCache = new WeakMap<object, ValidateFunction>();
 
 type ValidateSchemaProps<T> = {
   schema: JSONSchemaType<T>;
@@ -11,11 +10,7 @@ type ValidateSchemaProps<T> = {
 
 export const validateSchema = async <T>({ schema, json }: ValidateSchemaProps<T>) => {
   await test.step('Validating json schema', async () => {
-    let validate = schemaCache.get(schema);
-    if (!validate) {
-      validate = ajv.compile(schema);
-      schemaCache.set(schema, validate);
-    }
+    const validate = ajv.compile(schema);
 
     if (!validate(json)) {
       const prettyJson = JSON.stringify(json, null, 2);
