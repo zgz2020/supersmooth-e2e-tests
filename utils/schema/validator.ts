@@ -1,30 +1,21 @@
-import Ajv, { AnySchema } from 'ajv';
+import test from '@playwright/test';
+import Ajv, { JSONSchemaType } from 'ajv';
 
-const ajv = new Ajv({ allErrors: true });
+const ajv = new Ajv();
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
-}
+type ValidateSchemaProps<T> = {
+  schema: JSONSchemaType<T>;
+  json: T | T[];
+};
 
-export function validateSchema(data: unknown, schema: AnySchema): ValidationResult {
-  const validate = ajv.compile(schema);
-  const valid = validate(data);
+export const validateSchema = async <T>({ schema, json }: ValidateSchemaProps<T>) => {
+  await test.step('Validating json schema', async () => {
+    const validate = ajv.compile(schema);
 
-  if (valid) {
-    return {
-      valid: true,
-      errors: [],
-    };
-  }
-
-  const errors = (validate.errors || []).map((err) => {
-    const instancePath = err.instancePath ? err.instancePath : 'root';
-    return `${instancePath} ${err.message}`;
+    if (!validate(json)) {
+      const prettyJson = JSON.stringify(json, null, 2);
+      const prettyError = JSON.stringify(validate.errors, null, 2);
+      throw Error(`Schema validation error: ${prettyError}\nJSON: ${prettyJson}`);
+    }
   });
-
-  return {
-    valid: false,
-    errors,
-  };
-}
+};

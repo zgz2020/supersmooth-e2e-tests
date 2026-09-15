@@ -19,6 +19,7 @@ export default tseslint.config(
         {
           assertFunctionNames: [
             'expect',
+            'expectStatusCode',
             'shouldBeOpened',
             '*.shouldBeOpened',
             'multiply.shouldBeOpened',
