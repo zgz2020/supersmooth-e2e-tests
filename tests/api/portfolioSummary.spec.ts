@@ -21,5 +21,23 @@ test.describe('Portfolio Summary API', () => {
     expect(validationResult.errors).toEqual([]);
     expect(validationResult.valid).toBe(true);
   });
+
+  test('should validate portfolio summary schema when 7-day change fields are null', () => {
+    const nullFieldsPayload = {
+      supersmoothPortfolioUsd: 0,
+      supersmoothPortfolioChange7d: null,
+      suppliedUsd: 0,
+      suppliedChange7d: null,
+      borrowedUsd: 0,
+      borrowedChange7d: null,
+      borrowedChange7dUsd: 0,
+      chainBreakdown: [],
+    };
+
+    const validationResult = validateSchema(nullFieldsPayload, portfolioSummarySchema);
+
+    expect(validationResult.errors).toEqual([]);
+    expect(validationResult.valid).toBe(true);
+  });
 });
 
