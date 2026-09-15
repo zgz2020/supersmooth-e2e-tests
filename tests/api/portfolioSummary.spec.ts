@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { portfolioSummarySchema } from '../../utils/schema/api/portfolioSummarySchema.js';
 import { validateSchema } from '../../utils/schema/validator.js';
+import type { PortfolioSummary } from '../../utils/types/api/portfolioSummary.js';
 
 test.describe('Portfolio Summary API', () => {
   test('should fetch portfolio summary for valid checksummed address', async ({ request }) => {
@@ -15,11 +16,8 @@ test.describe('Portfolio Summary API', () => {
     expect(response.status()).toBe(200);
     expect(response.ok()).toBeTruthy();
 
-    const body = await response.json();
-    const validationResult = validateSchema(body, portfolioSummarySchema);
-
-    expect(validationResult.errors).toEqual([]);
-    expect(validationResult.valid).toBe(true);
+    const body: PortfolioSummary = await response.json();
+    await validateSchema({ schema: portfolioSummarySchema, json: body });
   });
 
   test('should fetch portfolio summary for valid lowercase address', async ({ request }) => {
@@ -34,11 +32,8 @@ test.describe('Portfolio Summary API', () => {
     expect(response.status()).toBe(200);
     expect(response.ok()).toBeTruthy();
 
-    const body = await response.json();
-    const validationResult = validateSchema(body, portfolioSummarySchema);
-
-    expect(validationResult.errors).toEqual([]);
-    expect(validationResult.valid).toBe(true);
+    const body: PortfolioSummary = await response.json();
+    await validateSchema({ schema: portfolioSummarySchema, json: body });
   });
 
   test('should fetch portfolio summary for address with zero balance', async ({ request }) => {
@@ -53,11 +48,8 @@ test.describe('Portfolio Summary API', () => {
     expect(response.status()).toBe(200);
     expect(response.ok()).toBeTruthy();
 
-    const body = await response.json();
-    const validationResult = validateSchema(body, portfolioSummarySchema);
-
-    expect(validationResult.errors).toEqual([]);
-    expect(validationResult.valid).toBe(true);
+    const body: PortfolioSummary = await response.json();
+    await validateSchema({ schema: portfolioSummarySchema, json: body });
   });
 
   test('should return 400 bad request when address parameter is missing', async ({ request }) => {
