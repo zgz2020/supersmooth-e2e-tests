@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { portfolioSummarySchema } from '../../utils/schema/api/portfolioSummarySchema.js';
 import { validateSchema } from '../../utils/schema/validator.js';
 import type { PortfolioSummary } from '../../utils/types/api/portfolioSummary.js';
+import { expectStatusCode } from '../../utils/assertions/solutions.js';
 
 test.describe('Portfolio Summary API', () => {
   test('should fetch portfolio summary for valid checksummed address', async ({ request }) => {
@@ -13,7 +14,7 @@ test.describe('Portfolio Summary API', () => {
       },
     });
 
-    expect(response.status()).toBe(200);
+    await expectStatusCode({ actual: response.status(), expected: 200 });
     expect(response.ok()).toBeTruthy();
 
     const body: PortfolioSummary = await response.json();
@@ -29,7 +30,7 @@ test.describe('Portfolio Summary API', () => {
       },
     });
 
-    expect(response.status()).toBe(200);
+    await expectStatusCode({ actual: response.status(), expected: 200 });
     expect(response.ok()).toBeTruthy();
 
     const body: PortfolioSummary = await response.json();
@@ -45,7 +46,7 @@ test.describe('Portfolio Summary API', () => {
       },
     });
 
-    expect(response.status()).toBe(200);
+    await expectStatusCode({ actual: response.status(), expected: 200 });
     expect(response.ok()).toBeTruthy();
 
     const body: PortfolioSummary = await response.json();
@@ -55,7 +56,7 @@ test.describe('Portfolio Summary API', () => {
   test('should return 400 bad request when address parameter is missing', async ({ request }) => {
     const response = await request.get('/api/portfolio/summary');
 
-    expect(response.status()).toBe(400);
+    await expectStatusCode({ actual: response.status(), expected: 400 });
 
     const body = await response.json();
     expect(body).toEqual({
@@ -70,7 +71,7 @@ test.describe('Portfolio Summary API', () => {
       },
     });
 
-    expect(response.status()).toBe(400);
+    await expectStatusCode({ actual: response.status(), expected: 400 });
 
     const body = await response.json();
     expect(body).toEqual({
@@ -87,7 +88,7 @@ test.describe('Portfolio Summary API', () => {
       },
     });
 
-    expect(response.status()).toBe(400);
+    await expectStatusCode({ actual: response.status(), expected: 400 });
 
     const body = await response.json();
     expect(body).toEqual({
@@ -102,7 +103,7 @@ test.describe('Portfolio Summary API', () => {
       },
     });
 
-    expect(response.status()).toBe(400);
+    await expectStatusCode({ actual: response.status(), expected: 400 });
 
     const body = await response.json();
     expect(body).toEqual({
@@ -113,6 +114,6 @@ test.describe('Portfolio Summary API', () => {
   test('should return 405 method not allowed for POST request', async ({ request }) => {
     const response = await request.post('/api/portfolio/summary');
 
-    expect(response.status()).toBe(405);
+    await expectStatusCode({ actual: response.status(), expected: 405 });
   });
 });
