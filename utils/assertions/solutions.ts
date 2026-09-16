@@ -1,10 +1,30 @@
-import { expect } from '@playwright/test';
+import { expect, type APIResponse } from '@playwright/test';
 
-type ExpectStatusCodeProps = {
-  actual: number;
-  expected: number;
-};
+expect.extend({
+  async toHaveStatusCode(response: APIResponse, expected: number) {
+    const actual = response.status();
+    const pass = actual === expected;
 
-export const expectStatusCode = async ({ actual, expected }: ExpectStatusCodeProps) => {
-  expect(actual, `Should have ${expected} status code`).toBe(expected);
-};
+    if (pass) {
+      return {
+        message: () => `Expected status code not to be ${expected}, but got ${actual}`,
+        pass: true,
+      };
+    }
+
+    const body = await response.text().catch(() => '<unable to read response body>');
+    return {
+      message: () => `Expected status code ${expected} but got ${actual}.\nResponse body:\n${body}`,
+      pass: false,
+    };
+  },
+});
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace PlaywrightTest {
+    interface Matchers<R> {
+      toHaveStatusCode(expected: number): Promise<R>;
+    }
+  }
+}

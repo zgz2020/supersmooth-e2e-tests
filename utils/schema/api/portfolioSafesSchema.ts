@@ -55,7 +55,12 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafe[]> = {
               },
               required: ['netValueUsd', 'collateralUsd', 'debtUsd', 'suppliedUsd'],
             },
-            earnDepositFlow: { anyOf: [{ type: 'object', required: [] }, { type: 'null', nullable: true }] },
+            earnDepositFlow: {
+              anyOf: [
+                { type: 'object', required: [] },
+                { type: 'null', nullable: true },
+              ],
+            },
             automations: {
               type: 'array',
               items: {
