@@ -1,11 +1,11 @@
+import type { Address, ProductTitleCase, Protocol } from './common.js';
+
 export type PositionRole = 'Collateral' | 'Debt';
 export type PositionOperation = 'Supply' | 'Borrow' | 'Withdraw' | 'Repay';
-export type PositionProduct = 'Multiply' | 'Borrow' | 'Earn';
-export type PositionProtocol = 'morpho' | 'euler' | 'compoundV3' | 'aaveV3';
 
 export interface PositionToken {
   role: PositionRole;
-  address: `0x${string}`;
+  address: Address;
   amount?: string;
   operation: PositionOperation;
 }
@@ -36,8 +36,8 @@ export interface EarnDepositFlow {
 export interface Position {
   id: string;
   market: string;
-  product: PositionProduct;
-  protocol: PositionProtocol;
+  product: ProductTitleCase;
+  protocol: Protocol;
   chainId: number;
   tokens: PositionToken[];
   isActive: boolean;
@@ -52,7 +52,7 @@ export interface Position {
 
 export interface PortfolioSafe {
   id: string;
-  address: `0x${string}`;
+  address: Address;
   createdAt: string;
   positions: Position[];
 }
