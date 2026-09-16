@@ -5,7 +5,7 @@ const ajv = new Ajv();
 
 type ValidateSchemaProps<T> = {
   schema: JSONSchemaType<T>;
-  json: T | T[];
+  json: T;
 };
 
 export const validateSchema = async <T>({ schema, json }: ValidateSchemaProps<T>) => {

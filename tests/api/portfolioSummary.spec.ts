@@ -2,41 +2,35 @@ import { test, expect } from '@playwright/test';
 import { portfolioSummarySchema } from '../../utils/schema/api/portfolioSummarySchema.js';
 import { validateSchema } from '../../utils/schema/validator.js';
 import type { PortfolioSummary } from '../../utils/types/api/portfolioSummary.js';
-import { expectStatusCode } from '../../utils/assertions/solutions.js';
+import { validAddress, zeroAddress, invalidAddressCases } from '../../utils/constants/addresses.js';
+import '../../utils/assertions/matchers.js';
 
 test.describe('Portfolio Summary API', () => {
-  test('should fetch portfolio summary for valid checksummed address', async ({ request }) => {
-    const targetAddress = '0x9e3663d0a9F97Cde94E22407d603782B7E7101ED';
-
-    const response = await request.get('/api/portfolio/summary', {
+  test('should fetch portfolio summary regardless of address casing', async ({ request }) => {
+    const checksummedResponse = await request.get('/api/portfolio/summary', {
       params: {
-        address: targetAddress,
+        address: validAddress,
       },
     });
+    await expect(checksummedResponse).toHaveStatusCode(200);
 
-    await expectStatusCode({ actual: response.status(), expected: 200 });
+    const checksummedBody: PortfolioSummary = await checksummedResponse.json();
+    await validateSchema({ schema: portfolioSummarySchema, json: checksummedBody });
+    expect(checksummedBody.chainBreakdown.length).toBeGreaterThan(0);
 
-    const body: PortfolioSummary = await response.json();
-    await validateSchema({ schema: portfolioSummarySchema, json: body });
-  });
-
-  test('should fetch portfolio summary for valid lowercase address', async ({ request }) => {
-    const targetAddress = '0x9e3663d0a9f97cde94e22407d603782b7e7101ed';
-
-    const response = await request.get('/api/portfolio/summary', {
+    const lowercaseResponse = await request.get('/api/portfolio/summary', {
       params: {
-        address: targetAddress,
+        address: validAddress.toLowerCase(),
       },
     });
+    await expect(lowercaseResponse).toHaveStatusCode(200);
 
-    await expectStatusCode({ actual: response.status(), expected: 200 });
-
-    const body: PortfolioSummary = await response.json();
-    await validateSchema({ schema: portfolioSummarySchema, json: body });
+    const lowercaseBody: PortfolioSummary = await lowercaseResponse.json();
+    expect(lowercaseBody).toEqual(checksummedBody);
   });
 
   test('should fetch portfolio summary for address with zero balance', async ({ request }) => {
-    const targetAddress = '0x0000000000000000000000000000000000000000';
+    const targetAddress = zeroAddress;
 
     const response = await request.get('/api/portfolio/summary', {
       params: {
@@ -44,73 +38,30 @@ test.describe('Portfolio Summary API', () => {
       },
     });
 
-    await expectStatusCode({ actual: response.status(), expected: 200 });
+    await expect(response).toHaveStatusCode(200);
 
     const body: PortfolioSummary = await response.json();
     await validateSchema({ schema: portfolioSummarySchema, json: body });
   });
 
-  test('should return 400 bad request when address parameter is missing', async ({ request }) => {
-    const response = await request.get('/api/portfolio/summary');
+  for (const { description, params } of invalidAddressCases) {
+    test(`should return 400 bad request when address parameter is ${description}`, async ({
+      request,
+    }) => {
+      const response = await request.get('/api/portfolio/summary', params ? { params } : undefined);
 
-    await expectStatusCode({ actual: response.status(), expected: 400 });
+      await expect(response).toHaveStatusCode(400);
 
-    const body = await response.json();
-    expect(body).toEqual({
-      error: 'A valid wallet address query param is required',
+      const body = await response.json();
+      expect(body).toEqual({
+        error: 'A valid wallet address query param is required',
+      });
     });
-  });
-
-  test('should return 400 bad request when address parameter is empty', async ({ request }) => {
-    const response = await request.get('/api/portfolio/summary', {
-      params: {
-        address: '',
-      },
-    });
-
-    await expectStatusCode({ actual: response.status(), expected: 400 });
-
-    const body = await response.json();
-    expect(body).toEqual({
-      error: 'A valid wallet address query param is required',
-    });
-  });
-
-  test('should return 400 bad request when address parameter is invalid string', async ({
-    request,
-  }) => {
-    const response = await request.get('/api/portfolio/summary', {
-      params: {
-        address: 'invalid-address',
-      },
-    });
-
-    await expectStatusCode({ actual: response.status(), expected: 400 });
-
-    const body = await response.json();
-    expect(body).toEqual({
-      error: 'A valid wallet address query param is required',
-    });
-  });
-
-  test('should return 400 bad request when address parameter is short hex', async ({ request }) => {
-    const response = await request.get('/api/portfolio/summary', {
-      params: {
-        address: '0x123',
-      },
-    });
-
-    await expectStatusCode({ actual: response.status(), expected: 400 });
-
-    const body = await response.json();
-    expect(body).toEqual({
-      error: 'A valid wallet address query param is required',
-    });
-  });
+  }
 
   test('should return 405 method not allowed for POST request', async ({ request }) => {
     const response = await request.post('/api/portfolio/summary');
 
-    await expectStatusCode({ actual: response.status(), expected: 405 });
+    await expect(response).toHaveStatusCode(405);
   });
 });
