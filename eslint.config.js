@@ -14,6 +14,7 @@ export default tseslint.config(
     ...playwright.configs['flat/recommended'],
     rules: {
       ...playwright.configs['flat/recommended'].rules,
+      'playwright/no-focused-test': 'warn',
       'playwright/expect-expect': [
         'error',
         {

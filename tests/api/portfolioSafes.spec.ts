@@ -7,26 +7,38 @@ import '../../utils/assertions/matchers.js';
 
 test.describe('Portfolio Safes API', () => {
   test('should fetch portfolio safes regardless of address casing', async ({ request }) => {
-    const checksummedResponse = await request.get('/api/portfolio/safes', {
-      params: {
-        address: validAddress,
-      },
+    const checksummedBody = await test.step('Fetch and validate checksummed address', async () => {
+      const response = await request.get('/api/portfolio/safes', {
+        params: {
+          address: validAddress,
+        },
+      });
+      await expect(response).toHaveStatusCode(200);
+
+      const body: PortfolioSafe[] = await response.json();
+      await validateSchema({ schema: portfolioSafesSchema, json: body });
+      expect(
+        body.length,
+        'Valid wallet address should return at least one portfolio safe',
+      ).toBeGreaterThan(0);
+
+      return body;
     });
-    await expect(checksummedResponse).toHaveStatusCode(200);
 
-    const checksummedBody: PortfolioSafe[] = await checksummedResponse.json();
-    await validateSchema({ schema: portfolioSafesSchema, json: checksummedBody });
-    expect(checksummedBody.length).toBeGreaterThan(0);
+    await test.step('Fetch lowercase address and verify parity with checksummed response', async () => {
+      const response = await request.get('/api/portfolio/safes', {
+        params: {
+          address: validAddress.toLowerCase(),
+        },
+      });
+      await expect(response).toHaveStatusCode(200);
 
-    const lowercaseResponse = await request.get('/api/portfolio/safes', {
-      params: {
-        address: validAddress.toLowerCase(),
-      },
+      const lowercaseBody: PortfolioSafe[] = await response.json();
+      expect(
+        lowercaseBody,
+        'Lowercase address response should match checksummed address response',
+      ).toEqual(checksummedBody);
     });
-    await expect(lowercaseResponse).toHaveStatusCode(200);
-
-    const lowercaseBody: PortfolioSafe[] = await lowercaseResponse.json();
-    expect(lowercaseBody).toEqual(checksummedBody);
   });
 
   test('should fetch portfolio safes for address with zero balance', async ({ request }) => {
@@ -42,7 +54,7 @@ test.describe('Portfolio Safes API', () => {
 
     const body: PortfolioSafe[] = await response.json();
     await validateSchema({ schema: portfolioSafesSchema, json: body });
-    expect(body).toEqual([]);
+    expect(body, 'Zero balance address should return an empty array of safes').toEqual([]);
   });
 
   for (const { description, params } of invalidAddressCases) {
