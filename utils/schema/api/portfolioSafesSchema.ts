@@ -26,7 +26,7 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafe[]> = {
                 properties: {
                   role: { type: 'string' },
                   address: { type: 'string' },
-                  amount: { type: 'string' },
+                  amount: { type: 'string', nullable: true },
                   operation: { type: 'string' },
                 },
                 required: ['role', 'address', 'operation'],
@@ -34,14 +34,14 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafe[]> = {
             },
             isActive: { type: 'boolean' },
             openedAt: { type: 'string' },
-            closedAt: { type: 'string', nullable: true },
+            closedAt: { anyOf: [{ type: 'string' }, { type: 'null', nullable: true }] },
             openingSnapshot: {
               type: 'object',
               properties: {
                 netValueUsd: { type: 'number' },
                 collateralUsd: { type: 'number' },
                 debtUsd: { type: 'number' },
-                suppliedUsd: { type: 'number', nullable: true },
+                suppliedUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
               },
               required: ['netValueUsd', 'collateralUsd', 'debtUsd', 'suppliedUsd'],
             },
@@ -51,18 +51,18 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafe[]> = {
                 netValueUsd: { type: 'number' },
                 collateralUsd: { type: 'number' },
                 debtUsd: { type: 'number' },
-                suppliedUsd: { type: 'number', nullable: true },
+                suppliedUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
               },
               required: ['netValueUsd', 'collateralUsd', 'debtUsd', 'suppliedUsd'],
             },
-            earnDepositFlow: { type: 'object', nullable: true, required: [] },
+            earnDepositFlow: { anyOf: [{ type: 'object', required: [] }, { type: 'null', nullable: true }] },
             automations: {
               type: 'array',
               items: {
                 type: 'object',
                 properties: {
                   id: { type: 'string' },
-                  triggerType: { type: 'string', nullable: true },
+                  triggerType: { anyOf: [{ type: 'string' }, { type: 'null', nullable: true }] },
                   enabled: { type: 'boolean' },
                 },
                 required: ['id', 'triggerType', 'enabled'],
