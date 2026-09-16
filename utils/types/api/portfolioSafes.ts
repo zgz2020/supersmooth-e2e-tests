@@ -1,6 +1,6 @@
 export interface PositionToken {
   role: string;
-  address: string;
+  address: `0x${string}`;
   amount?: string;
   operation: string;
 }
@@ -47,7 +47,7 @@ export interface Position {
 
 export interface PortfolioSafe {
   id: string;
-  address: string;
+  address: `0x${string}`;
   createdAt: string;
   positions: Position[];
 }
