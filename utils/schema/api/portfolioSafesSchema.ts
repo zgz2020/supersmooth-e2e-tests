@@ -26,7 +26,7 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafe[]> = {
                 properties: {
                   role: { type: 'string' },
                   address: { type: 'string' },
-                  amount: { type: 'string', nullable: true },
+                  amount: { type: 'string' },
                   operation: { type: 'string' },
                 },
                 required: ['role', 'address', 'operation'],
