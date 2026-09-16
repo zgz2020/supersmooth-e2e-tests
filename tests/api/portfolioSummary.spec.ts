@@ -3,10 +3,11 @@ import { portfolioSummarySchema } from '../../utils/schema/api/portfolioSummaryS
 import { validateSchema } from '../../utils/schema/validator.js';
 import type { PortfolioSummary } from '../../utils/types/api/portfolioSummary.js';
 import { expectStatusCode } from '../../utils/assertions/solutions.js';
+import { validAddress, zeroAddress } from '../../utils/constants/addresses.js';
 
 test.describe('Portfolio Summary API', () => {
   test('should fetch portfolio summary for valid checksummed address', async ({ request }) => {
-    const targetAddress = '0x9e3663d0a9F97Cde94E22407d603782B7E7101ED';
+    const targetAddress = validAddress;
 
     const response = await request.get('/api/portfolio/summary', {
       params: {
@@ -21,7 +22,7 @@ test.describe('Portfolio Summary API', () => {
   });
 
   test('should fetch portfolio summary for valid lowercase address', async ({ request }) => {
-    const targetAddress = '0x9e3663d0a9f97cde94e22407d603782b7e7101ed';
+    const targetAddress = validAddress.toLowerCase();
 
     const response = await request.get('/api/portfolio/summary', {
       params: {
@@ -36,7 +37,7 @@ test.describe('Portfolio Summary API', () => {
   });
 
   test('should fetch portfolio summary for address with zero balance', async ({ request }) => {
-    const targetAddress = '0x0000000000000000000000000000000000000000';
+    const targetAddress = zeroAddress;
 
     const response = await request.get('/api/portfolio/summary', {
       params: {

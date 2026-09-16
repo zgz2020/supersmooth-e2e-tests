@@ -3,10 +3,11 @@ import { portfolioSafesSchema } from '../../utils/schema/api/portfolioSafesSchem
 import { validateSchema } from '../../utils/schema/validator.js';
 import type { PortfolioSafe } from '../../utils/types/api/portfolioSafes.js';
 import { expectStatusCode } from '../../utils/assertions/solutions.js';
+import { validAddress, zeroAddress } from '../../utils/constants/addresses.js';
 
 test.describe('Portfolio Safes API', () => {
   test('should fetch portfolio safes for valid checksummed address', async ({ request }) => {
-    const targetAddress = '0x9e3663d0a9F97Cde94E22407d603782B7E7101ED';
+    const targetAddress = validAddress;
 
     const response = await request.get('/api/portfolio/safes', {
       params: {
@@ -21,7 +22,7 @@ test.describe('Portfolio Safes API', () => {
   });
 
   test('should fetch portfolio safes for valid lowercase address', async ({ request }) => {
-    const targetAddress = '0x9e3663d0a9f97cde94e22407d603782b7e7101ed';
+    const targetAddress = validAddress.toLowerCase();
 
     const response = await request.get('/api/portfolio/safes', {
       params: {
@@ -36,7 +37,7 @@ test.describe('Portfolio Safes API', () => {
   });
 
   test('should fetch portfolio safes for address with zero balance', async ({ request }) => {
-    const targetAddress = '0x0000000000000000000000000000000000000000';
+    const targetAddress = zeroAddress;
 
     const response = await request.get('/api/portfolio/safes', {
       params: {
