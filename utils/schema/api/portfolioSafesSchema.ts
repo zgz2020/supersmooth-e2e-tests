@@ -16,18 +16,18 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafe[]> = {
           properties: {
             id: { type: 'string' },
             market: { type: 'string' },
-            product: { type: 'string' },
-            protocol: { type: 'string' },
+            product: { type: 'string', enum: ['Multiply', 'Borrow', 'Earn'] },
+            protocol: { type: 'string', enum: ['morpho', 'euler', 'compoundV3', 'aaveV3'] },
             chainId: { type: 'number' },
             tokens: {
               type: 'array',
               items: {
                 type: 'object',
                 properties: {
-                  role: { type: 'string' },
+                  role: { type: 'string', enum: ['Collateral', 'Debt'] },
                   address: { type: 'string' },
                   amount: { type: 'string', nullable: true },
-                  operation: { type: 'string' },
+                  operation: { type: 'string', enum: ['Supply', 'Borrow', 'Withdraw', 'Repay'] },
                 },
                 required: ['role', 'address', 'operation'],
               },

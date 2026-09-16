@@ -1,8 +1,13 @@
+export type PositionRole = 'Collateral' | 'Debt';
+export type PositionOperation = 'Supply' | 'Borrow' | 'Withdraw' | 'Repay';
+export type PositionProduct = 'Multiply' | 'Borrow' | 'Earn';
+export type PositionProtocol = 'morpho' | 'euler' | 'compoundV3' | 'aaveV3';
+
 export interface PositionToken {
-  role: string;
+  role: PositionRole;
   address: `0x${string}`;
   amount?: string;
-  operation: string;
+  operation: PositionOperation;
 }
 
 export interface PositionSnapshot {
@@ -31,8 +36,8 @@ export interface EarnDepositFlow {
 export interface Position {
   id: string;
   market: string;
-  product: string;
-  protocol: string;
+  product: PositionProduct;
+  protocol: PositionProtocol;
   chainId: number;
   tokens: PositionToken[];
   isActive: boolean;
