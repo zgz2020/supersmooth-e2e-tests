@@ -7,26 +7,38 @@ import '../../utils/assertions/matchers.js';
 
 test.describe('Portfolio Summary API', () => {
   test('should fetch portfolio summary regardless of address casing', async ({ request }) => {
-    const checksummedResponse = await request.get('/api/portfolio/summary', {
-      params: {
-        address: validAddress,
-      },
+    const checksummedBody = await test.step('Fetch and validate checksummed address', async () => {
+      const response = await request.get('/api/portfolio/summary', {
+        params: {
+          address: validAddress,
+        },
+      });
+      await expect(response).toHaveStatusCode(200);
+
+      const body: PortfolioSummary = await response.json();
+      await validateSchema({ schema: portfolioSummarySchema, json: body });
+      expect(
+        body.chainBreakdown.length,
+        'Valid wallet address should return at least one chain breakdown item',
+      ).toBeGreaterThan(0);
+
+      return body;
     });
-    await expect(checksummedResponse).toHaveStatusCode(200);
 
-    const checksummedBody: PortfolioSummary = await checksummedResponse.json();
-    await validateSchema({ schema: portfolioSummarySchema, json: checksummedBody });
-    expect(checksummedBody.chainBreakdown.length).toBeGreaterThan(0);
+    await test.step('Fetch lowercase address and verify parity with checksummed response', async () => {
+      const response = await request.get('/api/portfolio/summary', {
+        params: {
+          address: validAddress.toLowerCase(),
+        },
+      });
+      await expect(response).toHaveStatusCode(200);
 
-    const lowercaseResponse = await request.get('/api/portfolio/summary', {
-      params: {
-        address: validAddress.toLowerCase(),
-      },
+      const lowercaseBody: PortfolioSummary = await response.json();
+      expect(
+        lowercaseBody,
+        'Lowercase address response should match checksummed address response',
+      ).toEqual(checksummedBody);
     });
-    await expect(lowercaseResponse).toHaveStatusCode(200);
-
-    const lowercaseBody: PortfolioSummary = await lowercaseResponse.json();
-    expect(lowercaseBody).toEqual(checksummedBody);
   });
 
   test('should fetch portfolio summary for address with zero balance', async ({ request }) => {
