@@ -12,9 +12,15 @@ test.describe('Portfolio Recommended Strategies API', () => {
 
     const body: PortfolioRecommendedStrategies = await response.json();
     await validateSchema({ schema: portfolioRecommendedStrategiesSchema, json: body });
-    expect(body.cards.length, 'Response should contain at least one recommended strategy card').toBeGreaterThan(0);
+    expect(
+      body.cards.length,
+      'Response should contain at least one recommended strategy card',
+    ).toBeGreaterThan(0);
     for (const card of body.cards) {
-      expect(card.tokens.length, `Card ${card.id} should contain at least one token`).toBeGreaterThan(0);
+      expect(
+        card.tokens.length,
+        `Card ${card.id} should contain at least one token`,
+      ).toBeGreaterThan(0);
       expect(card.url, `Card ${card.id} URL should start with /products/`).toMatch(/^\/products\//);
     }
   });
