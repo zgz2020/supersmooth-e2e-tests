@@ -3,6 +3,15 @@ import { defineConfig, devices } from '@playwright/test';
 
 dotenv.config();
 
+const isFakeGeoRun =
+  process.env.LOCAL_GEO === 'true' ||
+  process.argv.some(
+    (arg) =>
+      arg.includes('complianceGeoFakeLocation') ||
+      arg.includes('fake-geo') ||
+      arg.includes('fakeLocation'),
+  );
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -17,6 +26,14 @@ export default defineConfig({
   reporter: [
     ['html', { open: 'never', outputFolder: `playwright-reports/${process.env.REPORT_FOLDER}` }],
   ],
+  webServer: isFakeGeoRun
+    ? {
+        command: process.env.WEB_SERVER_COMMAND || 'node scripts/mock-compliance-server.js',
+        url: 'http://localhost:3000/api/compliance/geo',
+        reuseExistingServer: !process.env.CI,
+        timeout: 30 * 1000,
+      }
+    : undefined,
   use: {
     baseURL: process.env.BASE_URL || 'https://aphelion-app.onrender.com/',
     trace: 'on-first-retry',
@@ -31,6 +48,14 @@ export default defineConfig({
     {
       name: 'api',
       testDir: './tests/api',
+      testIgnore: ['**/complianceGeoFakeLocation.spec.ts'],
+    },
+    {
+      name: 'api-fake-geo',
+      testMatch: '**/complianceGeoFakeLocation.spec.ts',
+      use: {
+        baseURL: 'http://localhost:3000',
+      },
     },
     // {
     //   name: 'firefox',

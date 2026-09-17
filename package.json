@@ -10,6 +10,7 @@
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "test:api": "playwright test --project=api",
+    "test:api:fake-geo": "playwright test --project=api-fake-geo",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
