@@ -2,7 +2,10 @@ import { test, expect } from '@playwright/test';
 import { NETWORK_CHAIN_IDS } from '../../utils/constants/networks.js';
 import { effectiveSpreadSchema } from '../../utils/schema/api/effectiveSpreadSchema.js';
 import { validateSchema } from '../../utils/schema/validator.js';
-import type { EffectiveSpreadProduct, EffectiveSpreadResponse } from '../../utils/types/api/effectiveSpread.js';
+import type {
+  EffectiveSpreadProduct,
+  EffectiveSpreadResponse,
+} from '../../utils/types/api/effectiveSpread.js';
 import '../../utils/assertions/matchers.js';
 
 const products: EffectiveSpreadProduct[] = ['borrow', 'multiply', 'yieldLoop'];

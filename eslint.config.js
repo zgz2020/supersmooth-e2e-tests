@@ -1,7 +1,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import playwright from 'eslint-plugin-playwright';
-import eslintConfigPrettier from 'eslint-config-prettier';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default tseslint.config(
   {
@@ -31,8 +31,6 @@ export default tseslint.config(
   },
   {
     rules: {
-      // quotes: ['error', 'single', { avoidEscape: true }],
-      // semi: ['error', 'always'],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -43,5 +41,5 @@ export default tseslint.config(
       ],
     },
   },
-  eslintConfigPrettier,
+  eslintPluginPrettierRecommended,
 );
