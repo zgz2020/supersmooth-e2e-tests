@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { portfolioSummarySchema } from '../../utils/schema/api/portfolioSummarySchema.js';
 import { validateSchema } from '../../utils/schema/validator.js';
-import type { PortfolioSummary } from '../../utils/types/api/portfolioSummary.js';
+import type { PortfolioSummaryResponse } from '../../utils/types/api/portfolioSummary.js';
 import { validAddress, zeroAddress, invalidAddressCases } from '../../utils/constants/addresses.js';
 import '../../utils/assertions/matchers.js';
 
@@ -15,7 +15,7 @@ test.describe('Portfolio Summary API', () => {
       });
       await expect(response).toHaveStatusCode(200);
 
-      const body: PortfolioSummary = await response.json();
+      const body: PortfolioSummaryResponse = await response.json();
       await validateSchema({ schema: portfolioSummarySchema, json: body });
       expect(
         body.chainBreakdown.length,
@@ -33,7 +33,7 @@ test.describe('Portfolio Summary API', () => {
       });
       await expect(response).toHaveStatusCode(200);
 
-      const lowercaseBody: PortfolioSummary = await response.json();
+      const lowercaseBody: PortfolioSummaryResponse = await response.json();
       expect(
         lowercaseBody,
         'Lowercase address response should match checksummed address response',
@@ -52,7 +52,7 @@ test.describe('Portfolio Summary API', () => {
 
     await expect(response).toHaveStatusCode(200);
 
-    const body: PortfolioSummary = await response.json();
+    const body: PortfolioSummaryResponse = await response.json();
     await validateSchema({ schema: portfolioSummarySchema, json: body });
   });
 

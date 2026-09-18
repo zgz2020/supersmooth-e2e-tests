@@ -1,7 +1,7 @@
 import { JSONSchemaType } from 'ajv';
-import { PortfolioSummary } from '../../types/api/portfolioSummary.js';
+import { PortfolioSummaryResponse } from '../../types/api/portfolioSummary.js';
 
-export const portfolioSummarySchema: JSONSchemaType<PortfolioSummary> = {
+export const portfolioSummarySchema: JSONSchemaType<PortfolioSummaryResponse> = {
   type: 'object',
   properties: {
     supersmoothPortfolioUsd: { type: 'number' },

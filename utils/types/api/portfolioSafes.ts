@@ -50,7 +50,7 @@ export interface Position {
   dataQuality: DataQuality;
 }
 
-export interface PortfolioSafe {
+export interface PortfolioSafesResponse {
   id: string;
   address: Address;
   createdAt: string;

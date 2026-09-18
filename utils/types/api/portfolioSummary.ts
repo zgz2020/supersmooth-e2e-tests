@@ -4,7 +4,7 @@ interface ChainBreakdown {
   sharePercent: number;
 }
 
-export interface PortfolioSummary {
+export interface PortfolioSummaryResponse {
   supersmoothPortfolioUsd: number;
   supersmoothPortfolioChange7d: number | null;
   suppliedUsd: number;
