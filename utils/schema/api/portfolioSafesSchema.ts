@@ -1,7 +1,7 @@
 import { JSONSchemaType } from 'ajv';
-import { PortfolioSafe } from '../../types/api/portfolioSafes.js';
+import { PortfolioSafesResponse } from '../../types/api/portfolioSafes.js';
 
-export const portfolioSafesSchema: JSONSchemaType<PortfolioSafe[]> = {
+export const portfolioSafesSchema: JSONSchemaType<PortfolioSafesResponse[]> = {
   type: 'array',
   items: {
     type: 'object',

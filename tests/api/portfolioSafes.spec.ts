@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { portfolioSafesSchema } from '../../utils/schema/api/portfolioSafesSchema.js';
 import { validateSchema } from '../../utils/schema/validator.js';
-import type { PortfolioSafe } from '../../utils/types/api/portfolioSafes.js';
+import type { PortfolioSafesResponse } from '../../utils/types/api/portfolioSafes.js';
 import { validAddress, zeroAddress, invalidAddressCases } from '../../utils/constants/addresses.js';
 import '../../utils/assertions/matchers.js';
 
@@ -15,7 +15,7 @@ test.describe('Portfolio Safes API', () => {
       });
       await expect(response).toHaveStatusCode(200);
 
-      const body: PortfolioSafe[] = await response.json();
+      const body: PortfolioSafesResponse[] = await response.json();
       await validateSchema({ schema: portfolioSafesSchema, json: body });
       expect(
         body.length,
@@ -33,7 +33,7 @@ test.describe('Portfolio Safes API', () => {
       });
       await expect(response).toHaveStatusCode(200);
 
-      const lowercaseBody: PortfolioSafe[] = await response.json();
+      const lowercaseBody: PortfolioSafesResponse[] = await response.json();
       expect(
         lowercaseBody,
         'Lowercase address response should match checksummed address response',
@@ -52,7 +52,7 @@ test.describe('Portfolio Safes API', () => {
 
     await expect(response).toHaveStatusCode(200);
 
-    const body: PortfolioSafe[] = await response.json();
+    const body: PortfolioSafesResponse[] = await response.json();
     await validateSchema({ schema: portfolioSafesSchema, json: body });
     expect(body, 'Zero balance address should return an empty array of safes').toEqual([]);
   });
