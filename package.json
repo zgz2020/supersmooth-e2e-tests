@@ -6,9 +6,9 @@
   "description": "End-to-end testing suite for SOV",
   "main": "index.js",
   "scripts": {
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed",
+    "synpress-build-cache:base": "pnpm synpress ./utils/synpress/wallet-setup",
+    "test:no-wallet": "playwright test --project=noWallet",
+    "test:with-wallet": "playwright test --project=withWallet",
     "test:api": "playwright test --project=api",
     "test:api:fake-geo": "playwright test --project=api-fake-geo",
     "typecheck": "tsc --noEmit",
@@ -28,6 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.49.1",
+    "@synthetixio/synpress": "^4.0.3",
     "@types/node": "^26.4.1",
     "ajv": "^8.20.0",
     "dotenv": "^17.4.2",
@@ -38,5 +39,10 @@
     "prettier": "^3.9.6",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.70.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "playwright-core": "^1.49.1"
+    }
   }
 }

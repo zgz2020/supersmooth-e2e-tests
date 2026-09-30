@@ -23,17 +23,29 @@ export const test = base.extend<AppFixtures>({
 
 export const expect = test.expect;
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export function step<T extends (...args: any[]) => any>(
-  target: T,
-  context: ClassMethodDecoratorContext,
+export function step<This, Args extends unknown[], Return>(
+  target: (this: This, ...args: Args) => Return,
+  context: ClassMethodDecoratorContext<This, (this: This, ...args: Args) => Return>,
 ) {
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  return function replacementMethod(this: any, ...args: Parameters<T>): ReturnType<T> {
-    const name =
-      (this as { constructor: { name: string } }).constructor.name + '.' + (context.name as string);
+  return function replacementMethod(this: This, ...args: Args): Return {
+    // Map arguments to strings and join them safely
+    const stringifiedArgs = args
+      .map((arg: unknown) => {
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return '[Object]';
+          }
+        }
+        return String(arg);
+      })
+      .join(', ');
+
+    const name = `${(this as object).constructor.name}.${context.name as string}(${stringifiedArgs})`;
+
     return test.step(name, async () => {
       return await target.call(this, ...args);
-    }) as ReturnType<T>;
+    }) as Return;
   };
 }
