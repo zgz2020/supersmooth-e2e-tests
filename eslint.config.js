@@ -5,7 +5,15 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 
 export default tseslint.config(
   {
-    ignores: ['node_modules/**', 'playwright-report/**', 'test-results/**', 'dist/**', '.env'],
+    ignores: [
+      'node_modules/**',
+      'playwright-report/**',
+      'playwright-reports/**',
+      'test-results/**',
+      '.cache-synpress/**',
+      'dist/**',
+      '.env',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -18,13 +26,8 @@ export default tseslint.config(
       'playwright/expect-expect': [
         'error',
         {
-          assertFunctionNames: [
-            'expect',
-            'expectStatusCode',
-            'shouldBeOpened',
-            '*.shouldBeOpened',
-            'multiply.shouldBeOpened',
-          ],
+          assertFunctionNames: ['expect', 'expectStatusCode', 'shouldBeOpened', 'shouldBeVisible'],
+          assertFunctionPatterns: ['^.*\\.should.*', '^should.*'],
         },
       ],
     },

@@ -36,13 +36,19 @@ export default defineConfig({
     : undefined,
   use: {
     baseURL: process.env.BASE_URL || 'https://aphelion-app.onrender.com/',
+    headless: process.env.HEADLESS === 'true',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
   projects: [
     {
-      name: 'chromium',
-      testIgnore: ['**/tests/api/**'],
+      name: 'noWallet',
+      testDir: './tests/e2e/noWallet',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'withWallet',
+      testDir: './tests/e2e/withWallet',
       use: { ...devices['Desktop Chrome'] },
     },
     {

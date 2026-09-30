@@ -1,1 +1,2 @@
-export { Multiply } from './multiply.js';
+export * from './header.js';
+export * from './multiply.js';
