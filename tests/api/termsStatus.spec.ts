@@ -17,6 +17,7 @@ test.describe('Terms Status API', () => {
           address: validAddress,
         },
       });
+
       await expect(response).toHaveStatusCode(200);
 
       const headers = response.headers();
