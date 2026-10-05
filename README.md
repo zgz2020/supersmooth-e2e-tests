@@ -52,30 +52,39 @@ pnpm synpress-build-cache:base
 
 Tests are categorized into distinct projects defined in `playwright.config.ts`:
 
-| Test Suite | Description | Directory / Filter | Command |
-| :--- | :--- | :--- | :--- |
-| **No-Wallet E2E** | E2E tests that do not require Web3 wallet connection | `./tests/e2e/noWallet` | `pnpm test:no-wallet` |
-| **With-Wallet E2E** | E2E tests requiring MetaMask wallet interaction via Synpress | `./tests/e2e/withWallet` | `pnpm test:with-wallet` |
-| **All E2E** | Runs all end-to-end test suites | `./tests/e2e` | `pnpm test:e2e` |
-| **API Tests** | API endpoint and integration test suites | `./tests/api` | `pnpm test:api` |
-| **API Fake Geo** | API tests executing against local mock geo-compliance server | `complianceGeoFakeLocation.spec.ts` | `pnpm test:api:fake-geo` |
-| **All Tests** | Runs all Playwright test projects | `./tests` | `pnpm test` |
+| Test Suite          | Description                                                  | Directory / Filter                  | Command                  |
+| :------------------ | :----------------------------------------------------------- | :---------------------------------- | :----------------------- |
+| **No-Wallet E2E**   | E2E tests that do not require Web3 wallet connection         | `./tests/e2e/noWallet`              | `pnpm test:no-wallet`    |
+| **With-Wallet E2E** | E2E tests requiring MetaMask wallet interaction via Synpress | `./tests/e2e/withWallet`            | `pnpm test:with-wallet`  |
+| **All E2E**         | Runs all end-to-end test suites                              | `./tests/e2e`                       | `pnpm test:e2e`          |
+| **API Tests**       | API endpoint and integration test suites                     | `./tests/api`                       | `pnpm test:api`          |
+| **API Fake Geo**    | API tests executing against local mock geo-compliance server | `complianceGeoFakeLocation.spec.ts` | `pnpm test:api:fake-geo` |
+| **All Tests**       | Runs all Playwright test projects                            | `./tests`                           | `pnpm test`              |
 
 ---
 
 ## 📜 Available Scripts
 
-| Script | Description |
-| :--- | :--- |
-| `pnpm test` | Runs all Playwright test projects |
-| `pnpm test:e2e` | Runs all E2E tests under `./tests/e2e` |
-| `pnpm test:no-wallet` | Runs E2E tests without Web3 wallet interactions |
-| `pnpm test:with-wallet` | Runs E2E tests with MetaMask wallet automation via Synpress |
-| `pnpm test:api` | Runs API test suites |
-| `pnpm test:api:fake-geo` | Runs API tests with mock compliance geo server |
-| `pnpm typecheck` | Validates TypeScript types across the codebase |
-| `pnpm lint` | Runs ESLint checks across the codebase |
-| `pnpm format` | Formats code with Prettier |
+| Script                   | Description                                                 |
+| :----------------------- | :---------------------------------------------------------- |
+| `pnpm test`              | Runs all Playwright test projects                           |
+| `pnpm test:e2e`          | Runs all E2E tests under `./tests/e2e`                      |
+| `pnpm test:no-wallet`    | Runs E2E tests without Web3 wallet interactions             |
+| `pnpm test:with-wallet`  | Runs E2E tests with MetaMask wallet automation via Synpress |
+| `pnpm test:api`          | Runs API test suites                                        |
+| `pnpm test:api:fake-geo` | Runs API tests with mock compliance geo server              |
+| `pnpm typecheck`         | Validates TypeScript types across the codebase              |
+| `pnpm lint`              | Runs ESLint checks across the codebase                      |
+| `pnpm format`            | Formats code with Prettier                                  |
+
+---
+
+## 🌐 Wallet & Network Utilities
+
+Helper functions located in `./utils`:
+
+- **`connectWallet({ app, metamask, network? })`**: Connects MetaMask wallet to the dApp and switches to the specified network (defaults to `'Base'`).
+- **`switchNetwork({ app, metamask, network })`**: Opens the network selector modal, switches to the specified network (`FixturesNetwork`: `'Arbitrum One' | 'Base' | 'Ethereum' | 'HyperEVM' | 'OP Mainnet'`), and automatically approves new network additions and network switches in MetaMask.
 
 ---
 
@@ -92,15 +101,18 @@ Tests are categorized into distinct projects defined in `playwright.config.ts`:
 ├── src/
 │   ├── app.ts                 # Main App fixture entry point
 │   ├── fixtures/              # Custom Playwright & Synpress fixtures
-│   ├── modals/                # Modal dialog page objects (ConnectWallet, etc.)
-│   └── pages/                 # Page objects (Header, Multiply, etc.)
+│   ├── modals/                # Modal dialog page objects (ConnectWallet, ChooseNetwork, etc.)
+│   └── pages/                 # Page objects (Header, Multiply, VaultPage, etc.)
 ├── tests/
 │   ├── api/                   # API test specs
 │   └── e2e/
 │       ├── noWallet/          # E2E test specs without wallet
 │       └── withWallet/        # E2E test specs with Synpress MetaMask wallet
 └── utils/
-    └── synpress/             # Synpress wallet setup and cache utilities
+    ├── assertions/            # Custom matchers & assertion helpers
+    ├── connectWallet.ts       # Helper to connect wallet and select network
+    ├── switchNetwork.ts       # Helper to switch network with MetaMask approvals
+    └── synpress/              # Synpress wallet setup and cache utilities
 ```
 
 ---

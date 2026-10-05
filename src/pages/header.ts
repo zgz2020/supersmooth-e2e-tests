@@ -2,13 +2,19 @@ import type { Locator, Page } from '@playwright/test';
 import { expect, step } from '../fixtures/index.js';
 import type { Address } from '../../utils/types/api/common.js';
 
+export type ShortAddress = Address | RegExp;
+
 export class Header {
   readonly page: Page;
   readonly header: Locator;
+  readonly connectedWalletButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.header = page.getByRole('navigation').first();
+    this.connectedWalletButton = this.header.getByRole('button', {
+      name: /^0x[a-fA-F0-9]{4}\.\.\.[a-fA-F0-9]{4}$/,
+    });
   }
 
   @step
@@ -22,7 +28,14 @@ export class Header {
   }
 
   @step
-  async shouldHaveShortAddress(shortAddress: Address) {
-    await expect(this.header.getByRole('button', { name: shortAddress })).toBeVisible();
+  async shouldHaveShortAddress(
+    shortAddress: ShortAddress = /^0x[a-fA-F0-9]{4}\.\.\.[a-fA-F0-9]{4}$/,
+  ) {
+    await expect(this.connectedWalletButton).toHaveText(shortAddress);
+  }
+
+  @step
+  async openWalletFeatures() {
+    await this.connectedWalletButton.click();
   }
 }
