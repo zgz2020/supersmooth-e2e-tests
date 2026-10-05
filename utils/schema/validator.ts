@@ -1,10 +1,10 @@
 import test from '@playwright/test';
-import Ajv, { JSONSchemaType } from 'ajv';
+import Ajv, { AnySchemaObject, JSONSchemaType } from 'ajv';
 
-const ajv = new Ajv();
+const ajv = new Ajv({ allowUnionTypes: true });
 
 type ValidateSchemaProps<T> = {
-  schema: JSONSchemaType<T>;
+  schema: AnySchemaObject | JSONSchemaType<T>;
   json: T;
 };
 

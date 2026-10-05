@@ -36,7 +36,7 @@ export default defineConfig({
     : undefined,
   use: {
     baseURL: process.env.BASE_URL || 'https://aphelion-app.onrender.com/',
-    headless: process.env.HEADLESS === 'true',
+    headless: process.env.HEADLESS ? true : false,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
