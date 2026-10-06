@@ -1,7 +1,7 @@
 import type { Address, ProductTitleCase, Protocol } from './common.js';
 
-export type PositionRole = 'Collateral' | 'Debt';
-export type PositionOperation = 'Supply' | 'Borrow' | 'Withdraw' | 'Repay';
+export type PositionRole = 'Collateral' | 'Debt' | 'Deposit';
+export type PositionOperation = 'Supply' | 'Borrow' | 'Withdraw' | 'Repay' | 'Deposit';
 
 export interface PositionToken {
   role: PositionRole;
@@ -11,9 +11,9 @@ export interface PositionToken {
 }
 
 export interface PositionSnapshot {
-  netValueUsd: number;
-  collateralUsd: number;
-  debtUsd: number;
+  netValueUsd: number | null;
+  collateralUsd: number | null;
+  debtUsd: number | null;
   suppliedUsd: number | null;
 }
 

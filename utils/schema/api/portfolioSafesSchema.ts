@@ -24,10 +24,13 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafesResponse[]> = {
               items: {
                 type: 'object',
                 properties: {
-                  role: { type: 'string', enum: ['Collateral', 'Debt'] },
+                  role: { type: 'string', enum: ['Collateral', 'Debt', 'Deposit'] },
                   address: { type: 'string' },
                   amount: { type: 'string', nullable: true },
-                  operation: { type: 'string', enum: ['Supply', 'Borrow', 'Withdraw', 'Repay'] },
+                  operation: {
+                    type: 'string',
+                    enum: ['Supply', 'Borrow', 'Withdraw', 'Repay', 'Deposit'],
+                  },
                 },
                 required: ['role', 'address', 'operation'],
               },
@@ -38,9 +41,9 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafesResponse[]> = {
             openingSnapshot: {
               type: 'object',
               properties: {
-                netValueUsd: { type: 'number' },
-                collateralUsd: { type: 'number' },
-                debtUsd: { type: 'number' },
+                netValueUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
+                collateralUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
+                debtUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
                 suppliedUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
               },
               required: ['netValueUsd', 'collateralUsd', 'debtUsd', 'suppliedUsd'],
@@ -48,9 +51,9 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafesResponse[]> = {
             latestSnapshot: {
               type: 'object',
               properties: {
-                netValueUsd: { type: 'number' },
-                collateralUsd: { type: 'number' },
-                debtUsd: { type: 'number' },
+                netValueUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
+                collateralUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
+                debtUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
                 suppliedUsd: { anyOf: [{ type: 'number' }, { type: 'null', nullable: true }] },
               },
               required: ['netValueUsd', 'collateralUsd', 'debtUsd', 'suppliedUsd'],
