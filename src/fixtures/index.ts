@@ -10,10 +10,10 @@ type AppFixtures = {
 };
 
 export const test = base.extend<AppFixtures>({
-  app: async ({ page, baseURL }, use) => {
+  app: async ({ page }, use) => {
     const app = new App(page);
 
-    await app.open(baseURL || '/');
+    await app.open();
 
     await use(app);
 

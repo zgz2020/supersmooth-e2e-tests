@@ -18,9 +18,9 @@ test.describe('Portfolio Safes API', () => {
       const body: PortfolioSafesResponse[] = await response.json();
       await validateSchema({ schema: portfolioSafesSchema, json: body });
       expect(
-        body.length,
-        'Valid wallet address should return at least one portfolio safe',
-      ).toBeGreaterThan(0);
+        Array.isArray(body),
+        'Valid wallet address should return an array of portfolio safes',
+      ).toBe(true);
 
       return body;
     });

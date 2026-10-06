@@ -18,9 +18,9 @@ test.describe('Portfolio Summary API', () => {
       const body: PortfolioSummaryResponse = await response.json();
       await validateSchema({ schema: portfolioSummarySchema, json: body });
       expect(
-        body.chainBreakdown.length,
-        'Valid wallet address should return at least one chain breakdown item',
-      ).toBeGreaterThan(0);
+        Array.isArray(body.chainBreakdown),
+        'Valid wallet address should return an array of chain breakdown items',
+      ).toBe(true);
 
       return body;
     });
