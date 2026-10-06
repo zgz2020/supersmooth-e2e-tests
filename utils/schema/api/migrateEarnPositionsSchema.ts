@@ -1,0 +1,61 @@
+import { JSONSchemaType } from 'ajv';
+import type { MigrateEarnPositionsResponse } from '../../types/api/migrateEarnPositions.js';
+
+export const migrateEarnPositionsSchema: JSONSchemaType<MigrateEarnPositionsResponse> = {
+  type: 'object',
+  properties: {
+    migrations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          chainId: { type: 'number' },
+          protocol: { type: 'string' },
+          marketIdentifier: { type: 'string' },
+          name: { anyOf: [{ type: 'string' }, { type: 'null', nullable: true }] },
+          curator: { anyOf: [{ type: 'string' }, { type: 'null', nullable: true }] },
+          depositToken: { type: 'string' },
+          assetAddress: { type: 'string', pattern: '^0x[a-fA-F0-9]{40}$' },
+          assetDecimals: { type: 'number' },
+          sourceKind: { type: 'string' },
+          receiptToken: { type: 'string', pattern: '^0x[a-fA-F0-9]{40}$' },
+          receiptSymbol: { type: 'string' },
+          receiptDecimals: { type: 'number' },
+          receiptBalance: { type: 'string' },
+          depositAmount: { type: 'string' },
+          apy: { type: 'number' },
+          liquidity: { type: 'number' },
+          unsupportedReason: { anyOf: [{ type: 'string' }, { type: 'null', nullable: true }] },
+          depositUsd: { type: 'number' },
+        },
+        required: [
+          'id',
+          'chainId',
+          'protocol',
+          'marketIdentifier',
+          'name',
+          'curator',
+          'depositToken',
+          'assetAddress',
+          'assetDecimals',
+          'sourceKind',
+          'receiptToken',
+          'receiptSymbol',
+          'receiptDecimals',
+          'receiptBalance',
+          'depositAmount',
+          'apy',
+          'liquidity',
+          'unsupportedReason',
+          'depositUsd',
+        ],
+      },
+    },
+    unscannedChainIds: {
+      type: 'array',
+      items: { type: 'number' },
+    },
+  },
+  required: ['migrations', 'unscannedChainIds'],
+};
