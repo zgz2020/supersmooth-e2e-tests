@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: 'Checkout repository'
-        uses: 'actions/checkout@v5'
+        uses: 'actions/checkout@v4'
 
       - name: 'Setup pnpm'
         uses: 'pnpm/action-setup@v4'
@@ -27,7 +27,7 @@ jobs:
           version: 8
 
       - name: 'Setup Node.js'
-        uses: 'actions/setup-node@v5'
+        uses: 'actions/setup-node@v4'
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
@@ -43,7 +43,7 @@ jobs:
         run: 'pnpm test:api'
 
       - name: 'Upload Playwright Report'
-        uses: 'actions/upload-artifact@v5'
+        uses: 'actions/upload-artifact@v4'
         if: '!cancelled()'
         with:
           name: 'playwright-report-api'
