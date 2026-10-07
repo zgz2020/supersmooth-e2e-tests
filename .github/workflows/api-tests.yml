@@ -9,6 +9,9 @@ on:
         default: 'https://aphelion-app.onrender.com/'
         type: 'string'
 
+permissions:
+  contents: read
+
 jobs:
   api-tests:
     name: 'Run API Tests'
@@ -20,6 +23,8 @@ jobs:
 
       - name: 'Setup pnpm'
         uses: 'pnpm/action-setup@v4'
+        with:
+          version: 8
 
       - name: 'Setup Node.js'
         uses: 'actions/setup-node@v4'
@@ -30,9 +35,6 @@ jobs:
       - name: 'Install dependencies'
         run: 'pnpm install --frozen-lockfile'
 
-      - name: 'Install Playwright Browsers'
-        run: 'pnpm exec playwright install --with-deps chromium'
-
       - name: 'Run API tests'
         env:
           BASE_URL: '${{ inputs.baseUrl }}'
@@ -42,8 +44,8 @@ jobs:
 
       - name: 'Upload Playwright Report'
         uses: 'actions/upload-artifact@v4'
-        if: 'always()'
+        if: '!cancelled()'
         with:
           name: 'playwright-report-api'
-          path: 'playwright-reports/'
+          path: 'playwright-reports/api'
           retention-days: 30
