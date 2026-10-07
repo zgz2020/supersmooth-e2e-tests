@@ -15,7 +15,7 @@ permissions:
 jobs:
   api-tests:
     name: 'Run API Tests'
-    runs-on: 'ubuntu-latest'
+    runs-on: 'ubuntu-24.04'
 
     steps:
       - name: 'Checkout repository'
