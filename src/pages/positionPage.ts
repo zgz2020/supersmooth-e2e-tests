@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { step } from '../fixtures';
 import { RightSidePanel } from './rightSidePanel';
+import type { Token } from '../../utils/types/e2e/common.js';
 
 export class PositionPage {
   readonly page: Page;
@@ -12,7 +13,7 @@ export class PositionPage {
   }
 
   @step
-  async openPage(url: string, { collateral }: { collateral: 'ETH' | 'USDC' | 'USDT' | 'WBTC' }) {
+  async openPage(url: string, { collateral }: { collateral: Token }) {
     await this.page.goto(url);
     await this.rightSidePanel.configurePosition.waitToBeStable({ token: collateral });
   }
