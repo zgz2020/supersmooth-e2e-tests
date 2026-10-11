@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { step } from '../../fixtures';
 import { expect } from '../../fixtures/base';
+import type { Token } from '../../../utils/types/e2e/common.js';
 
 export class ConfigurePosition {
   readonly page: Page;
@@ -12,7 +13,7 @@ export class ConfigurePosition {
   }
 
   @step
-  async waitToBeStable({ token }: { token: 'ETH' | 'USDC' | 'USDT' | 'WBTC' }) {
+  async waitToBeStable({ token }: { token: Token }) {
     await expect(
       this.panelLocator
         .locator('button[aria-haspopup="listbox"]')
@@ -24,6 +25,11 @@ export class ConfigurePosition {
   @step
   async setDeposit(amount: string) {
     await this.panelLocator.locator('input').first().fill(amount);
+  }
+
+  @step
+  async setBorrow(amount: string) {
+    await this.panelLocator.locator('input').nth(1).fill(amount);
   }
 
   @step

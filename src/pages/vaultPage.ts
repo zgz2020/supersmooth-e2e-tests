@@ -2,6 +2,7 @@ import { expect, type Page } from '@playwright/test';
 import { step } from '../fixtures';
 import { defaultExpectTimeout } from '../../utils/constants/timeouts';
 import { RightSidePanel } from './rightSidePanel';
+import type { Token } from '../../utils/types/e2e/common.js';
 
 export class VaultPage {
   readonly page: Page;
@@ -13,7 +14,7 @@ export class VaultPage {
   }
 
   @step
-  async openPage(url: string, { collateral }: { collateral: 'ETH' | 'USDC' | 'USDT' | 'WBTC' }) {
+  async openPage(url: string, { collateral }: { collateral: Token }) {
     await this.page.goto(url);
     await this.rightSidePanel.configurePosition.waitToBeStable({ token: collateral });
   }

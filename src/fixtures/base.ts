@@ -36,4 +36,3 @@ export const test = testWithSynpress(
 
 export const expect = test.expect;
 export { step } from './index';
-export type { FixturesNetwork } from '../../utils/types/e2e/common.js';

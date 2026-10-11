@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "API and UI testing suite for Supersmooth",
+  "description": "API, mock and UI testing suite for Supersmooth",
   "main": "index.js",
   "scripts": {
     "synpress-build-cache:base": "pnpm synpress ./utils/synpress/wallet-setup",

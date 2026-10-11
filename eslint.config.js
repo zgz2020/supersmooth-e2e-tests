@@ -26,7 +26,13 @@ export default tseslint.config(
       'playwright/expect-expect': [
         'error',
         {
-          assertFunctionNames: ['expect', 'expectStatusCode', 'shouldBeOpened', 'shouldBeVisible'],
+          assertFunctionNames: [
+            'expect',
+            'expectStatusCode',
+            'shouldBeOpened',
+            'shouldBeVisible',
+            'openPosition',
+          ],
           assertFunctionPatterns: ['^.*\\.should.*', '^should.*'],
         },
       ],
