@@ -11,6 +11,7 @@
     "test:with-wallet": "playwright test --project=withWallet",
     "test:api": "playwright test --project=api",
     "test:api:fake-geo": "playwright test --project=api-fake-geo",
+    "test:repeat": "node scripts/repeat-tests.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

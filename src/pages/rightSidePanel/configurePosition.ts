@@ -15,21 +15,18 @@ export class ConfigurePosition {
   @step
   async waitToBeStable({ token }: { token: Token }) {
     await expect(
-      this.panelLocator
-        .locator('button[aria-haspopup="listbox"]')
-        .getByText(token, { exact: true })
-        .first(),
+      this.page.locator('button').filter({ has: this.page.getByText(token, { exact: true }) }),
     ).toBeVisible();
   }
 
   @step
   async setDeposit(amount: string) {
-    await this.panelLocator.locator('input').first().fill(amount);
+    await this.page.getByLabel(/Deposit/).fill(amount);
   }
 
   @step
   async setBorrow(amount: string) {
-    await this.panelLocator.locator('input').nth(1).fill(amount);
+    await this.page.getByLabel('Borrow').fill(amount);
   }
 
   @step
