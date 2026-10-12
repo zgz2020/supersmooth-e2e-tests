@@ -2,7 +2,8 @@ export type Address = `0x${string}`;
 
 export type Hash = `0x${string}`;
 
-export type Protocol = 'morpho' | 'euler' | 'compoundV3' | 'aaveV3' | 'spark';
+export type Protocol =
+  'morpho' | 'euler' | 'compoundV3' | 'aaveV3' | 'spark' | 'aaveV3Lido' | 'fluid';
 
 export type Network = 'ethereum' | 'base' | 'arbitrum' | 'optimism';
 
