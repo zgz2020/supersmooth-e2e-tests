@@ -1,22 +1,24 @@
 import { test, type Page } from '@playwright/test';
-import { Header, Multiply, PositionPage, VaultPage } from './pages';
+import { Header, Multiply, PositionPage, TradePage, VaultPage } from './pages';
 import { Modals } from './modals';
 
 export class App {
   readonly page: Page;
   readonly header: Header;
-  readonly multiply: Multiply;
   readonly modals: Modals;
-  readonly vaultPage: VaultPage;
+  readonly multiply: Multiply;
   readonly positionPage: PositionPage;
+  readonly tradePage: TradePage;
+  readonly vaultPage: VaultPage;
 
   constructor(page: Page) {
     this.page = page;
     this.header = new Header(page);
-    this.multiply = new Multiply(page);
     this.modals = new Modals(page);
-    this.vaultPage = new VaultPage(page);
+    this.multiply = new Multiply(page);
     this.positionPage = new PositionPage(page);
+    this.tradePage = new TradePage(page);
+    this.vaultPage = new VaultPage(page);
   }
 
   async open(url: string = '/products/multiply') {

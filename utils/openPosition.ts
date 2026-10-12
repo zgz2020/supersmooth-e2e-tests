@@ -6,6 +6,7 @@ type OpenPositionParams = {
 } & (
   | { positionType: 'Borrow'; borrowAmount: string }
   | { positionType: 'Multiply' | 'Earn'; borrowAmount?: never }
+  | { positionType: 'Trade'; borrowAmount?: never }
 );
 
 export const openPosition = async ({
@@ -14,8 +15,6 @@ export const openPosition = async ({
   depositAmount,
   borrowAmount,
 }: OpenPositionParams) => {
-  await app.vaultPage.shouldBeVisible();
-
   await app.vaultPage.rightSidePanel.configurePosition.setDeposit(depositAmount);
 
   if (positionType === 'Borrow' && borrowAmount) {

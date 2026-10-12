@@ -73,3 +73,93 @@ test.describe('Open position - Earn (Yield Loop) on Base', () => {
     await metamask.rejectTransaction();
   });
 });
+
+test.describe('Open position - Earn (Passive Strategy) on Base', () => {
+  test.beforeEach(async ({}, testInfo) => {
+    testInfo.setTimeout(testInfo.timeout + 35_000);
+  });
+
+  test('It should open Coinbase cbETH position - until rejecting first transaction', async ({
+    app,
+    metamask,
+  }) => {
+    await app.vaultPage.openPage(
+      '/products/earn/coinbase/8453/0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22',
+      { collateral: 'cbETH' },
+    );
+
+    await openPosition({
+      app,
+      positionType: 'Earn',
+      depositAmount: '0.00025',
+    });
+
+    await metamask.rejectTransaction();
+  });
+});
+
+test.describe('Open position - Earn (Automated Strategy) on Base', () => {
+  test.beforeEach(async ({}, testInfo) => {
+    testInfo.setTimeout(testInfo.timeout + 35_000);
+  });
+
+  test('It should open Morpho USDC position - until rejecting first transaction', async ({
+    app,
+    metamask,
+  }) => {
+    await app.vaultPage.openPage(
+      '/products/earn/morpho/8453/0xbeeff2490FEffa212faC2f6553682C219E6a8845',
+      { collateral: 'USDC' },
+    );
+
+    await openPosition({
+      app,
+      positionType: 'Earn',
+      depositAmount: '0.5',
+    });
+
+    await metamask.rejectTransaction();
+  });
+});
+
+test.describe('Open position - Trade (Perpetual Contracts) on HyperEVM (Deposit from Base)', () => {
+  test.beforeEach(async ({}, testInfo) => {
+    testInfo.setTimeout(testInfo.timeout + 35_000);
+  });
+
+  test('It should open XYZ100/USDC perp - until rejecting first transaction', async ({
+    app,
+    metamask,
+  }) => {
+    await app.tradePage.openPage('/products/perps/hyper/999/xyz%3AXYZ100');
+
+    await openPosition({
+      app,
+      positionType: 'Trade',
+      depositAmount: '5',
+    });
+
+    await metamask.rejectTransaction();
+  });
+});
+
+test.describe('Open position - Trade (Spot Exchange) on Base', () => {
+  test.beforeEach(async ({}, testInfo) => {
+    testInfo.setTimeout(testInfo.timeout + 35_000);
+  });
+
+  test('It should open uBTC/USDC trade - until rejecting first transaction', async ({
+    app,
+    metamask,
+  }) => {
+    await app.tradePage.openPage('/products/spot/hyper/999/ubtc-usdc');
+
+    await openPosition({
+      app,
+      positionType: 'Trade',
+      depositAmount: '5',
+    });
+
+    await metamask.rejectTransaction();
+  });
+});

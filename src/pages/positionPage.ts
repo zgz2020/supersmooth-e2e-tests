@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { step } from '../fixtures';
 import { RightSidePanel } from './rightSidePanel';
-import type { Token } from '../../utils/types/e2e/common.js';
+import type { WaitToBeStableProps } from '../../utils/types/e2e/common';
 
 export class PositionPage {
   readonly page: Page;
@@ -13,8 +13,8 @@ export class PositionPage {
   }
 
   @step
-  async openPage(url: string, { collateral }: { collateral: Token }) {
+  async openPage(url: string, props: WaitToBeStableProps) {
     await this.page.goto(url);
-    await this.rightSidePanel.configurePosition.waitToBeStable({ token: collateral });
+    await this.rightSidePanel.configurePosition.waitToBeStable(props);
   }
 }
