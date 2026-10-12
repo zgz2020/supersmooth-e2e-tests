@@ -73,9 +73,46 @@ Tests are categorized into distinct projects defined in `playwright.config.ts`:
 | `pnpm test:with-wallet`  | Runs E2E tests with MetaMask wallet automation via Synpress |
 | `pnpm test:api`          | Runs API test suites                                        |
 | `pnpm test:api:fake-geo` | Runs API tests with mock compliance geo server              |
+| `pnpm test:repeat`       | Runs a test suite repeatedly to detect flakiness            |
 | `pnpm typecheck`         | Validates TypeScript types across the codebase              |
 | `pnpm lint`              | Runs ESLint checks across the codebase                      |
 | `pnpm format`            | Formats code with Prettier                                  |
+
+---
+
+## 🔁 Test Repeater (Flakiness Checker)
+
+To verify test reliability or detect flakiness across consecutive executions, use the test repeater utility:
+
+```bash
+pnpm test:repeat
+```
+
+### Interactive Mode
+
+When invoked without arguments, the script prompts for the target suite and iteration count:
+
+1. **Select suite:** `1` (`api`), `2` (`no-wallet`), or `3` (`with-wallet`)
+2. **Number of iterations:**
+   - **API tests (`api`):** Limited to at most 2 runs (1-2 times) with a warning that running more times might trigger rate-limiting errors (e.g. `'Too many calls'`).
+   - **E2E tests (`no-wallet`, `with-wallet`):** Configurable between 2 and 5 runs.
+
+### Non-Interactive / CLI Mode
+
+You can also specify the suite and iteration count directly via command-line arguments:
+
+```bash
+# Run API tests up to 2 times
+pnpm test:repeat api 2
+
+# Run no-wallet E2E tests 3 times (between 2 and 5)
+pnpm test:repeat no-wallet 3
+
+# Run with-wallet E2E tests 5 times (between 2 and 5)
+pnpm test:repeat with-wallet 5
+```
+
+The tool tracks elapsed time per iteration and halts immediately if any run fails.
 
 ---
 
@@ -98,6 +135,9 @@ Helper functions located in `./utils`:
 ├── package.json
 ├── playwright.config.ts
 ├── README.md
+├── scripts/
+│   ├── mock-compliance-server.js # Mock geo-compliance server
+│   └── repeat-tests.js           # Interactive test repeater utility
 ├── src/
 │   ├── app.ts                 # Main App fixture entry point
 │   ├── fixtures/              # Custom Playwright & Synpress fixtures
