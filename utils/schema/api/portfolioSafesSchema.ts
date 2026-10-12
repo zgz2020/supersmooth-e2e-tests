@@ -17,7 +17,10 @@ export const portfolioSafesSchema: JSONSchemaType<PortfolioSafesResponse[]> = {
             id: { type: 'string' },
             market: { type: 'string' },
             product: { type: 'string', enum: ['Multiply', 'Borrow', 'Earn'] },
-            protocol: { type: 'string', enum: ['morpho', 'euler', 'compoundV3', 'aaveV3'] },
+            protocol: {
+              type: 'string',
+              enum: ['morpho', 'euler', 'compoundV3', 'aaveV3', 'spark', 'aaveV3Lido', 'fluid'],
+            },
             chainId: { type: 'number' },
             tokens: {
               type: 'array',
