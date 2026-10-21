@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import type { TokenPricesCurrentResponse } from '../../types/api/tokenPricesCurrent.ts';
+import type { TokenPricesCurrentResponse } from '../../types/api/tokenPricesCurrent';
 
 export const tokenPricesCurrentSchema: JSONSchemaType<TokenPricesCurrentResponse> = {
   type: 'object',

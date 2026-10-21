@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { invalidAddressCases, validAddress } from '../../utils/constants/addresses.ts';
-import type { TermsNonceResponse } from '../../utils/types/api/termsNonce.ts';
-import { termsNonceSchema } from '../../utils/schema/api/termsNonceSchema.ts';
-import { validateSchema } from '../../utils/schema/validator.ts';
-import '../../utils/assertions/matchers.ts';
+import { invalidAddressCases, validAddress } from '../../utils/constants/addresses';
+import type { TermsNonceResponse } from '../../utils/types/api/termsNonce';
+import { termsNonceSchema } from '../../utils/schema/api/termsNonceSchema';
+import { validateSchema } from '../../utils/schema/validator';
+import '../../utils/assertions/matchers';
 
 test.describe('Terms Nonce API', () => {
   test('should fetch terms nonce regardless of address casing', async ({ request }) => {

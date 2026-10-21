@@ -4,12 +4,13 @@ import {
   Earn,
   Header,
   LandingPage,
+  Migrate,
   Multiply,
   PositionPage,
   TradePage,
   VaultPage,
-} from './pages/index.ts';
-import { Modals } from './modals/index.ts';
+} from './pages';
+import { Modals } from './modals';
 
 export class App {
   readonly page: Page;
@@ -18,6 +19,7 @@ export class App {
   readonly header: Header;
   readonly landingPage: LandingPage;
   readonly modals: Modals;
+  readonly migrate: Migrate;
   readonly multiply: Multiply;
   readonly positionPage: PositionPage;
   readonly tradePage: TradePage;
@@ -29,6 +31,7 @@ export class App {
     this.earn = new Earn(page);
     this.header = new Header(page);
     this.landingPage = new LandingPage(page);
+    this.migrate = new Migrate(page);
     this.modals = new Modals(page);
     this.multiply = new Multiply(page);
     this.positionPage = new PositionPage(page);

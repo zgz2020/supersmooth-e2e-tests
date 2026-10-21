@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
-import { step } from '../fixtures/index.ts';
-import { RightSidePanel } from './rightSidePanel/index.ts';
-import type { WaitToBeStableProps } from '../../utils/types/e2e/common.ts';
+import { step } from '../fixtures';
+import { RightSidePanel } from './rightSidePanel';
+import type { WaitToBeStableProps } from '../../utils/types/e2e/common';
 
 export class PositionPage {
   readonly page: Page;

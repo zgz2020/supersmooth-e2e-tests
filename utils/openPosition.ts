@@ -1,4 +1,4 @@
-import type { App } from '../src/app.ts';
+import type { App } from '../src/app';
 
 type OpenPositionParams = {
   app: App;

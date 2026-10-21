@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { complianceGeoSchema } from '../../utils/schema/api/complianceGeoSchema.ts';
-import { validateSchema } from '../../utils/schema/validator.ts';
-import type { ComplianceGeoResponse } from '../../utils/types/api/complianceGeo.ts';
-import '../../utils/assertions/matchers.ts';
+import { complianceGeoSchema } from '../../utils/schema/api/complianceGeoSchema';
+import { validateSchema } from '../../utils/schema/validator';
+import type { ComplianceGeoResponse } from '../../utils/types/api/complianceGeo';
+import '../../utils/assertions/matchers';
 
 test.describe('Compliance Geo API', () => {
   test('should fetch compliance geo information successfully', async ({ request }) => {

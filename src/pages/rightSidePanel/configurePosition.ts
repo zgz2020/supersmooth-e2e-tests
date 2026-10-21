@@ -1,7 +1,7 @@
 import { Locator, Page } from '@playwright/test';
-import { step } from '../../fixtures/index.ts';
-import { expect } from '../../fixtures/base.ts';
-import type { WaitToBeStableProps } from '../../../utils/types/e2e/common.ts';
+import { step } from '../../fixtures';
+import { expect } from '../../fixtures/base';
+import type { WaitToBeStableProps } from '../../../utils/types/e2e/common';
 
 export class ConfigurePosition {
   readonly page: Page;

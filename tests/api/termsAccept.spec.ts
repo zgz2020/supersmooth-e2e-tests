@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { invalidAddressCases, validAddress } from '../../utils/constants/addresses.ts';
-import type { TermsAcceptPayload } from '../../utils/types/api/termsAccept.ts';
-import '../../utils/assertions/matchers.ts';
+import { invalidAddressCases, validAddress } from '../../utils/constants/addresses';
+import type { TermsAcceptPayload } from '../../utils/types/api/termsAccept';
+import '../../utils/assertions/matchers';
 
 const sampleSignature =
   '0x404ff65eeea36fa6d4a97a86b2dc588b830c287a383a6032baa2580dc478fdd124b14abf82d5aa92804c3ed4e7c0e15d0f15407bd1bec59a996afaa8fedd5aad1b';

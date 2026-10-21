@@ -1,4 +1,4 @@
-import type { Address } from './common.ts';
+import type { Address } from './common';
 
 export interface MigrationItem {
   id: string;

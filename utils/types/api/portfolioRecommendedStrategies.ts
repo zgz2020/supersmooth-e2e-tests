@@ -1,4 +1,4 @@
-import type { Network, Oracle, ProductType, Protocol } from './common.ts';
+import type { Network, Oracle, ProductType, Protocol } from './common';
 
 export interface RecommendedStrategyCard {
   id: string;

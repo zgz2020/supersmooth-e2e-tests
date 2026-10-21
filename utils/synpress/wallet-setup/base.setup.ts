@@ -1,5 +1,5 @@
 import { defineWalletSetup } from '@synthetixio/synpress';
-import { commonMetamaskSetup, PASSWORD } from './commonWalletSetup.ts';
+import { commonMetamaskSetup, PASSWORD } from './commonWalletSetup';
 import 'dotenv/config';
 
 const walletPK = process.env.TEST_WALLET_PK as string;

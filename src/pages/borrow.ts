@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, step } from '../fixtures/index.ts';
+import { expect, step } from '../fixtures';
 
 export class Borrow {
   readonly page: Page;

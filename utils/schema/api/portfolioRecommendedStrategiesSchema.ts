@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import { PortfolioRecommendedStrategies } from '../../types/api/portfolioRecommendedStrategies.ts';
+import { PortfolioRecommendedStrategies } from '../../types/api/portfolioRecommendedStrategies';
 
 export const portfolioRecommendedStrategiesSchema: JSONSchemaType<PortfolioRecommendedStrategies> =
   {

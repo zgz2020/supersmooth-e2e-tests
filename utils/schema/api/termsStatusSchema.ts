@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import type { TermsStatusResponse } from '../../types/api/termsStatus.ts';
+import type { TermsStatusResponse } from '../../types/api/termsStatus';
 
 export const termsStatusSchema: JSONSchemaType<TermsStatusResponse> = {
   type: 'object',

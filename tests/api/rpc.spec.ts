@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import type { JsonRpcRequest, JsonRpcResponse } from '../../utils/types/api/rpc.ts';
-import { jsonRpcResponseSchema } from '../../utils/schema/api/rpcSchema.ts';
-import { validateSchema } from '../../utils/schema/validator.ts';
-import '../../utils/assertions/matchers.ts';
+import type { JsonRpcRequest, JsonRpcResponse } from '../../utils/types/api/rpc';
+import { jsonRpcResponseSchema } from '../../utils/schema/api/rpcSchema';
+import { validateSchema } from '../../utils/schema/validator';
+import '../../utils/assertions/matchers';
 
 const supportedChainIds = [
   { name: 'Ethereum Mainnet', chainId: 1 },
