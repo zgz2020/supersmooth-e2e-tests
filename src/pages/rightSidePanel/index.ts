@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { ConfigurePosition } from './configurePosition';
+import { ConfigurePosition } from './configurePosition.ts';
 
 export class RightSidePanel {
   readonly page: Page;

@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import type { ProductTableTopCardsResponse } from '../../types/api/productTableTopCards.js';
+import type { ProductTableTopCardsResponse } from '../../types/api/productTableTopCards.ts';
 
 export const productTableTopCardsSchema: JSONSchemaType<ProductTableTopCardsResponse> = {
   type: 'object',

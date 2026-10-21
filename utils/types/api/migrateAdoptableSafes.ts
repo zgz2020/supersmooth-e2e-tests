@@ -1,4 +1,4 @@
-import type { Address } from './common.js';
+import type { Address } from './common.ts';
 
 export interface LendingMigrationTokenAmount {
   address: Address;

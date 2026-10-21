@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { tokenPricesCurrentSchema } from '../../utils/schema/api/tokenPricesCurrentSchema.js';
-import { validateSchema } from '../../utils/schema/validator.js';
-import type { TokenPricesCurrentResponse } from '../../utils/types/api/tokenPricesCurrent.js';
-import '../../utils/assertions/matchers.js';
+import { tokenPricesCurrentSchema } from '../../utils/schema/api/tokenPricesCurrentSchema.ts';
+import { validateSchema } from '../../utils/schema/validator.ts';
+import type { TokenPricesCurrentResponse } from '../../utils/types/api/tokenPricesCurrent.ts';
+import '../../utils/assertions/matchers.ts';
 
 test.describe('Token Prices Current API', () => {
   test('should fetch token prices current without params', async ({ request }) => {

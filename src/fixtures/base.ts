@@ -1,9 +1,9 @@
 import { testWithSynpress } from '@synthetixio/synpress';
 import { metaMaskFixtures } from '@synthetixio/synpress/playwright';
-import baseSetup from '../../utils/synpress/wallet-setup/base.setup';
-import { App } from '../app';
-import { connectWallet } from '../../utils/connectWallet';
-import type { FixturesNetwork } from '../../utils/types/e2e/common.js';
+import baseSetup from '../../utils/synpress/wallet-setup/base.setup.ts';
+import { App } from '../app.ts';
+import { connectWallet } from '../../utils/connectWallet.ts';
+import type { FixturesNetwork } from '../../utils/types/e2e/common.ts';
 
 type TestOptions = {
   network: FixturesNetwork;
@@ -35,4 +35,4 @@ export const test = testWithSynpress(
 );
 
 export const expect = test.expect;
-export { step } from './index';
+export { step } from './index.ts';

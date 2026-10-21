@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { invalidAddressCases, validAddress, zeroAddress } from '../../utils/constants/addresses.js';
-import type { MigrateEarnPositionsResponse } from '../../utils/types/api/migrateEarnPositions.js';
-import { migrateEarnPositionsSchema } from '../../utils/schema/api/migrateEarnPositionsSchema.js';
-import { validateSchema } from '../../utils/schema/validator.js';
-import '../../utils/assertions/matchers.js';
+import { invalidAddressCases, validAddress, zeroAddress } from '../../utils/constants/addresses.ts';
+import type { MigrateEarnPositionsResponse } from '../../utils/types/api/migrateEarnPositions.ts';
+import { migrateEarnPositionsSchema } from '../../utils/schema/api/migrateEarnPositionsSchema.ts';
+import { validateSchema } from '../../utils/schema/validator.ts';
+import '../../utils/assertions/matchers.ts';
 
 test.describe('Migrate Earn Positions API', () => {
   test('should fetch migrate earn positions regardless of address casing', async ({ request }) => {

@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { complianceGeoSchema } from '../../utils/schema/api/complianceGeoSchema.js';
-import { validateSchema } from '../../utils/schema/validator.js';
-import type { ComplianceGeoResponse } from '../../utils/types/api/complianceGeo.js';
-import '../../utils/assertions/matchers.js';
+import { complianceGeoSchema } from '../../utils/schema/api/complianceGeoSchema.ts';
+import { validateSchema } from '../../utils/schema/validator.ts';
+import type { ComplianceGeoResponse } from '../../utils/types/api/complianceGeo.ts';
+import '../../utils/assertions/matchers.ts';
 
 test.use({
   baseURL: process.env.LOCAL_BASE_URL || 'http://localhost:3000',

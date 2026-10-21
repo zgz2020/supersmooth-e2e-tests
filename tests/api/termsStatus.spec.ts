@@ -3,11 +3,11 @@ import {
   invalidAddressCases,
   termsStatusAddresses,
   validAddress,
-} from '../../utils/constants/addresses.js';
-import type { TermsStatusResponse } from '../../utils/types/api/termsStatus.js';
-import { termsStatusSchema } from '../../utils/schema/api/termsStatusSchema.js';
-import { validateSchema } from '../../utils/schema/validator.js';
-import '../../utils/assertions/matchers.js';
+} from '../../utils/constants/addresses.ts';
+import type { TermsStatusResponse } from '../../utils/types/api/termsStatus.ts';
+import { termsStatusSchema } from '../../utils/schema/api/termsStatusSchema.ts';
+import { validateSchema } from '../../utils/schema/validator.ts';
+import '../../utils/assertions/matchers.ts';
 
 test.describe('Terms Status API', () => {
   test('should fetch terms status regardless of address casing', async ({ request }) => {

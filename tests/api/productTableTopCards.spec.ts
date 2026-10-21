@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { productTableTopCardsSchema } from '../../utils/schema/api/productTableTopCardsSchema.js';
-import { validateSchema } from '../../utils/schema/validator.js';
+import { productTableTopCardsSchema } from '../../utils/schema/api/productTableTopCardsSchema.ts';
+import { validateSchema } from '../../utils/schema/validator.ts';
 import type {
   ProductTableTopCardsResponse,
   TopCardsProductType,
-} from '../../utils/types/api/productTableTopCards.js';
-import '../../utils/assertions/matchers.js';
+} from '../../utils/types/api/productTableTopCards.ts';
+import '../../utils/assertions/matchers.ts';
 
 interface ValidTopCardsCase {
   description: string;

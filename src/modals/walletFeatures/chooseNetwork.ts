@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
-import { expect, step } from '../../fixtures/index.js';
-import type { FixturesNetwork } from '../../../utils/types/e2e/common.js';
+import { expect, step } from '../../fixtures/index.ts';
+import type { FixturesNetwork } from '../../../utils/types/e2e/common.ts';
 
 export class ChooseNetwork {
   readonly page: Page;

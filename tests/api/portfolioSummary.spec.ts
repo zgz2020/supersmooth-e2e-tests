@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { portfolioSummarySchema } from '../../utils/schema/api/portfolioSummarySchema.js';
-import { validateSchema } from '../../utils/schema/validator.js';
-import type { PortfolioSummaryResponse } from '../../utils/types/api/portfolioSummary.js';
-import { validAddress, zeroAddress, invalidAddressCases } from '../../utils/constants/addresses.js';
-import '../../utils/assertions/matchers.js';
+import { portfolioSummarySchema } from '../../utils/schema/api/portfolioSummarySchema.ts';
+import { validateSchema } from '../../utils/schema/validator.ts';
+import type { PortfolioSummaryResponse } from '../../utils/types/api/portfolioSummary.ts';
+import { validAddress, zeroAddress, invalidAddressCases } from '../../utils/constants/addresses.ts';
+import '../../utils/assertions/matchers.ts';
 
 test.describe('Portfolio Summary API', () => {
   test('should fetch portfolio summary regardless of address casing', async ({ request }) => {

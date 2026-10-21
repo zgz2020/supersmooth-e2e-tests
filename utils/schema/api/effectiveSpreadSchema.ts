@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import { EffectiveSpreadResponse } from '../../types/api/effectiveSpread.js';
+import { EffectiveSpreadResponse } from '../../types/api/effectiveSpread.ts';
 
 export const effectiveSpreadSchema: JSONSchemaType<EffectiveSpreadResponse> = {
   type: 'object',

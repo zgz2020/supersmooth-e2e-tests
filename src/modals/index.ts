@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
-import { ConnectWallet } from './connectWallet.js';
-import { WalletFeatures } from './walletFeatures/index.js';
+import { ConnectWallet } from './connectWallet.ts';
+import { WalletFeatures } from './walletFeatures/index.ts';
 
 export class Modals {
   readonly page: Page;

@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import type { ComplianceScreenResponse } from '../../types/api/complianceScreen.js';
+import type { ComplianceScreenResponse } from '../../types/api/complianceScreen.ts';
 
 export const complianceScreenSchema: JSONSchemaType<ComplianceScreenResponse> = {
   type: 'object',

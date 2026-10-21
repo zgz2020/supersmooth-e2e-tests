@@ -1,6 +1,6 @@
 import { type Page } from '@playwright/test';
-import { step } from '../fixtures';
-import { RightSidePanel } from './rightSidePanel';
+import { step } from '../fixtures/index.ts';
+import { RightSidePanel } from './rightSidePanel/index.ts';
 
 export class TradePage {
   readonly page: Page;
