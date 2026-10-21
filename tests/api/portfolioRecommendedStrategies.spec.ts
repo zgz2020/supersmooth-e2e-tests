@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { portfolioRecommendedStrategiesSchema } from '../../utils/schema/api/portfolioRecommendedStrategiesSchema.js';
-import { validateSchema } from '../../utils/schema/validator.js';
-import type { PortfolioRecommendedStrategies } from '../../utils/types/api/portfolioRecommendedStrategies.js';
-import '../../utils/assertions/matchers.js';
+import { portfolioRecommendedStrategiesSchema } from '../../utils/schema/api/portfolioRecommendedStrategiesSchema.ts';
+import { validateSchema } from '../../utils/schema/validator.ts';
+import type { PortfolioRecommendedStrategies } from '../../utils/types/api/portfolioRecommendedStrategies.ts';
+import '../../utils/assertions/matchers.ts';
 
 test.describe('Portfolio Recommended Strategies API', () => {
   test('should fetch recommended strategies', async ({ request }) => {

@@ -1,4 +1,4 @@
-import type { Address, ProductTitleCase, Protocol } from './common.js';
+import type { Address, ProductTitleCase, Protocol } from './common.ts';
 
 export type PositionRole = 'Collateral' | 'Debt' | 'Deposit';
 export type PositionOperation = 'Supply' | 'Borrow' | 'Withdraw' | 'Repay' | 'Deposit';

@@ -1,5 +1,5 @@
-import { test } from '../../../src/fixtures/base';
-import { openPosition } from '../../../utils/openPosition.js';
+import { test } from '../../../src/fixtures/base.ts';
+import { openPosition } from '../../../utils/openPosition.ts';
 
 test.describe('Open position - Multiply on Base', () => {
   test.beforeEach(async ({}, testInfo) => {

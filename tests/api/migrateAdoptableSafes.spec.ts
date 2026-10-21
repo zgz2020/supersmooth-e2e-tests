@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { invalidAddressCases, validAddress, zeroAddress } from '../../utils/constants/addresses.js';
-import type { MigrateAdoptableSafesResponse } from '../../utils/types/api/migrateAdoptableSafes.js';
-import { migrateAdoptableSafesSchema } from '../../utils/schema/api/migrateAdoptableSafesSchema.js';
-import { validateSchema } from '../../utils/schema/validator.js';
-import '../../utils/assertions/matchers.js';
+import { invalidAddressCases, validAddress, zeroAddress } from '../../utils/constants/addresses.ts';
+import type { MigrateAdoptableSafesResponse } from '../../utils/types/api/migrateAdoptableSafes.ts';
+import { migrateAdoptableSafesSchema } from '../../utils/schema/api/migrateAdoptableSafesSchema.ts';
+import { validateSchema } from '../../utils/schema/validator.ts';
+import '../../utils/assertions/matchers.ts';
 
 test.describe('Migrate Adoptable Safes API', () => {
   test('should fetch adoptable safes regardless of address casing', async ({ request }) => {

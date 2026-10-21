@@ -41,6 +41,18 @@ export default tseslint.config(
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
+      'no-restricted-syntax': [
+        'error',
+        ...[
+          'ImportDeclaration',
+          'ExportAllDeclaration',
+          'ExportNamedDeclaration',
+          'ImportExpression',
+        ].map((node) => ({
+          selector: `${node} > Literal.source[value=/^\\.{1,2}\\/.*\\.js$/]`,
+          message: `Use '.ts' extension for relative imports instead of '.js'.`,
+        })),
+      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

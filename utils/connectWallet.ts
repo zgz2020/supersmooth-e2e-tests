@@ -1,7 +1,7 @@
 import { MetaMask } from '@synthetixio/synpress/playwright';
-import { App } from '../src/app';
-import { switchNetwork } from './switchNetwork.js';
-import type { FixturesNetwork } from './types/e2e/common.js';
+import { App } from '../src/app.ts';
+import { switchNetwork } from './switchNetwork.ts';
+import type { FixturesNetwork } from './types/e2e/common.ts';
 
 export const connectWallet = async ({
   app,

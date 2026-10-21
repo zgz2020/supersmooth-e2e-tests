@@ -1,4 +1,4 @@
-import type { Address } from '../types/api/common.js';
+import type { Address } from '../types/api/common.ts';
 
 export const validAddress: Address = '0x9e3663d0a9F97Cde94E22407d603782B7E7101ED';
 export const unsignedAddress: Address = '0x6467e807dB1E71B9Ef04E0E3aFb962E4B0900B2B';

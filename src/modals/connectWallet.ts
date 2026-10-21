@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, step } from '../fixtures/index.js';
+import { expect, step } from '../fixtures/index.ts';
 
 export class ConnectWallet {
   readonly page: Page;

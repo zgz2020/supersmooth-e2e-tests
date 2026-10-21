@@ -1,4 +1,4 @@
-import type { Hash } from './common.js';
+import type { Hash } from './common.ts';
 
 export interface TermsStatusResponse {
   enforced: boolean;
