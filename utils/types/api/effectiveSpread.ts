@@ -1,4 +1,4 @@
-import type { ProductType } from './common.ts';
+import type { ProductType } from './common';
 
 export type EffectiveSpreadProduct = Exclude<ProductType, 'earn'> | 'yieldLoop';
 

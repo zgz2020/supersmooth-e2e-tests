@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { NETWORK_CHAIN_IDS } from '../../utils/constants/networks.ts';
-import { effectiveSpreadSchema } from '../../utils/schema/api/effectiveSpreadSchema.ts';
-import { validateSchema } from '../../utils/schema/validator.ts';
+import { NETWORK_CHAIN_IDS } from '../../utils/constants/networks';
+import { effectiveSpreadSchema } from '../../utils/schema/api/effectiveSpreadSchema';
+import { validateSchema } from '../../utils/schema/validator';
 import type {
   EffectiveSpreadProduct,
   EffectiveSpreadResponse,
-} from '../../utils/types/api/effectiveSpread.ts';
-import '../../utils/assertions/matchers.ts';
+} from '../../utils/types/api/effectiveSpread';
+import '../../utils/assertions/matchers';
 
 const products: EffectiveSpreadProduct[] = ['borrow', 'multiply', 'yieldLoop'];
 

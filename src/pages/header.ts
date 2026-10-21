@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect, step } from '../fixtures/index.ts';
-import type { Address } from '../../utils/types/api/common.ts';
+import { expect, step } from '../fixtures';
+import type { Address } from '../../utils/types/api/common';
 
 type ShortAddress = Address | RegExp;
 type LandingPageMenuOptions = 'Earn' | 'Borrow' | 'Multiply';
@@ -22,6 +22,11 @@ export class Header {
   @step
   async shouldBeVisible() {
     await expect(this.headerLocator).toBeVisible();
+  }
+
+  @step
+  async clickOnSupersmoothLogo() {
+    await this.headerLocator.getByRole('link', { name: 'Supersmooth' }).click();
   }
 
   @step
@@ -48,6 +53,11 @@ export class Header {
   @step
   async launchApp() {
     await this.headerLocator.getByRole('link', { name: 'Launch app', exact: true }).click();
+  }
+
+  @step
+  async getHelp() {
+    await this.headerLocator.getByRole('button', { name: 'Get Help', exact: true }).click();
   }
 
   @step

@@ -1,5 +1,5 @@
-import { test, expect } from '../../../src/fixtures/index.ts';
-import { Multiply } from '../../../src/pages/index.ts';
+import { test, expect } from '../../../src/fixtures';
+import { Multiply } from '../../../src/pages';
 
 test('navigates to web app baseURL', async ({ app }) => {
   await expect(app.page).toHaveURL(/aphelion-app\.onrender\.com/);

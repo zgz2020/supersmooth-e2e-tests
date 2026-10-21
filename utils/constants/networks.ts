@@ -1,4 +1,4 @@
-import type { Network } from '../types/api/common.ts';
+import type { Network } from '../types/api/common';
 
 export const NETWORK_CHAIN_IDS: Record<Network, number> = {
   ethereum: 1,

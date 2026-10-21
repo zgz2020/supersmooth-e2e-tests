@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { App } from '../app.ts';
+import { App } from '../app';
 
 type AppFixtures = {
   /**

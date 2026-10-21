@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { complianceScreenSchema } from '../../utils/schema/api/complianceScreenSchema.ts';
-import { validateSchema } from '../../utils/schema/validator.ts';
-import type { ComplianceScreenResponse } from '../../utils/types/api/complianceScreen.ts';
-import { validAddress, sanctionedAddress } from '../../utils/constants/addresses.ts';
-import '../../utils/assertions/matchers.ts';
+import { complianceScreenSchema } from '../../utils/schema/api/complianceScreenSchema';
+import { validateSchema } from '../../utils/schema/validator';
+import type { ComplianceScreenResponse } from '../../utils/types/api/complianceScreen';
+import { validAddress, sanctionedAddress } from '../../utils/constants/addresses';
+import '../../utils/assertions/matchers';
 
 const getOriginHeader = (baseURL?: string) => ({
   origin: baseURL ? new URL(baseURL).origin : 'https://aphelion-app.onrender.com',

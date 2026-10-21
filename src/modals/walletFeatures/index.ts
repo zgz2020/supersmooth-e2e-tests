@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
-import { expect, step } from '../../fixtures/index.ts';
-import { ChooseNetwork } from './chooseNetwork.ts';
+import { expect, step } from '../../fixtures';
+import { ChooseNetwork } from './chooseNetwork';
 
 export class WalletFeatures {
   readonly page: Page;

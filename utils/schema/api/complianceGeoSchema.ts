@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import type { ComplianceGeoResponse } from '../../types/api/complianceGeo.ts';
+import type { ComplianceGeoResponse } from '../../types/api/complianceGeo';
 
 export const complianceGeoSchema: JSONSchemaType<ComplianceGeoResponse> = {
   type: 'object',

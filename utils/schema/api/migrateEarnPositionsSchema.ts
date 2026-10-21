@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import type { MigrateEarnPositionsResponse } from '../../types/api/migrateEarnPositions.ts';
+import type { MigrateEarnPositionsResponse } from '../../types/api/migrateEarnPositions';
 
 export const migrateEarnPositionsSchema: JSONSchemaType<MigrateEarnPositionsResponse> = {
   type: 'object',

@@ -1,8 +1,8 @@
 import { MetaMask } from '@synthetixio/synpress/playwright';
-import { App } from '../src/app.ts';
-import { expect } from '../src/fixtures/base.ts';
-import { defaultExpectTimeout } from './constants/timeouts.ts';
-import type { FixturesNetwork } from './types/e2e/common.ts';
+import { App } from '../src/app';
+import { expect } from '../src/fixtures/base';
+import { defaultExpectTimeout } from './constants/timeouts';
+import type { FixturesNetwork } from './types/e2e/common';
 
 export const switchNetwork = async ({
   app,

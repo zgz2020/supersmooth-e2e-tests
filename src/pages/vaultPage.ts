@@ -1,8 +1,8 @@
 import { expect, type Page } from '@playwright/test';
-import { step } from '../fixtures/index.ts';
-import { defaultExpectTimeout } from '../../utils/constants/timeouts.ts';
-import { RightSidePanel } from './rightSidePanel/index.ts';
-import type { Token } from '../../utils/types/e2e/common.ts';
+import { step } from '../fixtures';
+import { defaultExpectTimeout } from '../../utils/constants/timeouts';
+import { RightSidePanel } from './rightSidePanel';
+import type { Token } from '../../utils/types/e2e/common';
 
 export class VaultPage {
   readonly page: Page;

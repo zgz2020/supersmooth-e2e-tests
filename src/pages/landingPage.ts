@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
-import { expect, step } from '../fixtures/index.ts';
-import { heroRenderTimeout } from '../../utils/constants/timeouts.ts';
+import { expect, step } from '../fixtures';
+import { heroRenderTimeout } from '../../utils/constants/timeouts';
 
 export class LandingPage {
   readonly page: Page;
