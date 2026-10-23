@@ -1,4 +1,4 @@
-name: 'Reusable API Tests'
+name: '⚙️ [Reusable] API Tests'
 
 on:
   workflow_call:

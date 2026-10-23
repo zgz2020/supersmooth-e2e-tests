@@ -1,4 +1,4 @@
-name: Reusable no-wallet tests
+name: '⚙️ [Reusable] No-wallet Tests'
 
 on:
   workflow_call:
