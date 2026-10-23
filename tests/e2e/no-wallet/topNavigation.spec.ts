@@ -35,11 +35,6 @@ test.describe('Top navigation @regression', () => {
 
   test.describe('Main app', () => {
     test.describe('Multiply page', () => {
-      test.beforeEach(async ({ app }) => {
-        await app.multiply.open();
-        await app.multiply.shouldBeOpened();
-      });
-
       test('it should open Landing page from main app', async ({ app }) => {
         await app.header.clickOnSupersmoothLogo();
         await app.landingPage.shouldBeOpened();

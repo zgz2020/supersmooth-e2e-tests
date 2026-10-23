@@ -30,6 +30,12 @@ Install dependencies:
 pnpm install
 ```
 
+Configure environment variables:
+
+```bash
+cp .env.example .env
+```
+
 Install Playwright browsers (if needed):
 
 ```bash
@@ -40,7 +46,7 @@ pnpm exec playwright install
 
 ## 🦊 Synpress Wallet Setup
 
-For tests requiring Web3 wallet interaction (e.g., MetaMask), build the Synpress cache before running wallet test suites:
+For tests requiring Web3 wallet interaction (e.g., MetaMask), ensure `TEST_WALLET_PK` (and optionally `TEST_WALLET_ADDRESS`) is defined in `.env`, then build the Synpress cache before running wallet test suites:
 
 ```bash
 pnpm synpress-build-cache:base
@@ -134,6 +140,7 @@ Helper functions located in `./utils`:
 
 - **`connectWallet({ app, metamask, network? })`**: Connects MetaMask wallet to the dApp and switches to the specified network (defaults to `'Base'`).
 - **`switchNetwork({ app, metamask, network })`**: Opens the network selector modal, switches to the specified network (`FixturesNetwork`: `'Arbitrum One' | 'Base' | 'Ethereum' | 'HyperEVM' | 'OP Mainnet'`), and automatically approves new network additions and network switches in MetaMask.
+- **`verifyTermsAndAcceptIfNeeded({ app, metamask, address?, collateral?, depositAmount?, url? })`**: Verifies whether the specified wallet address has accepted the Terms of Service via `/api/terms/status`. If unsigned, it navigates to the position page, inputs a deposit, opens the position to trigger the Terms of Service modal, accepts and signs the terms in both the dApp and MetaMask, and polls `/api/terms/status` using Playwright `expect.poll` until verified. Also integrated directly into the `app` test fixture (`src/fixtures/base.ts`) to ensure wallets are terms-approved before executing with-wallet tests.
 
 ---
 
@@ -187,6 +194,7 @@ For complete architectural details, sequence diagrams, token setup, script parit
 │       ├── reusable-no-wallet.yml    # Reusable no-wallet runner (containerized)
 │       ├── reusable-with-wallet.yml  # Reusable with-wallet runner (containerized)
 │       └── with-wallet-tests.yml     # Manual with-wallet E2E workflow
+├── .env.example                      # Environment variables template
 ├── .gitignore
 ├── .nvmrc
 ├── docs/
@@ -200,20 +208,27 @@ For complete architectural details, sequence diagrams, token setup, script parit
 │   └── repeat-tests.js               # Interactive test repeater utility
 ├── src/
 │   ├── app.ts                        # Main App fixture entry point
-│   ├── fixtures/                     # Custom Playwright & Synpress fixtures
-│   ├── modals/                       # Modal dialog page objects (ConnectWallet, ChooseNetwork, etc.)
+│   ├── fixtures/                     # Custom Playwright & Synpress fixtures (auto-terms acceptance)
+│   ├── modals/                       # Modal dialog page objects (ConnectWallet, TermsOfService, etc.)
+│   │   ├── connectWallet/            # Connect wallet modal & All Wallets search view
+│   │   ├── settings/                 # Application settings modal
+│   │   ├── walletFeatures/           # Wallet features and network selection modal
+│   │   ├── getHelp.ts                # Help modal page object
+│   │   └── termsOfService.ts         # Terms of Service modal page object
 │   └── pages/                        # Page objects (Header, Multiply, VaultPage, etc.)
 ├── tests/
 │   ├── api/                          # API test specs
 │   └── e2e/
-│       ├── no-wallet/                 # E2E test specs without wallet
-│       └── with-wallet/               # E2E test specs with Synpress MetaMask wallet
+│       ├── no-wallet/                 # E2E test specs without wallet (connect wallet modal, navigation)
+│       └── with-wallet/               # E2E test specs with Synpress MetaMask wallet (position opening)
 └── utils/
     ├── assertions/                   # Custom matchers & assertion helpers
     ├── connectWallet.ts              # Helper to connect wallet and select network
     ├── globalSetup.ts                # Global setup logger for target BASE_URL
+    ├── openPosition.ts               # Helper to configure and open positions
     ├── switchNetwork.ts              # Helper to switch network with MetaMask approvals
-    └── synpress/                     # Synpress wallet setup and cache utilities
+    ├── synpress/                     # Synpress wallet setup and cache utilities
+    └── verifyTermsAndAcceptIfNeeded.ts # Verifies and accepts Terms of Service if needed
 ```
 
 ---

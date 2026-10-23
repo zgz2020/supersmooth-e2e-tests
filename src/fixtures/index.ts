@@ -14,6 +14,7 @@ export const test = base.extend<AppFixtures>({
     const app = new App(page);
 
     await app.open();
+    await app.multiply.shouldBeOpened();
 
     await use(app);
 
