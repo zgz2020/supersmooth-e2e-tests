@@ -1,6 +1,6 @@
 import { test } from '../../../src/fixtures';
 
-test.describe('Top navigation @P0', () => {
+test.describe('Top navigation @regression', () => {
   test.describe('Landing page', () => {
     test.beforeEach(async ({ app }) => {
       await app.landingPage.open();

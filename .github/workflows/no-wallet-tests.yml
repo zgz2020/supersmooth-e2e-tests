@@ -1,0 +1,20 @@
+name: 'No-wallet Tests'
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseUrl:
+        description: 'Base URL for no-wallet tests'
+        type: 'string'
+        default: 'https://staging.supersmooth.fi/'
+
+permissions:
+  contents: read
+
+jobs:
+  no-wallet-tests:
+    name: 'No-wallet Tests'
+    uses: './.github/workflows/reusable-no-wallet.yml'
+    with:
+      baseUrl: '${{ inputs.baseUrl }}'
+      script: 'ci:no-wallet'

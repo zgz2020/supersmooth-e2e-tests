@@ -11,6 +11,13 @@ const SUITES = {
     minIterations: 1,
     maxIterations: 2,
   },
+  'api:regression': {
+    label: 'api:regression',
+    command: 'pnpm',
+    args: ['test:api:regression'],
+    minIterations: 1,
+    maxIterations: 2,
+  },
   'no-wallet': {
     label: 'no-wallet',
     command: 'pnpm',
@@ -32,6 +39,15 @@ const normalizeSuite = (input) => {
   if (trimmed === '1' || trimmed === 'api') return 'api';
   if (
     trimmed === '2' ||
+    trimmed === 'api:regression' ||
+    trimmed === 'api_regression' ||
+    trimmed === 'api-regression' ||
+    trimmed === 'apiregression'
+  ) {
+    return 'api:regression';
+  }
+  if (
+    trimmed === '3' ||
     trimmed === 'no-wallet' ||
     trimmed === 'no_wallet' ||
     trimmed === 'nowallet'
@@ -39,7 +55,7 @@ const normalizeSuite = (input) => {
     return 'no-wallet';
   }
   if (
-    trimmed === '3' ||
+    trimmed === '4' ||
     trimmed === 'with-wallet' ||
     trimmed === 'with_wallet' ||
     trimmed === 'withwallet'
@@ -57,16 +73,22 @@ const askQuestion = (rl, question) =>
 const promptSuite = async (rl) => {
   console.log('\nSelect tests to run:');
   console.log('  1) api');
-  console.log('  2) no-wallet');
-  console.log('  3) with-wallet\n');
+  console.log('  2) api:regression');
+  console.log('  3) no-wallet');
+  console.log('  4) with-wallet\n');
 
   while (true) {
-    const input = await askQuestion(rl, 'Choice (api | no-wallet | with-wallet or 1-3): ');
+    const input = await askQuestion(
+      rl,
+      'Choice (api | api:regression | no-wallet | with-wallet or 1-4): ',
+    );
     const normalized = normalizeSuite(input);
     if (normalized) {
       return normalized;
     }
-    console.log('Invalid choice. Please enter api, no-wallet, or with-wallet (or 1-3).');
+    console.log(
+      'Invalid choice. Please enter api, api:regression, no-wallet, or with-wallet (or 1-4).',
+    );
   }
 };
 
@@ -90,7 +112,7 @@ const promptIterations = async (rl, suite) => {
       return num;
     }
 
-    if (suite === 'api' && !Number.isNaN(num) && num > maxIterations) {
+    if (suite.includes('api') && !Number.isNaN(num) && num > maxIterations) {
       console.log(
         `\n⚠️  Warning: API tests can only be run at most 2 times. Running more times might return 'Too many calls' or rate-limiting errors.\n`,
       );
@@ -130,7 +152,7 @@ const main = async () => {
       suite = await promptSuite(rl);
     }
 
-    if (suite === 'api' && process.argv[3] === undefined) {
+    if (suite.includes('api') && process.argv[3] === undefined) {
       console.log(
         `\n⚠️  Warning: API tests can only be run at most 2 times. Running more times might return 'Too many calls' or rate-limiting errors.`,
       );
@@ -144,7 +166,7 @@ const main = async () => {
       iterations > config.maxIterations
     ) {
       if (process.argv[3] !== undefined) {
-        if (suite === 'api' && iterations > config.maxIterations) {
+        if (suite.includes('api') && iterations > config.maxIterations) {
           console.log(
             `\n⚠️  Warning: API tests can only be run at most 2 times. Running more times might return 'Too many calls' or rate-limiting errors.`,
           );

@@ -1,0 +1,53 @@
+name: 'Reusable API Tests'
+
+on:
+  workflow_call:
+    inputs:
+      baseUrl:
+        description: 'Base URL for the tests'
+        type: 'string'
+        default: 'https://staging.supersmooth.fi/'
+      script:
+        description: 'pnpm script to run (e.g. test:api)'
+        type: 'string'
+        default: 'test:api'
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    name: 'Run API Tests'
+    runs-on: 'ubuntu-24.04'
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+        with:
+          version: '8'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Run tests'
+        env:
+          BASE_URL: '${{ inputs.baseUrl }}'
+          CI: 'true'
+        run: 'pnpm "${{ inputs.script }}"'
+
+      - name: 'Upload Playwright Report'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'api-tests'
+          path: 'playwright-reports/api-tests'
+          retention-days: 30

@@ -1,0 +1,25 @@
+name: Nightly Run
+
+on:
+  schedule:
+    - cron: '0 1 * * 1-5'
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    uses: './.github/workflows/reusable-api-tests.yml'
+    with:
+      script: 'test:api'
+
+  no-wallet-tests:
+    uses: './.github/workflows/reusable-no-wallet.yml'
+    with:
+      script: 'ci:no-wallet'
+
+  with-wallet-tests:
+    uses: './.github/workflows/reusable-with-wallet.yml'
+    secrets: inherit
+    with:
+      script: 'ci:with-wallet'

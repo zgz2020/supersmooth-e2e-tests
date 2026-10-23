@@ -50,7 +50,7 @@ test.describe('Terms Status API', () => {
   });
 
   for (const addressCase of termsStatusAddresses) {
-    test(`should return signed status = ${addressCase.signedStatus} for address ${addressCase.params.address}`, async ({
+    test(`should return signed status = ${addressCase.signedStatus} for address ${addressCase.params.address} @api_nightly`, async ({
       request,
     }) => {
       const response = await request.get('/api/terms/status', {

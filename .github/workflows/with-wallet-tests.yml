@@ -1,0 +1,21 @@
+name: 'With-wallet Tests'
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseUrl:
+        description: 'Base URL for with-wallet tests'
+        type: 'string'
+        default: 'https://staging.supersmooth.fi/'
+
+permissions:
+  contents: read
+
+jobs:
+  with-wallet-tests:
+    name: 'With-wallet Tests'
+    uses: './.github/workflows/reusable-with-wallet.yml'
+    secrets: inherit
+    with:
+      baseUrl: '${{ inputs.baseUrl }}'
+      script: 'ci:with-wallet'

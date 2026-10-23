@@ -1,7 +1,7 @@
 import { test } from '../../../src/fixtures/base';
 import { openPosition } from '../../../utils/openPosition';
 
-test.describe('Open position - Multiply on Base', () => {
+test.describe('Open position - Multiply on Base @regression', () => {
   test.beforeEach(async ({}, testInfo) => {
     testInfo.setTimeout(testInfo.timeout + 35_000);
   });

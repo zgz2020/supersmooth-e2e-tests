@@ -13,16 +13,13 @@ const isFakeGeoRun =
   );
 
 export default defineConfig({
+  globalSetup: './utils/globalSetup',
   testDir: './tests',
-  fullyParallel: true,
+  fullyParallel:
+    process.env.FULLY_PARALLEL !== undefined ? process.env.FULLY_PARALLEL === 'true' : true,
+  retries: process.env.RETRIES !== undefined ? Number(process.env.RETRIES) : process.env.CI ? 2 : 0,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers:
-    process.env.WORKERS !== undefined
-      ? Number(process.env.WORKERS) || 1
-      : process.env.CI
-        ? 1
-        : undefined,
+  workers: process.env.WORKERS !== undefined ? Number(process.env.WORKERS) || 1 : undefined,
   reporter: [
     ['html', { open: 'never', outputFolder: `playwright-reports/${process.env.REPORT_FOLDER}` }],
   ],
@@ -35,7 +32,7 @@ export default defineConfig({
       }
     : undefined,
   use: {
-    baseURL: process.env.BASE_URL || 'https://aphelion-app.onrender.com/',
+    baseURL: process.env.BASE_URL || 'https://staging.supersmooth.fi/',
     headless: process.env.HEADLESS ? true : false,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -55,6 +52,12 @@ export default defineConfig({
       name: 'api',
       testDir: './tests/api',
       testIgnore: ['**/complianceGeoFakeLocation.spec.ts'],
+    },
+    {
+      name: 'api-regression',
+      testDir: './tests/api',
+      testIgnore: ['**/complianceGeoFakeLocation.spec.ts'],
+      grepInvert: /@api_nightly/,
     },
     {
       name: 'api-fake-geo',

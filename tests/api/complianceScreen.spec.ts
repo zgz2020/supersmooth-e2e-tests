@@ -16,7 +16,10 @@ interface InvalidPayloadCase {
 }
 
 test.describe('Compliance Screen API', () => {
-  test('should screen wallet regardless of address casing', async ({ request, baseURL }) => {
+  test('should screen wallet regardless of address casing @api_nightly', async ({
+    request,
+    baseURL,
+  }) => {
     const checksummedBody = await test.step('Fetch and validate checksummed address', async () => {
       const response = await request.post('/api/compliance/screen', {
         headers: getOriginHeader(baseURL),

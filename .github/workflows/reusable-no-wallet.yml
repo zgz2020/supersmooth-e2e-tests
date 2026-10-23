@@ -1,0 +1,58 @@
+name: Reusable no-wallet tests
+
+on:
+  workflow_call:
+    inputs:
+      baseUrl:
+        description: 'Base URL for the tests'
+        type: 'string'
+        default: 'https://staging.supersmooth.fi/'
+      script:
+        description: 'pnpm script to run (e.g. test:no-wallet)'
+        type: 'string'
+        default: 'test:no-wallet'
+
+permissions:
+  contents: read
+
+jobs:
+  no-wallet-tests:
+    name: 'Run no-wallet tests'
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.0-noble
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+        with:
+          version: '8'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: Install xvfb
+        run: apt-get update -y && apt-get -y install xvfb && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+      - name: 'Run tests'
+        env:
+          BASE_URL: '${{ inputs.baseUrl }}'
+          CI: 'true'
+        run: 'pnpm "${{ inputs.script }}"'
+
+      - name: 'Upload Playwright Report'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'no-wallet'
+          path: 'playwright-reports/no-wallet'
+          retention-days: 30
