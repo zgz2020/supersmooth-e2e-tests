@@ -47,12 +47,14 @@ jobs:
         env:
           BASE_URL: ${{ inputs.baseUrl }}
           TEST_WALLET_PK: ${{ secrets.TEST_WALLET_PK }}
+          TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
         run: pnpm ci:synpress-build-cache:base
 
       - name: 'Run tests'
         env:
           BASE_URL: '${{ inputs.baseUrl }}'
           TEST_WALLET_PK: ${{ secrets.TEST_WALLET_PK }}
+          TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
           CI: 'true'
         run: 'pnpm "${{ inputs.script }}"'
 
