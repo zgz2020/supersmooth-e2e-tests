@@ -150,7 +150,7 @@ Continuous Integration (CI) and scheduled workflows are organized under `.github
 
 ### Scheduled & Trigger Workflows
 
-- **Nightly Run (`nightly.yml`)**: Scheduled cron workflow that triggers Monday through Friday at 01:00 UTC (`0 1 * * 1-5`). Executes the full API test suite, no-wallet E2E suite, and with-wallet E2E suite in parallel.
+- **Nightly Run (`nightly.yml`)**: Scheduled cron workflow that triggers on Monday, Wednesday, and Friday at 01:00 UTC (`0 1 * * 1,3,5`). Executes the full API test suite, no-wallet E2E suite, and with-wallet E2E suite in parallel.
 - **CI Regression Run (`ci-regression.yml`)**: Triggered via `workflow_dispatch` by the [aphelion-app](https://github.com/Aphelion-Co/aphelion-app) repository when merging to `staging`. Accepts `run_id`, `repository`, and `commit_sha` from the triggering workflow and executes the regression test suites in parallel:
   - API regression (`test:api:regression`)
   - No-wallet E2E regression (`ci:no-wallet-regression`)
