@@ -1,4 +1,4 @@
-import { JSONSchemaType } from 'ajv';
+import type { JSONSchemaType } from 'ajv';
 import type { MigrateAdoptableSafesResponse } from '../../types/api/migrateAdoptableSafes';
 
 export const migrateAdoptableSafesSchema: JSONSchemaType<MigrateAdoptableSafesResponse> = {

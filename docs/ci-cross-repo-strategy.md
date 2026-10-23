@@ -171,7 +171,7 @@ jobs:
             echo 'description=All E2E regression tests passed successfully' >> $GITHUB_OUTPUT
           else
             echo 'state=failure' >> $GITHUB_OUTPUT
-            echo 'description=E2E regression failed (API: '$API', NoWallet: '$NO_WALLET', WithWallet: '$WITH_WALLET')' >> $GITHUB_OUTPUT
+            echo 'description=E2E regression failed (API: '$API', No-Wallet: '$NO_WALLET', With-Wallet: '$WITH_WALLET')' >> $GITHUB_OUTPUT
           fi
 
       - name: 'Send status back to calling repository'

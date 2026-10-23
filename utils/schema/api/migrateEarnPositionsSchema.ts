@@ -1,4 +1,4 @@
-import { JSONSchemaType } from 'ajv';
+import type { JSONSchemaType } from 'ajv';
 import type { MigrateEarnPositionsResponse } from '../../types/api/migrateEarnPositions';
 
 export const migrateEarnPositionsSchema: JSONSchemaType<MigrateEarnPositionsResponse> = {

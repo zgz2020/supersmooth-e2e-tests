@@ -1,4 +1,4 @@
-import { JSONSchemaType } from 'ajv';
+import type { JSONSchemaType } from 'ajv';
 import type { ComplianceScreenResponse } from '../../types/api/complianceScreen';
 
 export const complianceScreenSchema: JSONSchemaType<ComplianceScreenResponse> = {

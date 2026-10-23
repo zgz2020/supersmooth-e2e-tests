@@ -1,4 +1,4 @@
-import { JSONSchemaType } from 'ajv';
+import type { JSONSchemaType } from 'ajv';
 import type { ProductTableTopCardsResponse } from '../../types/api/productTableTopCards';
 
 export const productTableTopCardsSchema: JSONSchemaType<ProductTableTopCardsResponse> = {

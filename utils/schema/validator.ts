@@ -1,5 +1,6 @@
 import test from '@playwright/test';
-import Ajv, { AnySchemaObject, JSONSchemaType } from 'ajv';
+import Ajv from 'ajv';
+import type { AnySchemaObject, JSONSchemaType } from 'ajv';
 
 const ajv = new Ajv({ allowUnionTypes: true });
 

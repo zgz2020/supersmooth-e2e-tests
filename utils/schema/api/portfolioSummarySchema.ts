@@ -1,5 +1,5 @@
-import { JSONSchemaType } from 'ajv';
-import { PortfolioSummaryResponse } from '../../types/api/portfolioSummary';
+import type { JSONSchemaType } from 'ajv';
+import type { PortfolioSummaryResponse } from '../../types/api/portfolioSummary';
 
 export const portfolioSummarySchema: JSONSchemaType<PortfolioSummaryResponse> = {
   type: 'object',

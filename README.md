@@ -54,8 +54,8 @@ Tests are categorized into distinct projects defined in `playwright.config.ts`:
 
 | Test Suite          | Description                                                  | Directory / Filter                  | Command                    |
 | :------------------ | :----------------------------------------------------------- | :---------------------------------- | :------------------------- |
-| **No-Wallet E2E**   | E2E tests that do not require Web3 wallet connection         | `./tests/e2e/noWallet`              | `pnpm test:no-wallet`      |
-| **With-Wallet E2E** | E2E tests requiring MetaMask wallet interaction via Synpress | `./tests/e2e/withWallet`            | `pnpm test:with-wallet`    |
+| **No-Wallet E2E**   | E2E tests that do not require Web3 wallet connection         | `./tests/e2e/no-wallet`             | `pnpm test:no-wallet`      |
+| **With-Wallet E2E** | E2E tests requiring MetaMask wallet interaction via Synpress | `./tests/e2e/with-wallet`           | `pnpm test:with-wallet`    |
 | **All E2E**         | Runs all end-to-end test suites                              | `./tests/e2e`                       | `pnpm test:e2e`            |
 | **API Tests**       | API endpoint and integration test suites                     | `./tests/api`                       | `pnpm test:api`            |
 | **API Regression**  | API regression suite excluding nightly-only tests            | `./tests/api` (`!@api_nightly`)     | `pnpm test:api:regression` |
@@ -206,8 +206,8 @@ For complete architectural details, sequence diagrams, token setup, script parit
 ├── tests/
 │   ├── api/                          # API test specs
 │   └── e2e/
-│       ├── noWallet/                 # E2E test specs without wallet
-│       └── withWallet/               # E2E test specs with Synpress MetaMask wallet
+│       ├── no-wallet/                 # E2E test specs without wallet
+│       └── with-wallet/               # E2E test specs with Synpress MetaMask wallet
 └── utils/
     ├── assertions/                   # Custom matchers & assertion helpers
     ├── connectWallet.ts              # Helper to connect wallet and select network

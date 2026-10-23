@@ -1,5 +1,5 @@
-import { JSONSchemaType } from 'ajv';
-import { PortfolioSafesResponse } from '../../types/api/portfolioSafes';
+import type { JSONSchemaType } from 'ajv';
+import type { PortfolioSafesResponse } from '../../types/api/portfolioSafes';
 
 export const portfolioSafesSchema: JSONSchemaType<PortfolioSafesResponse[]> = {
   type: 'array',

@@ -39,13 +39,13 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'noWallet',
-      testDir: './tests/e2e/noWallet',
+      name: 'no-wallet',
+      testDir: './tests/e2e/no-wallet',
       use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'withWallet',
-      testDir: './tests/e2e/withWallet',
+      name: 'with-wallet',
+      testDir: './tests/e2e/with-wallet',
       use: { ...devices['Desktop Chrome'] },
     },
     {

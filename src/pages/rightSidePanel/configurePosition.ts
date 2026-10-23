@@ -1,6 +1,5 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 import { step } from '../../fixtures';
-import { expect } from '../../fixtures/base';
 import type { WaitToBeStableProps } from '../../../utils/types/e2e/common';
 
 export class ConfigurePosition {
