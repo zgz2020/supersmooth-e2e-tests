@@ -1,0 +1,21 @@
+name: 'With-wallet Regression Tests'
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseUrl:
+        description: 'Base URL for with-wallet regression tests'
+        type: 'string'
+        default: 'https://staging.supersmooth.fi/'
+
+permissions:
+  contents: read
+
+jobs:
+  with-wallet-regression-tests:
+    name: 'With-wallet Regression Tests'
+    uses: './.github/workflows/reusable-with-wallet.yml'
+    secrets: inherit
+    with:
+      baseUrl: '${{ inputs.baseUrl }}'
+      script: 'ci:with-wallet-regression'

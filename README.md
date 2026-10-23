@@ -159,7 +159,9 @@ Continuous Integration (CI) and scheduled workflows are organized under `.github
 - **Manual Triggers (`workflow_dispatch`)**:
   - **API Tests (`api-tests.yml`)**: Runs API tests against a configurable `baseUrl` (defaults to `'https://staging.supersmooth.fi/'`).
   - **No-wallet Tests (`no-wallet-tests.yml`)**: Runs no-wallet E2E tests against a configurable `baseUrl`.
+  - **No-wallet Regression Tests (`no-wallet-regression.yml`)**: Runs no-wallet regression E2E tests against a configurable `baseUrl`.
   - **With-wallet Tests (`with-wallet-tests.yml`)**: Runs with-wallet E2E tests against a configurable `baseUrl`, inheriting the `TEST_WALLET_PK` repository secret.
+  - **With-wallet Regression Tests (`with-wallet-regression.yml`)**: Runs with-wallet regression E2E tests against a configurable `baseUrl`, inheriting the `TEST_WALLET_PK` repository secret.
 
 ### Reusable Workflows
 
@@ -189,10 +191,12 @@ For complete architectural details, sequence diagrams, token setup, script parit
 │       ├── api-tests.yml             # Manual API test workflow
 │       ├── ci-regression.yml         # CI regression workflow triggered by aphelion-app
 │       ├── nightly.yml               # Nightly scheduled cron workflow
+│       ├── no-wallet-regression.yml  # Manual no-wallet regression E2E workflow
 │       ├── no-wallet-tests.yml       # Manual no-wallet E2E workflow
 │       ├── reusable-api-tests.yml    # Reusable API test runner
 │       ├── reusable-no-wallet.yml    # Reusable no-wallet runner (containerized)
 │       ├── reusable-with-wallet.yml  # Reusable with-wallet runner (containerized)
+│       ├── with-wallet-regression.yml # Manual with-wallet regression E2E workflow
 │       └── with-wallet-tests.yml     # Manual with-wallet E2E workflow
 ├── .env.example                      # Environment variables template
 ├── .gitignore
