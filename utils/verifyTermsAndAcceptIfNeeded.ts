@@ -17,7 +17,7 @@ export interface VerifyTermsAndAcceptIfNeededParams {
 }
 
 export const DEFAULT_TERMS_WALLET_ADDRESS =
-  process.env.TEST_WALLET_ADDRESS || '0xb2b4D0501F82C900c703f3d85eD1918b38E7c445';
+  process.env.TEST_WALLET_ADDRESS || '0x44E361c3D9dcd703D535f9c2883a4E104AD2F4d5';
 export const DEFAULT_POSITION_URL =
   '/products/multiply/aaveV3/8453/0xA238Dd80C259a72e81d7e4664a9801593F98d1c5-0x4200000000000000000000000000000000000006-0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf';
 export const DEFAULT_DEPOSIT_AMOUNT = '0.0005';
@@ -26,13 +26,14 @@ export const DEFAULT_COLLATERAL: Token = 'ETH';
 const checkTermsStatus = async (request: APIRequestContext, address: string): Promise<boolean> => {
   const response = await request.get('/api/terms/status', {
     params: {
-      address,
+      // Lowercase avoids 400s caused by addresses with an invalid EIP-55 checksum
+      address: address.toLowerCase(),
     },
   });
 
   if (!response.ok()) {
     throw new Error(
-      `Failed to check terms status for ${address}: ${response.status()} ${response.statusText()}`,
+      `Failed to check terms status for ${address}: ${response.status()} ${await response.text()}`,
     );
   }
 
