@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { defineWalletSetup } from '@synthetixio/synpress';
 import { commonMetamaskSetup, PASSWORD } from './commonWalletSetup';
 

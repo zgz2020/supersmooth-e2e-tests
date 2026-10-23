@@ -6,3 +6,13 @@ export type Token = 'cbETH' | 'ETH' | 'USDC' | 'USDT' | 'WBTC' | 'WETH' | 'wstET
 
 export type WaitToBeStableProps =
   { collateral: Token; trade?: never } | { trade: true; collateral?: never };
+
+export type Wallets =
+  | 'WalletConnect'
+  | 'My Wallet'
+  | 'Trust Wallet'
+  | 'MetaMask'
+  | 'Binance Wallet'
+  | 'Kriptomat'
+  | 'Kriptonio'
+  | 'KriptoK';

@@ -4,6 +4,7 @@ import baseSetup from '../../utils/synpress/wallet-setup/base.setup';
 import { App } from '../app';
 import { connectWallet } from '../../utils/connectWallet';
 import type { FixturesNetwork } from '../../utils/types/e2e/common';
+import { verifyTermsAndAcceptIfNeeded } from '../../utils/verifyTermsAndAcceptIfNeeded';
 
 type TestOptions = {
   network: FixturesNetwork;
@@ -22,14 +23,20 @@ export const test = testWithSynpress(
         const app = new App(page);
 
         await app.open();
+        await app.multiply.shouldBeOpened();
 
         await connectWallet({ app, metamask, network });
+
+        await verifyTermsAndAcceptIfNeeded({
+          app,
+          metamask,
+        });
 
         await use(app);
 
         await app.page.close();
       },
-      { timeout: 50000 },
+      { timeout: 70000 },
     ],
   }),
 );
