@@ -58,40 +58,49 @@ pnpm synpress-build-cache:base
 
 Tests are categorized into distinct projects defined in `playwright.config.ts`:
 
-| Test Suite          | Description                                                  | Directory / Filter                  | Command                    |
-| :------------------ | :----------------------------------------------------------- | :---------------------------------- | :------------------------- |
-| **No-Wallet E2E**   | E2E tests that do not require Web3 wallet connection         | `./tests/e2e/no-wallet`             | `pnpm test:no-wallet`      |
-| **With-Wallet E2E** | E2E tests requiring MetaMask wallet interaction via Synpress | `./tests/e2e/with-wallet`           | `pnpm test:with-wallet`    |
-| **All E2E**         | Runs all end-to-end test suites                              | `./tests/e2e`                       | `pnpm test:e2e`            |
-| **API Tests**       | API endpoint and integration test suites                     | `./tests/api`                       | `pnpm test:api`            |
-| **API Regression**  | API regression suite excluding nightly-only tests            | `./tests/api` (`!@api_nightly`)     | `pnpm test:api:regression` |
-| **API Fake Geo**    | API tests executing against local mock geo-compliance server | `complianceGeoFakeLocation.spec.ts` | `pnpm test:api:fake-geo`   |
-| **All Tests**       | Runs all Playwright test projects                            | `./tests`                           | `pnpm test`                |
+| Test Suite          | Description                                                           | Directory / Filter                    | Command                    |
+| :------------------ | :-------------------------------------------------------------------- | :------------------------------------ | :------------------------- |
+| **No-Wallet E2E**   | E2E tests that do not require Web3 wallet connection                  | `./tests/e2e/no-wallet`               | `pnpm test:no-wallet`      |
+| **Cross-Browser**   | Smoke tests on Firefox, Safari, Mobile Safari, Android, and viewports | `./tests/e2e/no-wallet-cross-browser` | `pnpm test:cross-browser`  |
+| **With-Wallet E2E** | E2E tests requiring MetaMask wallet interaction via Synpress          | `./tests/e2e/with-wallet`             | `pnpm test:with-wallet`    |
+| **All E2E**         | Runs all end-to-end test suites                                       | `./tests/e2e`                         | `pnpm test:e2e`            |
+| **API Tests**       | API endpoint and integration test suites                              | `./tests/api`                         | `pnpm test:api`            |
+| **API Regression**  | API regression suite excluding nightly-only tests                     | `./tests/api` (`!@api_nightly`)       | `pnpm test:api:regression` |
+| **API Fake Geo**    | API tests executing against local mock geo-compliance server          | `complianceGeoFakeLocation.spec.ts`   | `pnpm test:api:fake-geo`   |
+| **All Tests**       | Runs all Playwright test projects                                     | `./tests`                             | `pnpm test`                |
 
 ---
 
 ## 📜 Available Scripts
 
-| Script                              | Description                                                       |
-| :---------------------------------- | :---------------------------------------------------------------- |
-| `pnpm test`                         | Runs all Playwright test projects                                 |
-| `pnpm test:e2e`                     | Runs all E2E tests under `./tests/e2e`                            |
-| `pnpm test:no-wallet`               | Runs E2E tests without Web3 wallet interactions                   |
-| `pnpm test:no-wallet-regression`    | Runs no-wallet E2E regression tests (`--grep @regression`)        |
-| `pnpm test:with-wallet`             | Runs E2E tests with MetaMask wallet automation via Synpress       |
-| `pnpm test:with-wallet-regression`  | Runs with-wallet E2E regression tests (`--grep @regression`)      |
-| `pnpm test:api`                     | Runs full API test suites                                         |
-| `pnpm test:api:regression`          | Runs API tests excluding tests tagged with `@api_nightly`         |
-| `pnpm test:api:fake-geo`            | Runs API tests with mock compliance geo server                    |
-| `pnpm test:repeat`                  | Runs a test suite repeatedly to detect flakiness                  |
-| `pnpm ci:synpress-build-cache:base` | Builds Synpress wallet cache inside virtual framebuffer (`xvfb`)  |
-| `pnpm ci:no-wallet`                 | Runs no-wallet tests configured for CI with `xvfb` and 2 workers  |
-| `pnpm ci:no-wallet-regression`      | Runs no-wallet regression tests in CI with `xvfb` and 2 workers   |
-| `pnpm ci:with-wallet`               | Runs with-wallet tests configured for CI with `xvfb` and 1 worker |
-| `pnpm ci:with-wallet-regression`    | Runs with-wallet regression tests in CI with `xvfb` and 1 worker  |
-| `pnpm typecheck`                    | Validates TypeScript types across the codebase                    |
-| `pnpm lint`                         | Runs ESLint checks across the codebase                            |
-| `pnpm format`                       | Formats code with Prettier                                        |
+| Script                                   | Description                                                       |
+| :--------------------------------------- | :---------------------------------------------------------------- |
+| `pnpm test`                              | Runs all Playwright test projects                                 |
+| `pnpm test:e2e`                          | Runs all E2E tests under `./tests/e2e`                            |
+| `pnpm test:no-wallet`                    | Runs E2E tests without Web3 wallet interactions                   |
+| `pnpm test:no-wallet-regression`         | Runs no-wallet E2E regression tests (`--grep @regression`)        |
+| `pnpm test:cross-browser`                | Runs cross-browser smoke tests across all configured engines      |
+| `pnpm test:cross-browser:firefox`        | Runs cross-browser smoke tests on Desktop Firefox                 |
+| `pnpm test:cross-browser:webkit`         | Runs cross-browser smoke tests on Desktop Safari (WebKit)         |
+| `pnpm test:cross-browser:mobile-safari`  | Runs cross-browser smoke tests on Mobile Safari (iPhone 14)       |
+| `pnpm test:cross-browser:mobile-android` | Runs cross-browser smoke tests on Mobile Android (Pixel 7)        |
+| `pnpm test:cross-browser:tablet-ipad`    | Runs cross-browser smoke tests on Tablet (iPad Pro 11)            |
+| `pnpm test:cross-browser:desktop-large`  | Runs cross-browser smoke tests on Desktop Safari (1920x1080)      |
+| `pnpm test:with-wallet`                  | Runs E2E tests with MetaMask wallet automation via Synpress       |
+| `pnpm test:with-wallet-regression`       | Runs with-wallet E2E regression tests (`--grep @regression`)      |
+| `pnpm test:api`                          | Runs full API test suites                                         |
+| `pnpm test:api:regression`               | Runs API tests excluding tests tagged with `@api_nightly`         |
+| `pnpm test:api:fake-geo`                 | Runs API tests with mock compliance geo server                    |
+| `pnpm test:repeat`                       | Runs a test suite repeatedly to detect flakiness                  |
+| `pnpm ci:synpress-build-cache:base`      | Builds Synpress wallet cache inside virtual framebuffer (`xvfb`)  |
+| `pnpm ci:no-wallet`                      | Runs no-wallet tests configured for CI with `xvfb` and 2 workers  |
+| `pnpm ci:no-wallet-regression`           | Runs no-wallet regression tests in CI with `xvfb` and 2 workers   |
+| `pnpm ci:cross-browser`                  | Runs cross-browser smoke tests in CI with `xvfb`                  |
+| `pnpm ci:with-wallet`                    | Runs with-wallet tests configured for CI with `xvfb` and 1 worker |
+| `pnpm ci:with-wallet-regression`         | Runs with-wallet regression tests in CI with `xvfb` and 1 worker  |
+| `pnpm typecheck`                         | Validates TypeScript types across the codebase                    |
+| `pnpm lint`                              | Runs ESLint checks across the codebase                            |
+| `pnpm format`                            | Formats code with Prettier                                        |
 
 ---
 
@@ -107,10 +116,12 @@ pnpm test:repeat
 
 When invoked without arguments, the script prompts for the target suite and iteration count:
 
-1. **Select suite:** `1` (`api`), `2` (`api:regression`), `3` (`no-wallet`), or `4` (`with-wallet`)
+1. **Select suite:** `1` (`api`), `2` (`api:regression`), `3` (`no-wallet`), `4` (`with-wallet`), or `5` (`cross-browser`)
+   - When selecting `cross-browser`, a target submenu prompts for: `1` (`all`), `2` (`firefox`), `3` (`webkit`), `4` (`mobile-safari`), `5` (`mobile-android`), `6` (`tablet-ipad`), or `7` (`desktop-large`).
 2. **Number of iterations:**
+   - **Cross-browser tests:** Configurable between 1 and 5 runs (defaults to 1).
    - **API tests (`api`, `api:regression`):** Limited to at most 2 runs (1-2 times) with a warning that running more times might trigger rate-limiting errors (e.g. `'Too many calls'`).
-   - **E2E tests (`no-wallet`, `with-wallet`):** Configurable between 2 and 5 runs.
+   - **E2E tests (`no-wallet`, `with-wallet`):** Configurable between 2 and 5 runs (defaults to 2).
 
 ### Non-Interactive / CLI Mode
 
@@ -128,6 +139,12 @@ pnpm test:repeat no-wallet 3
 
 # Run with-wallet E2E tests 5 times (between 2 and 5)
 pnpm test:repeat with-wallet 5
+
+# Run all cross-browser smoke tests
+pnpm test:repeat cross-browser 1
+
+# Run a specific cross-browser target (e.g. Desktop Safari / WebKit)
+pnpm test:repeat cross-browser:webkit 1
 ```
 
 The tool tracks elapsed time per iteration and halts immediately if any run fails.
@@ -159,6 +176,7 @@ Continuous Integration (CI) and scheduled workflows are organized under `.github
 - **Manual Triggers (`workflow_dispatch`)**:
   - **API Tests (`api-tests.yml`)**: Runs API tests against a configurable `baseUrl` (defaults to `'https://staging.supersmooth.fi/'`).
   - **No-wallet Tests (`no-wallet-tests.yml`)**: Runs no-wallet E2E tests against a configurable `baseUrl`.
+  - **No-wallet Cross-browser Tests (`no-wallet-cross-browser.yml`)**: Matrix workflow executing smoke tests in parallel across Desktop Firefox, Desktop Safari, Mobile Safari (iPhone 14), Mobile Android (Pixel 7), Tablet (iPad Pro 11), and Desktop Large (1920x1080) against a configurable `baseUrl`.
   - **No-wallet Regression Tests (`no-wallet-regression.yml`)**: Runs no-wallet regression E2E tests against a configurable `baseUrl`.
   - **With-wallet Tests (`with-wallet-tests.yml`)**: Runs with-wallet E2E tests against a configurable `baseUrl`, inheriting the `TEST_WALLET_PK` repository secret.
   - **With-wallet Regression Tests (`with-wallet-regression.yml`)**: Runs with-wallet regression E2E tests against a configurable `baseUrl`, inheriting the `TEST_WALLET_PK` repository secret.
@@ -191,6 +209,7 @@ For complete architectural details, sequence diagrams, token setup, script parit
 │       ├── api-tests.yml             # Manual API test workflow
 │       ├── ci-regression.yml         # CI regression workflow triggered by aphelion-app
 │       ├── nightly.yml               # Nightly scheduled cron workflow
+│       ├── no-wallet-cross-browser.yml # Matrix cross-browser smoke test workflow
 │       ├── no-wallet-regression.yml  # Manual no-wallet regression E2E workflow
 │       ├── no-wallet-tests.yml       # Manual no-wallet E2E workflow
 │       ├── reusable-api-tests.yml    # Reusable API test runner
@@ -224,6 +243,7 @@ For complete architectural details, sequence diagrams, token setup, script parit
 │   ├── api/                          # API test specs
 │   └── e2e/
 │       ├── no-wallet/                 # E2E test specs without wallet (connect wallet modal, navigation)
+│       ├── no-wallet-cross-browser/   # Cross-browser smoke specs across Firefox, WebKit, Mobile, Tablet
 │       └── with-wallet/               # E2E test specs with Synpress MetaMask wallet (position opening)
 └── utils/
     ├── assertions/                   # Custom matchers & assertion helpers

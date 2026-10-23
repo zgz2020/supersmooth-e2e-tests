@@ -32,6 +32,55 @@ const SUITES = {
     minIterations: 2,
     maxIterations: 5,
   },
+  'cross-browser': {
+    label: 'cross-browser (all)',
+    command: 'pnpm',
+    args: ['test:cross-browser'],
+    minIterations: 1,
+    maxIterations: 5,
+  },
+  'cross-browser:firefox': {
+    label: 'cross-browser:firefox',
+    command: 'pnpm',
+    args: ['test:cross-browser:firefox'],
+    minIterations: 1,
+    maxIterations: 5,
+  },
+  'cross-browser:webkit': {
+    label: 'cross-browser:webkit',
+    command: 'pnpm',
+    args: ['test:cross-browser:webkit'],
+    minIterations: 1,
+    maxIterations: 5,
+  },
+  'cross-browser:mobile-safari': {
+    label: 'cross-browser:mobile-safari',
+    command: 'pnpm',
+    args: ['test:cross-browser:mobile-safari'],
+    minIterations: 1,
+    maxIterations: 5,
+  },
+  'cross-browser:mobile-android': {
+    label: 'cross-browser:mobile-android',
+    command: 'pnpm',
+    args: ['test:cross-browser:mobile-android'],
+    minIterations: 1,
+    maxIterations: 5,
+  },
+  'cross-browser:tablet-ipad': {
+    label: 'cross-browser:tablet-ipad',
+    command: 'pnpm',
+    args: ['test:cross-browser:tablet-ipad'],
+    minIterations: 1,
+    maxIterations: 5,
+  },
+  'cross-browser:desktop-large': {
+    label: 'cross-browser:desktop-large',
+    command: 'pnpm',
+    args: ['test:cross-browser:desktop-large'],
+    minIterations: 1,
+    maxIterations: 5,
+  },
 };
 
 const normalizeSuite = (input) => {
@@ -62,6 +111,65 @@ const normalizeSuite = (input) => {
   ) {
     return 'with-wallet';
   }
+  if (
+    trimmed === '5' ||
+    trimmed === 'cross-browser' ||
+    trimmed === 'cross_browser' ||
+    trimmed === 'crossbrowser'
+  ) {
+    return 'cross-browser';
+  }
+  if (
+    trimmed === 'firefox' ||
+    trimmed === 'cross-browser:firefox' ||
+    trimmed === 'cross-browser-firefox'
+  ) {
+    return 'cross-browser:firefox';
+  }
+  if (
+    trimmed === 'webkit' ||
+    trimmed === 'safari' ||
+    trimmed === 'cross-browser:webkit' ||
+    trimmed === 'cross-browser-webkit' ||
+    trimmed === 'cross-browser:safari'
+  ) {
+    return 'cross-browser:webkit';
+  }
+  if (
+    trimmed === 'mobile-safari' ||
+    trimmed === 'mobilesafari' ||
+    trimmed === 'iphone' ||
+    trimmed === 'cross-browser:mobile-safari'
+  ) {
+    return 'cross-browser:mobile-safari';
+  }
+  if (
+    trimmed === 'mobile-android' ||
+    trimmed === 'mobileandroid' ||
+    trimmed === 'pixel' ||
+    trimmed === 'android' ||
+    trimmed === 'cross-browser:mobile-android'
+  ) {
+    return 'cross-browser:mobile-android';
+  }
+  if (
+    trimmed === 'tablet-ipad' ||
+    trimmed === 'tabletipad' ||
+    trimmed === 'ipad' ||
+    trimmed === 'tablet' ||
+    trimmed === 'cross-browser:tablet-ipad'
+  ) {
+    return 'cross-browser:tablet-ipad';
+  }
+  if (
+    trimmed === 'desktop-large' ||
+    trimmed === 'desktoplarge' ||
+    trimmed === '1080p' ||
+    trimmed === 'large' ||
+    trimmed === 'cross-browser:desktop-large'
+  ) {
+    return 'cross-browser:desktop-large';
+  }
   return null;
 };
 
@@ -70,24 +178,58 @@ const askQuestion = (rl, question) =>
     rl.question(question, (answer) => resolve(answer.trim()));
   });
 
+const promptCrossBrowserTarget = async (rl) => {
+  console.log('\nSelect cross-browser target:');
+  console.log('  1) all (all 6 browsers/devices)');
+  console.log('  2) firefox (Desktop Firefox)');
+  console.log('  3) webkit (Desktop Safari)');
+  console.log('  4) mobile-safari (iPhone 14)');
+  console.log('  5) mobile-android (Pixel 7)');
+  console.log('  6) tablet-ipad (iPad Pro 11)');
+  console.log('  7) desktop-large (Desktop Safari 1920x1080)\n');
+
+  while (true) {
+    const input = await askQuestion(rl, 'Choice (1-7 or target name) [default: 1]: ');
+    if (input === '' || input === '1' || input === 'all') {
+      return 'cross-browser';
+    }
+    if (input === '2' || input === 'firefox') return 'cross-browser:firefox';
+    if (input === '3' || input === 'webkit' || input === 'safari') return 'cross-browser:webkit';
+    if (input === '4' || input === 'mobile-safari' || input === 'iphone')
+      return 'cross-browser:mobile-safari';
+    if (input === '5' || input === 'mobile-android' || input === 'android' || input === 'pixel')
+      return 'cross-browser:mobile-android';
+    if (input === '6' || input === 'tablet-ipad' || input === 'ipad' || input === 'tablet')
+      return 'cross-browser:tablet-ipad';
+    if (input === '7' || input === 'desktop-large' || input === 'large')
+      return 'cross-browser:desktop-large';
+
+    console.log('Invalid choice. Please select 1-7 or enter a valid target name.');
+  }
+};
+
 const promptSuite = async (rl) => {
   console.log('\nSelect tests to run:');
   console.log('  1) api');
   console.log('  2) api:regression');
   console.log('  3) no-wallet');
-  console.log('  4) with-wallet\n');
+  console.log('  4) with-wallet');
+  console.log('  5) cross-browser\n');
 
   while (true) {
     const input = await askQuestion(
       rl,
-      'Choice (api | api:regression | no-wallet | with-wallet or 1-4): ',
+      'Choice (api | api:regression | no-wallet | with-wallet | cross-browser or 1-5): ',
     );
     const normalized = normalizeSuite(input);
+    if (normalized === 'cross-browser') {
+      return await promptCrossBrowserTarget(rl);
+    }
     if (normalized) {
       return normalized;
     }
     console.log(
-      'Invalid choice. Please enter api, api:regression, no-wallet, or with-wallet (or 1-4).',
+      'Invalid choice. Please enter api, api:regression, no-wallet, with-wallet, or cross-browser (or 1-5).',
     );
   }
 };
@@ -97,7 +239,11 @@ const promptIterations = async (rl, suite) => {
   const { minIterations, maxIterations, label } = config;
 
   while (true) {
-    const defaultVal = minIterations === 1 ? 2 : minIterations;
+    const defaultVal = suite.startsWith('cross-browser')
+      ? 1
+      : minIterations === 1
+        ? 2
+        : minIterations;
     const input = await askQuestion(
       rl,
       `Number of iterations/repetitions (${minIterations}-${maxIterations}) [default: ${defaultVal}]: `,
