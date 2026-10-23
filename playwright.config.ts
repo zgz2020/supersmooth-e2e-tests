@@ -66,13 +66,38 @@ export default defineConfig({
         baseURL: 'http://localhost:3000',
       },
     },
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+    {
+      name: 'firefox',
+      testDir: './tests/e2e/no-wallet-cross-browser',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      testDir: './tests/e2e/no-wallet-cross-browser',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-safari',
+      testDir: './tests/e2e/no-wallet-cross-browser',
+      use: { ...devices['iPhone 14'] },
+    },
+    {
+      name: 'mobile-android',
+      testDir: './tests/e2e/no-wallet-cross-browser',
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'tablet-ipad',
+      testDir: './tests/e2e/no-wallet-cross-browser',
+      use: { ...devices['iPad Pro 11'] },
+    },
+    {
+      name: 'desktop-large',
+      testDir: './tests/e2e/no-wallet-cross-browser',
+      use: {
+        ...devices['Desktop Safari'],
+        viewport: { width: 1920, height: 1080 },
+      },
+    },
   ],
 });
