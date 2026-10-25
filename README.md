@@ -238,11 +238,11 @@ For complete architectural details, sequence diagrams, token setup, script parit
 │   │   ├── walletFeatures/           # Wallet features and network selection modal
 │   │   ├── getHelp.ts                # Help modal page object
 │   │   └── termsOfService.ts         # Terms of Service modal page object
-│   └── pages/                        # Page objects (Header, Multiply, VaultPage, etc.)
+│   └── pages/                        # Page objects (Header, Multiply, Borrow, Earn, Trade, ProductsTopNavigation, etc.)
 ├── tests/
 │   ├── api/                          # API test specs
 │   └── e2e/
-│       ├── no-wallet/                 # E2E test specs without wallet (connect wallet modal, navigation)
+│       ├── no-wallet/                 # E2E test specs without wallet (connect wallet modal, products & top navigation)
 │       ├── no-wallet-cross-browser/   # Cross-browser smoke specs across Firefox, WebKit, Mobile, Tablet
 │       └── with-wallet/               # E2E test specs with Synpress MetaMask wallet (position opening)
 └── utils/

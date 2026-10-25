@@ -1,11 +1,14 @@
 import type { Page } from '@playwright/test';
 import { expect, step } from '../fixtures';
+import { ProductsTopNavigation } from './productsTopNavigation';
 
 export class Earn {
   readonly page: Page;
+  readonly productsTopNavigation: ProductsTopNavigation;
 
   constructor(page: Page) {
     this.page = page;
+    this.productsTopNavigation = new ProductsTopNavigation(page);
   }
 
   @step
@@ -16,9 +19,7 @@ export class Earn {
   @step
   async shouldBeOpened() {
     await expect(
-      this.page.getByText('Deposit a single asset into curated lending markets and vaults', {
-        exact: false,
-      }),
+      this.page.getByText(/Correlated Efficiency \(E-Mode\)|Stablecoin Strategies/).first(),
     ).toBeVisible();
   }
 }
