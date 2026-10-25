@@ -28,8 +28,6 @@ jobs:
 
       - name: 'Setup pnpm'
         uses: 'pnpm/action-setup@v4'
-        with:
-          version: '8'
 
       - name: 'Setup Node.js'
         uses: 'actions/setup-node@v4'
@@ -55,7 +53,6 @@ jobs:
           BASE_URL: '${{ inputs.baseUrl }}'
           TEST_WALLET_PK: ${{ secrets.TEST_WALLET_PK }}
           TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
-          CI: 'true'
         run: 'pnpm "${{ inputs.script }}"'
 
       - name: 'Upload Playwright Report'
