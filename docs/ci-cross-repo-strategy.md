@@ -9,7 +9,7 @@ This document serves as the operational reference guide for the automated Contin
 The integration operates asynchronously using the **GitHub Commit Statuses API**:
 
 1. When changes merge into the `staging` branch of `aphelion-app`, an automated workflow dispatches the regression suite in `sov-e2e-tests` and marks the commit status as `pending`.
-2. `sov-e2e-tests` executes the API, no-wallet, and with-wallet regression test suites in parallel.
+2. `sov-e2e-tests` executes the API, no-wallet, cross-browser, and with-wallet regression test suites in parallel.
 3. Upon completion, a callback job in `sov-e2e-tests` evaluates the overall outcome and updates the commit status badge in `aphelion-app` to **success** (green) or **failure** (red), attaching a direct link to the test run and Playwright HTML reports.
 
 ```mermaid
@@ -23,7 +23,7 @@ sequenceDiagram
   Dev->>App: Merge PR to staging
   App->>GH: Set commit status = pending ('E2E Regression')
   App->>E2E: Trigger ci-regression.yml via workflow_dispatch
-  Note over E2E: Run API, No-wallet, With-wallet regression in parallel
+  Note over E2E: Run API, No-wallet, Cross-browser, With-wallet regression in parallel
   alt All suites pass
     E2E->>GH: Set commit status = success (green) + run link
   else Any suite fails
@@ -101,7 +101,7 @@ The test execution and callback workflow is located at `.github/workflows/ci-reg
 **Key Components:**
 
 - **Inputs**: Receives `run_id`, `repository`, `commit_sha`, and `baseUrl`.
-- **Parallel Test Execution**: Runs `api-tests`, `no-wallet-tests`, and `with-wallet-tests` concurrently using the reusable workflow templates.
+- **Parallel Test Execution**: Runs `api-tests`, `no-wallet-tests`, `cross-browser-tests`, and `with-wallet-tests` concurrently using the reusable workflow templates.
 - **Callback Job (`report-status`)**: Runs with `if: always()` after all test jobs complete, determines overall success or failure, updates the commit status badge in `aphelion-app`, and publishes a summary to `$GITHUB_STEP_SUMMARY`.
 
 **Workflow Configuration (`.github/workflows/ci-regression.yml` in `sov-e2e-tests`):**
@@ -146,6 +146,11 @@ jobs:
       baseUrl: '${{ inputs.baseUrl }}'
       script: 'ci:no-wallet-regression'
 
+  cross-browser-tests:
+    uses: './.github/workflows/reusable-no-wallet-cross-browser.yml'
+    with:
+      baseUrl: '${{ inputs.baseUrl }}'
+
   with-wallet-tests:
     uses: './.github/workflows/reusable-with-wallet.yml'
     secrets: inherit
@@ -156,7 +161,7 @@ jobs:
   report-status:
     name: 'Report Status to Calling Repository'
     runs-on: 'ubuntu-24.04'
-    needs: [api-tests, no-wallet-tests, with-wallet-tests]
+    needs: [api-tests, no-wallet-tests, cross-browser-tests, with-wallet-tests]
     if: always()
     steps:
       - name: 'Evaluate test results'
@@ -164,14 +169,15 @@ jobs:
         run: |
           API='${{ needs.api-tests.result }}'
           NO_WALLET='${{ needs.no-wallet-tests.result }}'
+          CROSS_BROWSER='${{ needs.cross-browser-tests.result }}'
           WITH_WALLET='${{ needs.with-wallet-tests.result }}'
 
-          if [ $API = 'success' ] && [ $NO_WALLET = 'success' ] && [ $WITH_WALLET = 'success' ]; then
+          if [ $API = 'success' ] && [ $NO_WALLET = 'success' ] && [ $CROSS_BROWSER = 'success' ] && [ $WITH_WALLET = 'success' ]; then
             echo 'state=success' >> $GITHUB_OUTPUT
-            echo 'description=All E2E regression tests passed successfully' >> $GITHUB_OUTPUT
+            echo 'description=All E2E, cross-browser, and API regression tests passed successfully' >> $GITHUB_OUTPUT
           else
             echo 'state=failure' >> $GITHUB_OUTPUT
-            echo 'description=E2E regression failed (API: '$API', No-Wallet: '$NO_WALLET', With-Wallet: '$WITH_WALLET')' >> $GITHUB_OUTPUT
+            echo 'description=E2E and/or API regression failed (API: '$API', No-Wallet: '$NO_WALLET', Cross-Browser: '$CROSS_BROWSER', With-Wallet: '$WITH_WALLET')' >> $GITHUB_OUTPUT
           fi
 
       - name: 'Send status back to calling repository'
@@ -202,11 +208,12 @@ jobs:
 
 The regression scripts and report directory paths in `package.json` are aligned with the reusable workflow definitions:
 
-| Test Suite                 | `package.json` Script       | Report Directory Path            | Reusable Workflow Artifact                 |
-| :------------------------- | :-------------------------- | :------------------------------- | :----------------------------------------- |
-| **API Regression**         | `test:api:regression`       | `playwright-reports/api-tests`   | `reusable-api-tests.yml` (`api-tests`)     |
-| **No-wallet Regression**   | `ci:no-wallet-regression`   | `playwright-reports/no-wallet`   | `reusable-no-wallet.yml` (`no-wallet`)     |
-| **With-wallet Regression** | `ci:with-wallet-regression` | `playwright-reports/with-wallet` | `reusable-with-wallet.yml` (`with-wallet`) |
+| Test Suite                 | `package.json` Script                      | Report Directory Path                        | Reusable Workflow Artifact                                         |
+| :------------------------- | :----------------------------------------- | :------------------------------------------- | :----------------------------------------------------------------- |
+| **API Regression**         | `test:api:regression`                      | `playwright-reports/api-tests`               | `reusable-api-tests.yml` (`api-tests`)                             |
+| **No-wallet Regression**   | `ci:no-wallet-regression`                  | `playwright-reports/no-wallet`               | `reusable-no-wallet.yml` (`no-wallet`)                             |
+| **Cross-browser Matrix**   | `pnpm playwright test --project=<project>` | `playwright-reports/cross-browser-<project>` | `reusable-no-wallet-cross-browser.yml` (`cross-browser-<project>`) |
+| **With-wallet Regression** | `ci:with-wallet-regression`                | `playwright-reports/with-wallet`             | `reusable-with-wallet.yml` (`with-wallet`)                         |
 
 ---
 

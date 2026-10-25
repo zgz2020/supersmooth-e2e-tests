@@ -1,0 +1,65 @@
+name: '⚙️ [Reusable] No-wallet Cross-browser Tests'
+
+on:
+  workflow_call:
+    inputs:
+      baseUrl:
+        description: 'Base URL for cross-browser tests'
+        type: 'string'
+        default: 'https://staging.supersmooth.fi/'
+
+permissions:
+  contents: read
+
+jobs:
+  cross-browser-tests:
+    name: '${{ matrix.browser.name }}'
+    runs-on: 'ubuntu-24.04'
+    container:
+      image: 'mcr.microsoft.com/playwright:v1.49.0-noble'
+    strategy:
+      fail-fast: false
+      matrix:
+        browser:
+          - name: 'Desktop Firefox'
+            project: 'firefox'
+          - name: 'Desktop Safari'
+            project: 'webkit'
+          - name: 'Mobile Safari (iPhone 14)'
+            project: 'mobile-safari'
+          - name: 'Mobile Android (Pixel 7)'
+            project: 'mobile-android'
+          - name: 'Tablet (iPad Pro 11)'
+            project: 'tablet-ipad'
+          - name: 'Desktop Large (1920x1080)'
+            project: 'desktop-large'
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Run cross-browser tests'
+        env:
+          BASE_URL: '${{ inputs.baseUrl }}'
+          REPORT_FOLDER: 'cross-browser-${{ matrix.browser.project }}'
+        run: 'xvfb-run pnpm playwright test --project=${{ matrix.browser.project }}'
+
+      - name: 'Upload test report artifact'
+        if: 'always()'
+        uses: 'actions/upload-artifact@v4'
+        with:
+          name: 'cross-browser-${{ matrix.browser.project }}'
+          path: 'playwright-reports/cross-browser-${{ matrix.browser.project }}'
+          retention-days: 30

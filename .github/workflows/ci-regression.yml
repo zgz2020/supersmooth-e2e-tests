@@ -37,6 +37,11 @@ jobs:
       baseUrl: '${{ inputs.baseUrl }}'
       script: 'ci:no-wallet-regression'
 
+  cross-browser-tests:
+    uses: './.github/workflows/reusable-no-wallet-cross-browser.yml'
+    with:
+      baseUrl: '${{ inputs.baseUrl }}'
+
   with-wallet-tests:
     uses: './.github/workflows/reusable-with-wallet.yml'
     secrets: inherit
@@ -47,7 +52,7 @@ jobs:
   report-status:
     name: 'Report Status to Calling Repository'
     runs-on: 'ubuntu-24.04'
-    needs: [api-tests, no-wallet-tests, with-wallet-tests]
+    needs: [api-tests, no-wallet-tests, cross-browser-tests, with-wallet-tests]
     if: always()
     steps:
       - name: 'Evaluate test results'
@@ -55,14 +60,15 @@ jobs:
         run: |
           API='${{ needs.api-tests.result }}'
           NO_WALLET='${{ needs.no-wallet-tests.result }}'
+          CROSS_BROWSER='${{ needs.cross-browser-tests.result }}'
           WITH_WALLET='${{ needs.with-wallet-tests.result }}'
 
-          if [ $API = 'success' ] && [ $NO_WALLET = 'success' ] && [ $WITH_WALLET = 'success' ]; then
+          if [ $API = 'success' ] && [ $NO_WALLET = 'success' ] && [ $CROSS_BROWSER = 'success' ] && [ $WITH_WALLET = 'success' ]; then
             echo 'state=success' >> $GITHUB_OUTPUT
-            echo 'description=All E2E and API regression tests passed successfully' >> $GITHUB_OUTPUT
+            echo 'description=All E2E, cross-browser, and API regression tests passed successfully' >> $GITHUB_OUTPUT
           else
             echo 'state=failure' >> $GITHUB_OUTPUT
-            echo 'description=E2E and/or API regression failed (API: '$API', No-Wallet: '$NO_WALLET', With-Wallet: '$WITH_WALLET')' >> $GITHUB_OUTPUT
+            echo 'description=E2E and/or API regression failed (API: '$API', No-Wallet: '$NO_WALLET', Cross-Browser: '$CROSS_BROWSER', With-Wallet: '$WITH_WALLET')' >> $GITHUB_OUTPUT
           fi
 
       - name: 'Send status back to calling repository'

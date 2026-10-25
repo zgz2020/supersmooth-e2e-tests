@@ -1,4 +1,4 @@
-name: Nightly Run
+name: 'Nightly Run'
 
 on:
   schedule:
@@ -17,6 +17,9 @@ jobs:
     uses: './.github/workflows/reusable-no-wallet.yml'
     with:
       script: 'ci:no-wallet'
+
+  cross-browser-tests:
+    uses: './.github/workflows/reusable-no-wallet-cross-browser.yml'
 
   with-wallet-tests:
     uses: './.github/workflows/reusable-with-wallet.yml'
