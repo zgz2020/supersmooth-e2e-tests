@@ -167,16 +167,17 @@ Continuous Integration (CI) and scheduled workflows are organized under `.github
 
 ### Scheduled & Trigger Workflows
 
-- **Nightly Run (`nightly.yml`)**: Scheduled cron workflow that triggers on Monday, Wednesday, and Friday at 01:00 UTC (`0 1 * * 1,3,5`). Executes the full API test suite, no-wallet E2E suite, and with-wallet E2E suite in parallel.
+- **Nightly Run (`nightly.yml`)**: Scheduled cron workflow that triggers on Monday, Wednesday, and Friday at 01:00 UTC (`0 1 * * 1,3,5`). Executes the full API test suite, no-wallet E2E suite, no-wallet cross-browser matrix, and with-wallet E2E suite in parallel.
 - **CI Regression Run (`ci-regression.yml`)**: Triggered via `workflow_dispatch` by the [aphelion-app](https://github.com/Aphelion-Co/aphelion-app) repository when merging to `staging`. Accepts `run_id`, `repository`, and `commit_sha` from the triggering workflow and executes the regression test suites in parallel:
   - API regression (`test:api:regression`)
   - No-wallet E2E regression (`ci:no-wallet-regression`)
+  - No-wallet cross-browser matrix (`reusable-no-wallet-cross-browser.yml`)
   - With-wallet E2E regression (`ci:with-wallet-regression`)
     Upon completion, the `report-status` job evaluates the run outcome and delivers a green/red commit status check back to the calling commit in `aphelion-app`. For the complete architectural design and reference guide, see [Cross-Repository CI Strategy](docs/ci-cross-repo-strategy.md).
 - **Manual Triggers (`workflow_dispatch`)**:
   - **API Tests (`api-tests.yml`)**: Runs API tests against a configurable `baseUrl` (defaults to `'https://staging.supersmooth.fi/'`).
   - **No-wallet Tests (`no-wallet-tests.yml`)**: Runs no-wallet E2E tests against a configurable `baseUrl`.
-  - **No-wallet Cross-browser Tests (`no-wallet-cross-browser.yml`)**: Matrix workflow executing smoke tests in parallel across Desktop Firefox, Desktop Safari, Mobile Safari (iPhone 14), Mobile Android (Pixel 7), Tablet (iPad Pro 11), and Desktop Large (1920x1080) against a configurable `baseUrl`.
+  - **No-wallet Cross-browser Tests (`no-wallet-cross-browser.yml`)**: Triggers the reusable cross-browser matrix workflow across Desktop Firefox, Desktop Safari, Mobile Safari (iPhone 14), Mobile Android (Pixel 7), Tablet (iPad Pro 11), and Desktop Large (1920x1080) against a configurable `baseUrl`.
   - **No-wallet Regression Tests (`no-wallet-regression.yml`)**: Runs no-wallet regression E2E tests against a configurable `baseUrl`.
   - **With-wallet Tests (`with-wallet-tests.yml`)**: Runs with-wallet E2E tests against a configurable `baseUrl`, inheriting the `TEST_WALLET_PK` repository secret.
   - **With-wallet Regression Tests (`with-wallet-regression.yml`)**: Runs with-wallet regression E2E tests against a configurable `baseUrl`, inheriting the `TEST_WALLET_PK` repository secret.
@@ -185,6 +186,7 @@ Continuous Integration (CI) and scheduled workflows are organized under `.github
 
 - **`reusable-api-tests.yml`**: Runs API tests in `ubuntu-24.04`, uploading the report artifact as `api-tests`.
 - **`reusable-no-wallet.yml`**: Runs no-wallet E2E tests inside the official Playwright Docker container (`mcr.microsoft.com/playwright:v1.49.0-noble`) with `xvfb`, uploading the report artifact as `no-wallet`.
+- **`reusable-no-wallet-cross-browser.yml`**: Matrix workflow executing smoke tests in parallel across Desktop Firefox, Desktop Safari, Mobile Safari (iPhone 14), Mobile Android (Pixel 7), Tablet (iPad Pro 11), and Desktop Large (1920x1080) inside the Playwright Docker container with `xvfb`, uploading individual report artifacts for each target (`cross-browser-<project>`).
 - **`reusable-with-wallet.yml`**: Builds the Synpress MetaMask cache, runs with-wallet E2E tests in the Playwright Docker container with `xvfb`, and uploads the report artifact as `with-wallet`.
 
 ### Artifacts & Reports
@@ -209,10 +211,11 @@ For complete architectural details, sequence diagrams, token setup, script parit
 │       ├── api-tests.yml             # Manual API test workflow
 │       ├── ci-regression.yml         # CI regression workflow triggered by aphelion-app
 │       ├── nightly.yml               # Nightly scheduled cron workflow
-│       ├── no-wallet-cross-browser.yml # Matrix cross-browser smoke test workflow
+│       ├── no-wallet-cross-browser.yml # Manual cross-browser smoke test workflow
 │       ├── no-wallet-regression.yml  # Manual no-wallet regression E2E workflow
 │       ├── no-wallet-tests.yml       # Manual no-wallet E2E workflow
 │       ├── reusable-api-tests.yml    # Reusable API test runner
+│       ├── reusable-no-wallet-cross-browser.yml # Reusable cross-browser matrix runner (containerized)
 │       ├── reusable-no-wallet.yml    # Reusable no-wallet runner (containerized)
 │       ├── reusable-with-wallet.yml  # Reusable with-wallet runner (containerized)
 │       ├── with-wallet-regression.yml # Manual with-wallet regression E2E workflow
