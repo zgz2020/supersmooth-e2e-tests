@@ -189,6 +189,9 @@ Continuous Integration (CI) and scheduled workflows are organized under `.github
 - **`reusable-no-wallet-cross-browser.yml`**: Matrix workflow executing smoke tests in parallel across Desktop Firefox, Desktop Safari, Mobile Safari (iPhone 14), Mobile Android (Pixel 7), Tablet (iPad Pro 11), and Desktop Large (1920x1080) inside the Playwright Docker container with `xvfb`, uploading individual report artifacts for each target (`cross-browser-<project>`).
 - **`reusable-with-wallet.yml`**: Builds the Synpress MetaMask cache, runs with-wallet E2E tests in the Playwright Docker container with `xvfb`, and uploads the report artifact as `with-wallet`.
 
+> [!NOTE]
+> Containerized workflows require a few environment workarounds (`xvfb`, pnpm version via `packageManager`, Firefox `$HOME`). See [Containerized Browser Execution](docs/ci-cross-repo-strategy.md#containerized-browser-execution--firefox-home-workaround).
+
 ### Artifacts & Reports
 
 Playwright HTML test reports are generated and preserved as GitHub Actions artifacts for 30 days upon test completion.

@@ -50,10 +50,15 @@ jobs:
       - name: 'Install dependencies'
         run: 'pnpm install --frozen-lockfile'
 
+      - name: 'Install xvfb'
+        run: 'apt-get update -y && apt-get -y install xvfb && rm -rf /var/lib/apt/lists/* /var/cache/apt/*'
+
       - name: 'Run cross-browser tests'
         env:
           BASE_URL: '${{ inputs.baseUrl }}'
           REPORT_FOLDER: 'cross-browser-${{ matrix.browser.project }}'
+          # Firefox refuses to run as root when $HOME is owned by another user (/github/home -> pwuser)
+          HOME: '/root'
         run: 'xvfb-run pnpm playwright test --project=${{ matrix.browser.project }}'
 
       - name: 'Upload test report artifact'

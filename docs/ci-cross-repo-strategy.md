@@ -236,6 +236,14 @@ The regression scripts and report directory paths in `package.json` are aligned 
   2. Verify that `APHELION_STATUS_TOKEN` is populated in repository secrets.
   3. Ensure `inputs.commit_sha` matches an existing commit SHA in `aphelion-app`.
 
+### Containerized Browser Execution & Firefox `$HOME` Workaround
+
+When running end-to-end tests inside the official Playwright container (the image pinned via `container.image` in each reusable workflow):
+
+- **pnpm Setup**: The pnpm version is declared once via the `packageManager` field in `package.json`; `pnpm/action-setup@v4` reads it automatically, so workflows must not set `version:`.
+- **xvfb Dependency**: `xvfb` is not bundled by default in the image and must be installed via `apt-get install -y xvfb` before invoking `xvfb-run`.
+- **Firefox `$HOME` Ownership**: In GitHub Actions container jobs, steps execute as `root`, but the runner mounts `/github/home` as `$HOME` with ownership assigned to `pwuser`. Firefox rejects launching when `$HOME` is not owned by the current user (`Running Nightly as root in a regular user's session is not supported`). To resolve this, `HOME: '/root'` must be explicitly provided in the step environment when invoking Playwright for Firefox or matrix executions.
+
 ---
 
 ## 🔄 6. Alternative Reference: Synchronous Wait Pattern
