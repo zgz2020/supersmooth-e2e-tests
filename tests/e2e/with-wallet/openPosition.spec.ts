@@ -131,7 +131,7 @@ test.describe('Open position - Trade (Perpetual Contracts) on HyperEVM (Deposit 
     app,
     metamask,
   }) => {
-    await app.tradePage.openPage('/products/perps/hyper/999/xyz%3AXYZ100');
+    await app.perpAndSpotPage.openPage('/products/perps/hyper/999/xyz%3AXYZ100');
 
     await openPosition({
       app,
@@ -152,7 +152,7 @@ test.describe('Open position - Trade (Spot Exchange) on Base', () => {
     app,
     metamask,
   }) => {
-    await app.tradePage.openPage('/products/spot/hyper/999/ubtc-usdc');
+    await app.perpAndSpotPage.openPage('/products/spot/hyper/999/ubtc-usdc');
 
     await openPosition({
       app,

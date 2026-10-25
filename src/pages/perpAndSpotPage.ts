@@ -2,7 +2,7 @@ import { type Page } from '@playwright/test';
 import { step } from '../fixtures';
 import { RightSidePanel } from './rightSidePanel';
 
-export class TradePage {
+export class PerpAndSpotPage {
   readonly page: Page;
   readonly rightSidePanel: RightSidePanel;
 

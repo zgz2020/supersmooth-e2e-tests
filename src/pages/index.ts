@@ -4,6 +4,7 @@ export * from './header';
 export * from './landingPage';
 export * from './migrate';
 export * from './multiply';
+export * from './perpAndSpotPage';
 export * from './positionPage';
-export * from './tradePage';
+export * from './trade';
 export * from './vaultPage';

@@ -6,8 +6,9 @@ import {
   LandingPage,
   Migrate,
   Multiply,
+  PerpAndSpotPage,
   PositionPage,
-  TradePage,
+  Trade,
   VaultPage,
 } from './pages';
 import { Modals } from './modals';
@@ -21,8 +22,9 @@ export class App {
   readonly modals: Modals;
   readonly migrate: Migrate;
   readonly multiply: Multiply;
+  readonly perpAndSpotPage: PerpAndSpotPage;
   readonly positionPage: PositionPage;
-  readonly tradePage: TradePage;
+  readonly trade: Trade;
   readonly vaultPage: VaultPage;
 
   constructor(page: Page) {
@@ -34,8 +36,9 @@ export class App {
     this.migrate = new Migrate(page);
     this.modals = new Modals(page);
     this.multiply = new Multiply(page);
+    this.perpAndSpotPage = new PerpAndSpotPage(page);
     this.positionPage = new PositionPage(page);
-    this.tradePage = new TradePage(page);
+    this.trade = new Trade(page);
     this.vaultPage = new VaultPage(page);
   }
 
