@@ -2,7 +2,18 @@ export type FixturesNetwork = 'Arbitrum One' | 'Base' | 'Ethereum' | 'HyperEVM' 
 
 export type PositionType = 'Multiply' | 'Borrow' | 'Earn' | 'Trade';
 
-export type Token = 'cbETH' | 'ETH' | 'USDC' | 'USDT' | 'WBTC' | 'WETH' | 'wstETH';
+export type Token =
+  | 'cbBTC'
+  | 'cbETH'
+  | 'ETH'
+  | 'gtUSDa'
+  | 'USDC'
+  | 'USDe'
+  | 'USDT'
+  | 'WBTC'
+  | 'weETH'
+  | 'WETH'
+  | 'wstETH';
 
 export type WaitToBeStableProps =
   { collateral: Token; trade?: never } | { trade: true; collateral?: never };
