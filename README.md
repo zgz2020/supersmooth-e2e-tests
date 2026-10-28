@@ -202,6 +202,7 @@ For complete architectural details, sequence diagrams, token setup, script parit
 
 - [Cross-Repository CI Strategy Guide](docs/ci-cross-repo-strategy.md)
 - [Cross-Repository CI Strategy (PDF)](docs/ci-cross-repo-strategy.pdf)
+- [CI & GitHub Runs Reference Guide](docs/ci-github-runs.md)
 
 ---
 
@@ -228,6 +229,7 @@ For complete architectural details, sequence diagrams, token setup, script parit
 ├── .nvmrc
 ├── docs/
 │   ├── ci-cross-repo-strategy.md     # Cross-repo CI architecture reference guide
+│   └── ci-github-runs.md             # CI & GitHub runs regional/environment reference guide
 ├── eslint.config.js
 ├── package.json
 ├── playwright.config.ts

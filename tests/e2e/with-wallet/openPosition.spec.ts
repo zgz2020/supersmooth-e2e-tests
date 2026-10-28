@@ -123,6 +123,11 @@ test.describe('Open position - Earn (Automated Strategy) on Base', () => {
 });
 
 test.describe('Open position - Trade (Perpetual Contracts) on HyperEVM (Deposit from Base)', () => {
+  test.skip(
+    !!process.env.CI,
+    'Skipped in CI: Perpetual contracts are geo-blocked on US GitHub Actions runners',
+  );
+
   test.beforeEach(async ({}, testInfo) => {
     testInfo.setTimeout(testInfo.timeout + 35_000);
   });

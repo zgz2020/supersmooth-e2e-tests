@@ -8,9 +8,9 @@ on:
         type: 'string'
         default: 'https://staging.supersmooth.fi/'
       script:
-        description: 'pnpm script to run (e.g. test:no-wallet)'
+        description: 'pnpm script to run (e.g. ci:no-wallet)'
         type: 'string'
-        default: 'test:no-wallet'
+        default: 'ci:no-wallet'
 
 permissions:
   contents: read
