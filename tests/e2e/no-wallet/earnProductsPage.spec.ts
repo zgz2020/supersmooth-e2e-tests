@@ -13,5 +13,8 @@ test.describe('Earn products page - Passive Strategies', () => {
 
     // 2. Verify 4 cards are rendered
     await app.earn.topCards.shouldHaveCount(4);
+
+    // 3. Verify all cards have valid data
+    await app.earn.topCards.shouldHaveValidCards({ product: 'earn' });
   });
 });
