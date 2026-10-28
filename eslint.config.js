@@ -23,6 +23,7 @@ export default tseslint.config(
     rules: {
       ...playwright.configs['flat/recommended'].rules,
       'playwright/no-focused-test': 'warn',
+      'playwright/no-skipped-test': ['warn', { allowConditional: true }],
       'playwright/expect-expect': [
         'error',
         {
