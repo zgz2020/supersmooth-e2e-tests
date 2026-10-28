@@ -13,12 +13,8 @@ export class TopCards {
 
   constructor(page: Page) {
     this.page = page;
-    // TODO: Scope tabList or add aria-label/data-testid in app code so a second tablist won't fail strict mode (see docs/TODO.md)
-    this.tabList = page.getByRole('tablist');
-    // TODO: Replace brittle XPath/class selector once data-testid='top-card' is added in app code (see docs/TODO.md)
-    this.cards = this.tabList
-      .locator('xpath=ancestor::div[contains(@class, "items-start")][1]')
-      .locator('a[href^="/products/"]');
+    this.tabList = page.getByTestId('top-cards-tablist');
+    this.cards = page.getByTestId('top-card');
   }
 
   tab(tabName: ProductTopCardsTabs): Locator {
@@ -53,5 +49,50 @@ export class TopCards {
   @step
   async shouldHaveCount(count: number = 4) {
     await expect(this.cards).toHaveCount(count);
+  }
+
+  @step
+  async shouldHaveValidCardData({
+    card,
+    product,
+  }: {
+    card: Locator;
+    product: TopCardsProductType;
+  }) {
+    // URL
+    const productPath = product === 'yieldLoop' ? 'yield-loop' : product;
+    const urlPattern = new RegExp(
+      `^/products/${productPath}/[a-zA-Z0-9-]+/\\d+/0x[a-fA-F0-9]+(?:-0x[a-fA-F0-9]+)*$`,
+    );
+    await expect(card).toHaveAttribute('href', urlPattern);
+
+    // Title
+    await expect(card.getByTestId('top-card-title')).not.toBeEmpty();
+
+    // Marketed value (APY %, Borrow Rate %, Max LTV %, or Multiply x)
+    const marketedValuePattern =
+      product === 'multiply' ? /^[-+]?\d{1,3}\.\d{2}[%x]$/ : /^[-+]?\d{1,3}\.\d{2}%$/;
+    await expect(card.getByTestId('top-card-marketed-value')).toHaveText(marketedValuePattern);
+
+    // Liquidity value
+    await expect(card.getByTestId('top-card-footer-value')).toHaveText(/^\$\d+(\.\d+)?[BKM]$/);
+
+    // Max Deposit - Yield Loop only
+    if (product === 'yieldLoop') {
+      await expect(card.getByTestId('top-card-max-deposit-value')).toHaveText(
+        /^\d+(?:\.\d+)?[KM]?\s+[a-zA-Z]+$/,
+      );
+
+      await expect(card.getByTestId('top-card-max-deposit-sub-value')).toHaveText(
+        /^\$\d+(?:\.\d+)?[KM]?$/,
+      );
+    }
+  }
+
+  @step
+  async shouldHaveValidCards({ product }: { product: TopCardsProductType }) {
+    for (const card of await this.cards.all()) {
+      await this.shouldHaveValidCardData({ card, product });
+    }
   }
 }
