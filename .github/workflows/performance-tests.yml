@@ -1,0 +1,50 @@
+name: 'Performance Tests'
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseUrl:
+        description: 'Base URL for performance tests'
+        type: 'string'
+        default: 'https://staging.supersmooth.fi/'
+      profile:
+        description: 'Performance profile'
+        type: 'choice'
+        options:
+          - 'smoke'
+          - 'load'
+          - 'stress'
+          - 'spike'
+          - 'soak'
+        default: 'smoke'
+      scenario:
+        description: 'Scenario to run'
+        type: 'choice'
+        options:
+          - 'all'
+          - 'api'
+          - 'web'
+          - 'tokens'
+          - 'compliance'
+          - 'portfolio'
+          - 'products'
+          - 'rpc'
+        default: 'all'
+      target:
+        description: 'Specific target(s) (optional comma-separated e.g. "earn,borrow" or "tokens,rpc")'
+        type: 'string'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  performance-tests:
+    name: 'Performance Tests'
+    uses: './.github/workflows/reusable-performance-tests.yml'
+    with:
+      baseUrl: '${{ inputs.baseUrl }}'
+      profile: '${{ inputs.profile }}'
+      scenario: '${{ inputs.scenario }}'
+      target: '${{ inputs.target }}'

@@ -1,0 +1,65 @@
+name: '⚙️ [Reusable] Performance Tests'
+
+on:
+  workflow_call:
+    inputs:
+      baseUrl:
+        description: 'Base URL for the performance tests'
+        type: 'string'
+        default: 'https://staging.supersmooth.fi/'
+      profile:
+        description: 'Performance profile (smoke | load | stress | spike | soak)'
+        type: 'string'
+        default: 'smoke'
+      scenario:
+        description: 'Target scenario (all | api | web | tokens | compliance | portfolio | products | rpc)'
+        type: 'string'
+        default: 'all'
+      target:
+        description: 'Specific target endpoint(s) or page(s) (optional comma-separated e.g. "earn,borrow" or "tokens,rpc")'
+        type: 'string'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  performance-tests:
+    name: 'Run k6 Performance Tests'
+    runs-on: 'ubuntu-24.04'
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup k6'
+        uses: 'grafana/setup-k6-action@v1'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Run performance test suite'
+        env:
+          K6_BASE_URL: '${{ inputs.baseUrl }}'
+          K6_PROFILE: '${{ inputs.profile }}'
+          K6_SCENARIO: '${{ inputs.scenario }}'
+          K6_TARGET: '${{ inputs.target }}'
+        run: 'pnpm test:performance'
+
+      - name: 'Upload Performance Reports'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'performance-reports-${{ inputs.profile }}-${{ inputs.scenario }}'
+          path: 'performance-reports'
+          retention-days: 30

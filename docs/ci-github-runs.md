@@ -88,7 +88,7 @@ test.describe('Open position - Trade (Perpetual Contracts) on HyperEVM (Deposit 
 
 Because `test.skip(condition, description)` is declared at the `test.describe` level (outside the `test(...)` body), Playwright evaluates it statically at test discovery time (`0ms` execution time) and **does not initialize the Synpress / MetaMask fixtures** (`_contextPath`, `context`, `metamask`, `app`) or `beforeEach` hooks, while still recording the test as **Skipped** with the reason in the HTML report.
 
-*(In [`eslint.config.js`](../eslint.config.js), `'playwright/no-skipped-test': ['warn', { allowConditional: true }]` is configured to permit conditional `test.skip(condition)` calls while still flagging unconditional `.skip()` usage.)*
+_(In [`eslint.config.js`](../eslint.config.js), `'playwright/no-skipped-test': ['warn', { allowConditional: true }]` is configured to permit conditional `test.skip(condition)` calls while still flagging unconditional `.skip()` usage.)_
 
 ---
 
@@ -97,8 +97,8 @@ Because `test.skip(condition, description)` is declared at the `test.describe` l
 > [!IMPORTANT]
 > Intercepting `/api/compliance/geo` on the client side via Playwright's `page.route()` is **not sufficient on its own**, because the `307 Temporary Redirect` on `/products/perps/...` occurs server-side (in Next.js middleware/SSR) before the page loads in the browser.
 
-| Option | Approach | Implementation Summary |
-| :--- | :--- | :--- |
+| Option                                              | Approach                            | Implementation Summary                                                                                                                                                                                                                                                      |
+| :-------------------------------------------------- | :---------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **1. E2E Geo-Bypass Header / Cookie (Recommended)** | Server + Client bypass on `staging` | Update `staging.supersmooth.fi` middleware and `/api/compliance/geo` to check a dedicated E2E header or cookie (e.g. `x-e2e-country-override: 'ES'` or a shared CI bypass secret) before reading `cf-ipcountry`. Inject that header/cookie in Playwright's context fixture. |
-| **2. Disable Geo-Blocking on `staging`** | Environment variable on `staging` | Disable `blockedSurfaces` enforcement in the `staging` deployment environment while keeping it enforced on production (`supersmooth.fi`). |
-| **3. Non-US Proxy or Runner in CI** | Network / Runner routing | Configure Playwright in CI to route traffic through an EU proxy (`use: { proxy: { server: process.env.CI_PROXY_URL } }`), add a VPN step in the GitHub Actions workflow, or execute on a self-hosted runner in a non-restricted region. |
+| **2. Disable Geo-Blocking on `staging`**            | Environment variable on `staging`   | Disable `blockedSurfaces` enforcement in the `staging` deployment environment while keeping it enforced on production (`supersmooth.fi`).                                                                                                                                   |
+| **3. Non-US Proxy or Runner in CI**                 | Network / Runner routing            | Configure Playwright in CI to route traffic through an EU proxy (`use: { proxy: { server: process.env.CI_PROXY_URL } }`), add a VPN step in the GitHub Actions workflow, or execute on a self-hosted runner in a non-restricted region.                                     |

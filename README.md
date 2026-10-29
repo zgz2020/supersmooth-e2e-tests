@@ -8,6 +8,7 @@ End-to-end (E2E) testing suite for the Sovereign (SOV) web3 application using Pl
 
 - **Testing Framework:** [Playwright](https://playwright.dev/) (`@playwright/test`)
 - **Web3 Wallet Automation:** [Synpress](https://github.com/Synthetixio/synpress) (`@synthetixio/synpress` v4)
+- **Performance Testing:** [Grafana k6](https://k6.io/)
 - **Language:** [TypeScript](https://www.typescriptlang.org/)
 - **Package Manager:** [`pnpm`](https://pnpm.io/)
 - **Runtime:** Node.js (v20 LTS recommended via `.nvmrc`)
@@ -67,40 +68,97 @@ Tests are categorized into distinct projects defined in `playwright.config.ts`:
 | **API Tests**       | API endpoint and integration test suites                              | `./tests/api`                         | `pnpm test:api`            |
 | **API Regression**  | API regression suite excluding nightly-only tests                     | `./tests/api` (`!@api_nightly`)       | `pnpm test:api:regression` |
 | **API Fake Geo**    | API tests executing against local mock geo-compliance server          | `complianceGeoFakeLocation.spec.ts`   | `pnpm test:api:fake-geo`   |
+| **Performance**     | Grafana k6 performance tests (smoke, load, stress, spike, soak)       | `./tests/performance`                 | `pnpm test:performance`    |
 | **All Tests**       | Runs all Playwright test projects                                     | `./tests`                             | `pnpm test`                |
 
 ---
 
 ## 📜 Available Scripts
 
-| Script                                   | Description                                                       |
-| :--------------------------------------- | :---------------------------------------------------------------- |
-| `pnpm test`                              | Runs all Playwright test projects                                 |
-| `pnpm test:e2e`                          | Runs all E2E tests under `./tests/e2e`                            |
-| `pnpm test:no-wallet`                    | Runs E2E tests without Web3 wallet interactions                   |
-| `pnpm test:no-wallet-regression`         | Runs no-wallet E2E regression tests (`--grep @regression`)        |
-| `pnpm test:cross-browser`                | Runs cross-browser smoke tests across all configured engines      |
-| `pnpm test:cross-browser:firefox`        | Runs cross-browser smoke tests on Desktop Firefox                 |
-| `pnpm test:cross-browser:webkit`         | Runs cross-browser smoke tests on Desktop Safari (WebKit)         |
-| `pnpm test:cross-browser:mobile-safari`  | Runs cross-browser smoke tests on Mobile Safari (iPhone 14)       |
-| `pnpm test:cross-browser:mobile-android` | Runs cross-browser smoke tests on Mobile Android (Pixel 7)        |
-| `pnpm test:cross-browser:tablet-ipad`    | Runs cross-browser smoke tests on Tablet (iPad Pro 11)            |
-| `pnpm test:cross-browser:desktop-large`  | Runs cross-browser smoke tests on Desktop Safari (1920x1080)      |
-| `pnpm test:with-wallet`                  | Runs E2E tests with MetaMask wallet automation via Synpress       |
-| `pnpm test:with-wallet-regression`       | Runs with-wallet E2E regression tests (`--grep @regression`)      |
-| `pnpm test:api`                          | Runs full API test suites                                         |
-| `pnpm test:api:regression`               | Runs API tests excluding tests tagged with `@api_nightly`         |
-| `pnpm test:api:fake-geo`                 | Runs API tests with mock compliance geo server                    |
-| `pnpm test:repeat`                       | Runs a test suite repeatedly to detect flakiness                  |
-| `pnpm ci:synpress-build-cache:base`      | Builds Synpress wallet cache inside virtual framebuffer (`xvfb`)  |
-| `pnpm ci:no-wallet`                      | Runs no-wallet tests configured for CI with `xvfb` and 2 workers  |
-| `pnpm ci:no-wallet-regression`           | Runs no-wallet regression tests in CI with `xvfb` and 2 workers   |
-| `pnpm ci:cross-browser`                  | Runs cross-browser smoke tests in CI with `xvfb`                  |
-| `pnpm ci:with-wallet`                    | Runs with-wallet tests configured for CI with `xvfb` and 1 worker |
-| `pnpm ci:with-wallet-regression`         | Runs with-wallet regression tests in CI with `xvfb` and 1 worker  |
-| `pnpm typecheck`                         | Validates TypeScript types across the codebase                    |
-| `pnpm lint`                              | Runs ESLint checks across the codebase                            |
-| `pnpm format`                            | Formats code with Prettier                                        |
+| Script                                   | Description                                                                 |
+| :--------------------------------------- | :-------------------------------------------------------------------------- |
+| `pnpm test`                              | Runs all Playwright test projects                                           |
+| `pnpm test:e2e`                          | Runs all E2E tests under `./tests/e2e`                                      |
+| `pnpm test:no-wallet`                    | Runs E2E tests without Web3 wallet interactions                             |
+| `pnpm test:no-wallet-regression`         | Runs no-wallet E2E regression tests (`--grep @regression`)                  |
+| `pnpm test:cross-browser`                | Runs cross-browser smoke tests across all configured engines                |
+| `pnpm test:cross-browser:firefox`        | Runs cross-browser smoke tests on Desktop Firefox                           |
+| `pnpm test:cross-browser:webkit`         | Runs cross-browser smoke tests on Desktop Safari (WebKit)                   |
+| `pnpm test:cross-browser:mobile-safari`  | Runs cross-browser smoke tests on Mobile Safari (iPhone 14)                 |
+| `pnpm test:cross-browser:mobile-android` | Runs cross-browser smoke tests on Mobile Android (Pixel 7)                  |
+| `pnpm test:cross-browser:tablet-ipad`    | Runs cross-browser smoke tests on Tablet (iPad Pro 11)                      |
+| `pnpm test:cross-browser:desktop-large`  | Runs cross-browser smoke tests on Desktop Safari (1920x1080)                |
+| `pnpm test:with-wallet`                  | Runs E2E tests with MetaMask wallet automation via Synpress                 |
+| `pnpm test:with-wallet-regression`       | Runs with-wallet E2E regression tests (`--grep @regression`)                |
+| `pnpm test:api`                          | Runs full API test suites                                                   |
+| `pnpm test:api:regression`               | Runs API tests excluding tests tagged with `@api_nightly`                   |
+| `pnpm test:api:fake-geo`                 | Runs API tests with mock compliance geo server                              |
+| `pnpm test:performance`                  | Runs default k6 performance smoke tests                                     |
+| `pnpm test:performance:menu`             | Interactive CLI menu to run performance tests with profile & target prompts |
+| `pnpm test:performance:smoke`            | Runs k6 smoke test (1 VU, 30s)                                              |
+| `pnpm test:performance:load`             | Runs k6 load test (ramp to 10 VUs, hold 1m)                                 |
+| `pnpm test:performance:stress`           | Runs k6 stress test (ramp to 40 VUs)                                        |
+| `pnpm test:performance:spike`            | Runs k6 spike test (burst to 50 VUs)                                        |
+| `pnpm test:performance:soak`             | Runs k6 soak test (10 VUs over 5m)                                          |
+| `pnpm test:performance:api`              | Runs k6 performance test for all API endpoints                              |
+| `pnpm test:performance:web`              | Runs k6 performance test for web page navigation                            |
+| `pnpm test:repeat`                       | Runs a test suite repeatedly to detect flakiness                            |
+| `pnpm ci:synpress-build-cache:base`      | Builds Synpress wallet cache inside virtual framebuffer (`xvfb`)            |
+| `pnpm ci:no-wallet`                      | Runs no-wallet tests configured for CI with `xvfb` and 2 workers            |
+| `pnpm ci:no-wallet-regression`           | Runs no-wallet regression tests in CI with `xvfb` and 2 workers             |
+| `pnpm ci:cross-browser`                  | Runs cross-browser smoke tests in CI with `xvfb`                            |
+| `pnpm ci:with-wallet`                    | Runs with-wallet tests configured for CI with `xvfb` and 1 worker           |
+| `pnpm ci:with-wallet-regression`         | Runs with-wallet regression tests in CI with `xvfb` and 1 worker            |
+| `pnpm typecheck`                         | Validates TypeScript types across the codebase                              |
+| `pnpm lint`                              | Runs ESLint checks across the codebase                                      |
+| `pnpm format`                            | Formats code with Prettier                                                  |
+
+---
+
+## ⚡ Grafana k6 Performance Testing
+
+Performance testing is powered by [Grafana k6](https://k6.io/) and TypeScript.
+
+### Quick Start
+
+```bash
+# Interactive menu (prompts for profile, targets & options):
+pnpm test:performance:menu
+
+# Run default smoke test (all scenarios, 1 VU, 30s)
+pnpm test:performance
+
+# Run by traffic profile:
+pnpm test:performance:smoke
+pnpm test:performance:load
+pnpm test:performance:stress
+pnpm test:performance:spike
+pnpm test:performance:soak
+
+# Run by target scope:
+pnpm test:performance:api
+pnpm test:performance:web
+
+# Run a specific endpoint or page:
+TARGET=earn pnpm test:performance:smoke
+TARGET=token-prices pnpm test:performance:smoke
+
+# Run multiple endpoints/pages (comma-separated):
+TARGET="earn,borrow" pnpm test:performance:smoke
+TARGET="earn,token-prices,rpc" pnpm test:performance:smoke
+```
+
+### Reports
+
+Every test execution automatically outputs reports to `performance-reports/` using Grafana k6's native engine:
+
+- **Itemised Checks & Spec Report:** `performance-reports/report.html` (itemised page checks, assertions, and pass/fail stats via native `handleSummary`)
+- **Execution History & Comparison:** `performance-reports/history/` (automatically archives snapshots of the last 20 runs and renders a side-by-side comparison table inside `report.html`)
+- **Grafana Time-Series Dashboard:** `performance-reports/dashboard.html` (interactive charts generated via native `web-dashboard` export)
+- **Machine-readable JSON Summary:** `performance-reports/summary.json` (metric summary via native `handleSummary`)
+- **Live Web Dashboard:** Real-time metrics at `http://127.0.0.1:5665` during local execution
+
+For complete documentation on workload profiles, thresholds, custom metrics, and GitHub Actions, see the [Performance Testing Guide](docs/performance-testing-k6.md).
 
 ---
 
