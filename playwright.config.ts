@@ -15,6 +15,7 @@ const isFakeGeoRun =
 export default defineConfig({
   globalSetup: './utils/globalSetup',
   testDir: './tests',
+  testIgnore: ['**/tests/performance/**'],
   fullyParallel:
     process.env.FULLY_PARALLEL !== undefined ? process.env.FULLY_PARALLEL === 'true' : true,
   retries: process.env.RETRIES !== undefined ? Number(process.env.RETRIES) : process.env.CI ? 2 : 0,

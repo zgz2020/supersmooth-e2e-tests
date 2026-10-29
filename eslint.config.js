@@ -9,6 +9,7 @@ export default tseslint.config(
       'node_modules/**',
       'playwright-report/**',
       'playwright-reports/**',
+      'performance-reports/**',
       'test-results/**',
       '.cache-synpress/**',
       'dist/**',
@@ -19,6 +20,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ['tests/**/*.ts'],
+    ignores: ['tests/performance/**'],
     ...playwright.configs['flat/recommended'],
     rules: {
       ...playwright.configs['flat/recommended'].rules,
@@ -61,6 +63,12 @@ export default tseslint.config(
           varsIgnorePattern: '^_',
         },
       ],
+    },
+  },
+  {
+    files: ['tests/performance/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
     },
   },
   eslintPluginPrettierRecommended,

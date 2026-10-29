@@ -17,6 +17,9 @@ devDependencies:
   '@synthetixio/synpress':
     specifier: ^4.0.3
     version: 4.0.3(@depay/solana-web3.js@1.98.3)(@depay/web3-blockchains@9.8.13)(@playwright/test@1.49.1)(ethers@5.8.0)(playwright-core@1.49.1)(typescript@5.7.3)
+  '@types/k6':
+    specifier: ^2.3.1
+    version: 2.3.1
   '@types/node':
     specifier: ^26.4.1
     version: 26.5.1
@@ -1366,6 +1369,10 @@ packages:
 
   /@types/json-schema@7.0.15:
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+    dev: true
+
+  /@types/k6@2.3.1:
+    resolution: {integrity: sha512-3zbIAfQXvSDsA3ZaKC7+eczsvx1hGtL8o68iYEssOmTEmg0MuoCwZ45aAI3jDm0JtlhJZaQAszrie+M1xaqK7g==}
     dev: true
 
   /@types/node@26.5.1:

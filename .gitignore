@@ -12,6 +12,7 @@ package-lock.json
 test-results/
 playwright-report/
 playwright-reports/
+performance-reports/
 blob-report/
 coverage/
 cypress/screenshots/
@@ -32,3 +33,5 @@ pnpm-debug.log*
 # Temporary files
 tmp/
 *.tmp.*
+TODO.md
+TODO.*
