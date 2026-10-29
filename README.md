@@ -1,53 +1,45 @@
-# sov-e2e-tests
+# 🏛️ Sovereign E2E & Performance Testing Suite
 
-End-to-end (E2E) testing suite for the Sovereign (SOV) web3 application using Playwright, Synpress, TypeScript, and `pnpm`.
+End-to-end (E2E), API, and performance testing suite for the Sovereign (SOV) Web3 application using **Playwright**, **Synpress**, **Grafana k6**, **TypeScript**, and **pnpm**.
 
 ---
 
 ## 🚀 Tech Stack
 
-- **Testing Framework:** [Playwright](https://playwright.dev/) (`@playwright/test`)
-- **Web3 Wallet Automation:** [Synpress](https://github.com/Synthetixio/synpress) (`@synthetixio/synpress` v4)
-- **Performance Testing:** [Grafana k6](https://k6.io/)
-- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **E2E Testing:** [Playwright](https://playwright.dev/) (`@playwright/test`)
+- **Web3 Wallet Automation:** [Synpress](https://github.com/Synthetixio/synpress) (`@synthetixio/synpress` v4) with MetaMask
+- **Performance Testing:** [Grafana k6](https://k6.io/) & TypeScript
+- **Language & Runtime:** [TypeScript](https://www.typescriptlang.org/) / Node.js (v20+ LTS via `.nvmrc`)
 - **Package Manager:** [`pnpm`](https://pnpm.io/)
-- **Runtime:** Node.js (v20 LTS recommended via `.nvmrc`)
 
 ---
 
-## 🛠️ Prerequisites
+## ⚡ Quick Start
 
-Ensure you have Node.js (v20+) and `pnpm` installed on your machine.
+### 1. Prerequisites & Installation
 
-If you use `nvm`, switch to the recommended Node version:
+Ensure you have Node.js (v20+) and `pnpm` installed:
 
 ```bash
+# Switch to recommended Node version:
 nvm use
-```
 
-Install dependencies:
-
-```bash
+# Install dependencies:
 pnpm install
+
+# Install Playwright browser binaries:
+pnpm exec playwright install
 ```
 
-Configure environment variables:
+### 2. Environment Configuration
+
+Copy the sample environment file and configure variables:
 
 ```bash
 cp .env.example .env
 ```
 
-Install Playwright browsers (if needed):
-
-```bash
-pnpm exec playwright install
-```
-
----
-
-## 🦊 Synpress Wallet Setup
-
-For tests requiring Web3 wallet interaction (e.g., MetaMask), ensure `TEST_WALLET_PK` (and optionally `TEST_WALLET_ADDRESS`) is defined in `.env`, then build the Synpress cache before running wallet test suites:
+### 3. Build Wallet Cache (Required for With-Wallet Tests)
 
 ```bash
 pnpm synpress-build-cache:base
@@ -55,212 +47,58 @@ pnpm synpress-build-cache:base
 
 ---
 
-## 🧪 Test Suites & How to Run
+## 🧪 Essential Test Commands
 
-Tests are categorized into distinct projects defined in `playwright.config.ts`:
+| Test Suite          | Purpose                                                 | Command                       |
+| :------------------ | :------------------------------------------------------ | :---------------------------- |
+| **No-Wallet E2E**   | User flows without Web3 wallet connectivity             | `pnpm test:no-wallet`         |
+| **With-Wallet E2E** | MetaMask wallet connection, approvals, and trading      | `pnpm test:with-wallet`       |
+| **API Suites**      | Direct backend HTTP endpoints & schema validation       | `pnpm test:api`               |
+| **Cross-Browser**   | Responsive layout smoke matrix across engines & devices | `pnpm test:cross-browser`     |
+| **Performance**     | Grafana k6 high-throughput load and SLA tests           | `pnpm test:performance`       |
+| **Test Repeater**   | Interactive flakiness detection runner                  | `pnpm test:repeat`            |
+| **Code Quality**    | TypeScript type check and ESLint verification           | `pnpm typecheck && pnpm lint` |
 
-| Test Suite          | Description                                                           | Directory / Filter                    | Command                    |
-| :------------------ | :-------------------------------------------------------------------- | :------------------------------------ | :------------------------- |
-| **No-Wallet E2E**   | E2E tests that do not require Web3 wallet connection                  | `./tests/e2e/no-wallet`               | `pnpm test:no-wallet`      |
-| **Cross-Browser**   | Smoke tests on Firefox, Safari, Mobile Safari, Android, and viewports | `./tests/e2e/no-wallet-cross-browser` | `pnpm test:cross-browser`  |
-| **With-Wallet E2E** | E2E tests requiring MetaMask wallet interaction via Synpress          | `./tests/e2e/with-wallet`             | `pnpm test:with-wallet`    |
-| **All E2E**         | Runs all end-to-end test suites                                       | `./tests/e2e`                         | `pnpm test:e2e`            |
-| **API Tests**       | API endpoint and integration test suites                              | `./tests/api`                         | `pnpm test:api`            |
-| **API Regression**  | API regression suite excluding nightly-only tests                     | `./tests/api` (`!@api_nightly`)       | `pnpm test:api:regression` |
-| **API Fake Geo**    | API tests executing against local mock geo-compliance server          | `complianceGeoFakeLocation.spec.ts`   | `pnpm test:api:fake-geo`   |
-| **Performance**     | Grafana k6 performance tests (smoke, load, stress, spike, soak)       | `./tests/performance`                 | `pnpm test:performance`    |
-| **All Tests**       | Runs all Playwright test projects                                     | `./tests`                             | `pnpm test`                |
+> 📖 **Full Command List:** For the exhaustive list of all 36+ scripts, CI flags, and targeted browser commands, see the **[Scripts & Test Suites Reference](docs/scripts-reference.md)**.
 
 ---
 
-## 📜 Available Scripts
+## ⚡ Performance Testing (Grafana k6)
 
-| Script                                   | Description                                                                 |
-| :--------------------------------------- | :-------------------------------------------------------------------------- |
-| `pnpm test`                              | Runs all Playwright test projects                                           |
-| `pnpm test:e2e`                          | Runs all E2E tests under `./tests/e2e`                                      |
-| `pnpm test:no-wallet`                    | Runs E2E tests without Web3 wallet interactions                             |
-| `pnpm test:no-wallet-regression`         | Runs no-wallet E2E regression tests (`--grep @regression`)                  |
-| `pnpm test:cross-browser`                | Runs cross-browser smoke tests across all configured engines                |
-| `pnpm test:cross-browser:firefox`        | Runs cross-browser smoke tests on Desktop Firefox                           |
-| `pnpm test:cross-browser:webkit`         | Runs cross-browser smoke tests on Desktop Safari (WebKit)                   |
-| `pnpm test:cross-browser:mobile-safari`  | Runs cross-browser smoke tests on Mobile Safari (iPhone 14)                 |
-| `pnpm test:cross-browser:mobile-android` | Runs cross-browser smoke tests on Mobile Android (Pixel 7)                  |
-| `pnpm test:cross-browser:tablet-ipad`    | Runs cross-browser smoke tests on Tablet (iPad Pro 11)                      |
-| `pnpm test:cross-browser:desktop-large`  | Runs cross-browser smoke tests on Desktop Safari (1920x1080)                |
-| `pnpm test:with-wallet`                  | Runs E2E tests with MetaMask wallet automation via Synpress                 |
-| `pnpm test:with-wallet-regression`       | Runs with-wallet E2E regression tests (`--grep @regression`)                |
-| `pnpm test:api`                          | Runs full API test suites                                                   |
-| `pnpm test:api:regression`               | Runs API tests excluding tests tagged with `@api_nightly`                   |
-| `pnpm test:api:fake-geo`                 | Runs API tests with mock compliance geo server                              |
-| `pnpm test:performance`                  | Runs default k6 performance smoke tests                                     |
-| `pnpm test:performance:menu`             | Interactive CLI menu to run performance tests with profile & target prompts |
-| `pnpm test:performance:smoke`            | Runs k6 smoke test (1 VU, 30s)                                              |
-| `pnpm test:performance:load`             | Runs k6 load test (ramp to 10 VUs, hold 1m)                                 |
-| `pnpm test:performance:stress`           | Runs k6 stress test (ramp to 40 VUs)                                        |
-| `pnpm test:performance:spike`            | Runs k6 spike test (burst to 50 VUs)                                        |
-| `pnpm test:performance:soak`             | Runs k6 soak test (10 VUs over 5m)                                          |
-| `pnpm test:performance:api`              | Runs k6 performance test for all API endpoints                              |
-| `pnpm test:performance:web`              | Runs k6 performance test for web page navigation                            |
-| `pnpm test:repeat`                       | Runs a test suite repeatedly to detect flakiness                            |
-| `pnpm ci:synpress-build-cache:base`      | Builds Synpress wallet cache inside virtual framebuffer (`xvfb`)            |
-| `pnpm ci:no-wallet`                      | Runs no-wallet tests configured for CI with `xvfb` and 2 workers            |
-| `pnpm ci:no-wallet-regression`           | Runs no-wallet regression tests in CI with `xvfb` and 2 workers             |
-| `pnpm ci:cross-browser`                  | Runs cross-browser smoke tests in CI with `xvfb`                            |
-| `pnpm ci:with-wallet`                    | Runs with-wallet tests configured for CI with `xvfb` and 1 worker           |
-| `pnpm ci:with-wallet-regression`         | Runs with-wallet regression tests in CI with `xvfb` and 1 worker            |
-| `pnpm typecheck`                         | Validates TypeScript types across the codebase                              |
-| `pnpm lint`                              | Runs ESLint checks across the codebase                                      |
-| `pnpm format`                            | Formats code with Prettier                                                  |
-
----
-
-## ⚡ Grafana k6 Performance Testing
-
-Performance testing is powered by [Grafana k6](https://k6.io/) and TypeScript.
-
-### Quick Start
+Run targeted performance tests against local, staging, or production environments:
 
 ```bash
 # Interactive menu (prompts for profile, targets & options):
 pnpm test:performance:menu
 
-# Run default smoke test (all scenarios, 1 VU, 30s)
+# Run default smoke test (all scenarios, 1 VU, 30s):
 pnpm test:performance
 
-# Run by traffic profile:
-pnpm test:performance:smoke
-pnpm test:performance:load
-pnpm test:performance:stress
-pnpm test:performance:spike
-pnpm test:performance:soak
-
-# Run by target scope:
-pnpm test:performance:api
-pnpm test:performance:web
-
-# Run a specific endpoint or page:
+# Run targeted endpoint or page:
 TARGET=earn pnpm test:performance:smoke
-TARGET=token-prices pnpm test:performance:smoke
-
-# Run multiple endpoints/pages (comma-separated):
-TARGET="earn,borrow" pnpm test:performance:smoke
 TARGET="earn,token-prices,rpc" pnpm test:performance:smoke
 ```
 
-### Reports
+Every execution generates dual native reports in `performance-reports/`:
 
-Every test execution automatically outputs reports to `performance-reports/` using Grafana k6's native engine:
+- **Itemised Checks Report (`report.html`)**: Assertions breakdown, KPI cards, and recent run history comparison table.
+- **Grafana Time-Series Dashboard (`dashboard.html`)**: Time-series graphs for RPS, VUs, latency percentiles, and errors.
 
-- **Itemised Checks & Spec Report:** `performance-reports/report.html` (itemised page checks, assertions, and pass/fail stats via native `handleSummary`)
-- **Execution History & Comparison:** `performance-reports/history/` (automatically archives snapshots of the last 20 runs and renders a side-by-side comparison table inside `report.html`)
-- **Grafana Time-Series Dashboard:** `performance-reports/dashboard.html` (interactive charts generated via native `web-dashboard` export)
-- **Machine-readable JSON Summary:** `performance-reports/summary.json` (metric summary via native `handleSummary`)
-- **Live Web Dashboard:** Real-time metrics at `http://127.0.0.1:5665` during local execution
-
-For complete documentation on workload profiles, thresholds, custom metrics, and GitHub Actions, see the [Performance Testing Guide](docs/performance-testing-k6.md).
+> 📖 **Deep Dive:** Workload profiles, tiered tagged SLAs, and CI dispatch are detailed in the **[Performance Testing Guide](docs/performance-testing-k6.md)**.
 
 ---
 
-## 🔁 Test Repeater (Flakiness Checker)
+## 📚 Documentation Hub
 
-To verify test reliability or detect flakiness across consecutive executions, use the test repeater utility:
+Detailed architectural documentation, setup guides, and references are organized under [`docs/`](docs/):
 
-```bash
-pnpm test:repeat
-```
-
-### Interactive Mode
-
-When invoked without arguments, the script prompts for the target suite and iteration count:
-
-1. **Select suite:** `1` (`api`), `2` (`api:regression`), `3` (`no-wallet`), `4` (`with-wallet`), or `5` (`cross-browser`)
-   - When selecting `cross-browser`, a target submenu prompts for: `1` (`all`), `2` (`firefox`), `3` (`webkit`), `4` (`mobile-safari`), `5` (`mobile-android`), `6` (`tablet-ipad`), or `7` (`desktop-large`).
-2. **Number of iterations:**
-   - **Cross-browser tests:** Configurable between 1 and 5 runs (defaults to 1).
-   - **API tests (`api`, `api:regression`):** Limited to at most 2 runs (1-2 times) with a warning that running more times might trigger rate-limiting errors (e.g. `'Too many calls'`).
-   - **E2E tests (`no-wallet`, `with-wallet`):** Configurable between 2 and 5 runs (defaults to 2).
-
-### Non-Interactive / CLI Mode
-
-You can also specify the suite and iteration count directly via command-line arguments:
-
-```bash
-# Run API tests up to 2 times
-pnpm test:repeat api 2
-
-# Run API regression tests up to 2 times
-pnpm test:repeat api:regression 2
-
-# Run no-wallet E2E tests 3 times (between 2 and 5)
-pnpm test:repeat no-wallet 3
-
-# Run with-wallet E2E tests 5 times (between 2 and 5)
-pnpm test:repeat with-wallet 5
-
-# Run all cross-browser smoke tests
-pnpm test:repeat cross-browser 1
-
-# Run a specific cross-browser target (e.g. Desktop Safari / WebKit)
-pnpm test:repeat cross-browser:webkit 1
-```
-
-The tool tracks elapsed time per iteration and halts immediately if any run fails.
-
----
-
-## 🌐 Wallet & Network Utilities
-
-Helper functions located in `./utils`:
-
-- **`connectWallet({ app, metamask, network? })`**: Connects MetaMask wallet to the dApp and switches to the specified network (defaults to `'Base'`).
-- **`switchNetwork({ app, metamask, network })`**: Opens the network selector modal, switches to the specified network (`FixturesNetwork`: `'Arbitrum One' | 'Base' | 'Ethereum' | 'HyperEVM' | 'OP Mainnet'`), and automatically approves new network additions and network switches in MetaMask.
-- **`verifyTermsAndAcceptIfNeeded({ app, metamask, address?, collateral?, depositAmount?, url? })`**: Verifies whether the specified wallet address has accepted the Terms of Service via `/api/terms/status`. If unsigned, it navigates to the position page, inputs a deposit, opens the position to trigger the Terms of Service modal, accepts and signs the terms in both the dApp and MetaMask, and polls `/api/terms/status` using Playwright `expect.poll` until verified. Also integrated directly into the `app` test fixture (`src/fixtures/base.ts`) to ensure wallets are terms-approved before executing with-wallet tests.
-
----
-
-## 🤖 GitHub Actions Workflows
-
-Continuous Integration (CI) and scheduled workflows are organized under `.github/workflows/`:
-
-### Scheduled & Trigger Workflows
-
-- **Nightly Run (`nightly.yml`)**: Scheduled cron workflow that triggers on Monday, Wednesday, and Friday at 01:00 UTC (`0 1 * * 1,3,5`). Executes the full API test suite, no-wallet E2E suite, no-wallet cross-browser matrix, and with-wallet E2E suite in parallel.
-- **CI Regression Run (`ci-regression.yml`)**: Triggered via `workflow_dispatch` by the [aphelion-app](https://github.com/Aphelion-Co/aphelion-app) repository when merging to `staging`. Accepts `run_id`, `repository`, and `commit_sha` from the triggering workflow and executes the regression test suites in parallel:
-  - API regression (`test:api:regression`)
-  - No-wallet E2E regression (`ci:no-wallet-regression`)
-  - No-wallet cross-browser matrix (`reusable-no-wallet-cross-browser.yml`)
-  - With-wallet E2E regression (`ci:with-wallet-regression`)
-    Upon completion, the `report-status` job evaluates the run outcome and delivers a green/red commit status check back to the calling commit in `aphelion-app`. For the complete architectural design and reference guide, see [Cross-Repository CI Strategy](docs/ci-cross-repo-strategy.md).
-- **Manual Triggers (`workflow_dispatch`)**:
-  - **API Tests (`api-tests.yml`)**: Runs API tests against a configurable `baseUrl` (defaults to `'https://staging.supersmooth.fi/'`).
-  - **No-wallet Tests (`no-wallet-tests.yml`)**: Runs no-wallet E2E tests against a configurable `baseUrl`.
-  - **No-wallet Cross-browser Tests (`no-wallet-cross-browser.yml`)**: Triggers the reusable cross-browser matrix workflow across Desktop Firefox, Desktop Safari, Mobile Safari (iPhone 14), Mobile Android (Pixel 7), Tablet (iPad Pro 11), and Desktop Large (1920x1080) against a configurable `baseUrl`.
-  - **No-wallet Regression Tests (`no-wallet-regression.yml`)**: Runs no-wallet regression E2E tests against a configurable `baseUrl`.
-  - **With-wallet Tests (`with-wallet-tests.yml`)**: Runs with-wallet E2E tests against a configurable `baseUrl`, inheriting the `TEST_WALLET_PK` repository secret.
-  - **With-wallet Regression Tests (`with-wallet-regression.yml`)**: Runs with-wallet regression E2E tests against a configurable `baseUrl`, inheriting the `TEST_WALLET_PK` repository secret.
-
-### Reusable Workflows
-
-- **`reusable-api-tests.yml`**: Runs API tests in `ubuntu-24.04`, uploading the report artifact as `api-tests`.
-- **`reusable-no-wallet.yml`**: Runs no-wallet E2E tests inside the official Playwright Docker container (`mcr.microsoft.com/playwright:v1.49.0-noble`) with `xvfb`, uploading the report artifact as `no-wallet`.
-- **`reusable-no-wallet-cross-browser.yml`**: Matrix workflow executing smoke tests in parallel across Desktop Firefox, Desktop Safari, Mobile Safari (iPhone 14), Mobile Android (Pixel 7), Tablet (iPad Pro 11), and Desktop Large (1920x1080) inside the Playwright Docker container with `xvfb`, uploading individual report artifacts for each target (`cross-browser-<project>`).
-- **`reusable-with-wallet.yml`**: Builds the Synpress MetaMask cache, runs with-wallet E2E tests in the Playwright Docker container with `xvfb`, and uploads the report artifact as `with-wallet`.
-
-> [!NOTE]
-> Containerized workflows require a few environment workarounds (`xvfb`, pnpm version via `packageManager`, Firefox `$HOME`). See [Containerized Browser Execution](docs/ci-cross-repo-strategy.md#containerized-browser-execution--firefox-home-workaround).
-
-### Artifacts & Reports
-
-Playwright HTML test reports are generated and preserved as GitHub Actions artifacts for 30 days upon test completion.
-
-### 📖 Cross-Repository CI Documentation
-
-For complete architectural details, sequence diagrams, token setup, script parity, and maintenance instructions, consult the reference documentation:
-
-- [Cross-Repository CI Strategy Guide](docs/ci-cross-repo-strategy.md)
-- [Cross-Repository CI Strategy (PDF)](docs/ci-cross-repo-strategy.pdf)
-- [CI & GitHub Runs Reference Guide](docs/ci-github-runs.md)
+| Guide                                                           | Description                                                                    |
+| :-------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| **[📜 Scripts Reference](docs/scripts-reference.md)**           | Complete breakdown of all scripts in `package.json` with execution flags       |
+| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                | Synpress v4 cache configuration, MetaMask automation, and wallet helpers       |
+| **[⚡ Performance Testing](docs/performance-testing-k6.md)**    | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide              |
+| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)** | Architecture, status reporting, and dispatch from `aphelion-app` to CI         |
+| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**     | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting |
 
 ---
 
@@ -268,64 +106,22 @@ For complete architectural details, sequence diagrams, token setup, script parit
 
 ```text
 .
-├── .github/
-│   └── workflows/
-│       ├── api-tests.yml             # Manual API test workflow
-│       ├── ci-regression.yml         # CI regression workflow triggered by aphelion-app
-│       ├── nightly.yml               # Nightly scheduled cron workflow
-│       ├── no-wallet-cross-browser.yml # Manual cross-browser smoke test workflow
-│       ├── no-wallet-regression.yml  # Manual no-wallet regression E2E workflow
-│       ├── no-wallet-tests.yml       # Manual no-wallet E2E workflow
-│       ├── reusable-api-tests.yml    # Reusable API test runner
-│       ├── reusable-no-wallet-cross-browser.yml # Reusable cross-browser matrix runner (containerized)
-│       ├── reusable-no-wallet.yml    # Reusable no-wallet runner (containerized)
-│       ├── reusable-with-wallet.yml  # Reusable with-wallet runner (containerized)
-│       ├── with-wallet-regression.yml # Manual with-wallet regression E2E workflow
-│       └── with-wallet-tests.yml     # Manual with-wallet E2E workflow
-├── .env.example                      # Environment variables template
-├── .gitignore
-├── .nvmrc
-├── docs/
-│   ├── ci-cross-repo-strategy.md     # Cross-repo CI architecture reference guide
-│   └── ci-github-runs.md             # CI & GitHub runs regional/environment reference guide
-├── eslint.config.js
-├── package.json
-├── playwright.config.ts
-├── README.md
-├── scripts/
-│   ├── mock-compliance-server.js     # Mock geo-compliance server
-│   └── repeat-tests.js               # Interactive test repeater utility
-├── src/
-│   ├── app.ts                        # Main App fixture entry point
-│   ├── fixtures/                     # Custom Playwright & Synpress fixtures (auto-terms acceptance)
-│   ├── modals/                       # Modal dialog page objects (ConnectWallet, TermsOfService, etc.)
-│   │   ├── connectWallet/            # Connect wallet modal & All Wallets search view
-│   │   ├── settings/                 # Application settings modal
-│   │   ├── walletFeatures/           # Wallet features and network selection modal
-│   │   ├── getHelp.ts                # Help modal page object
-│   │   └── termsOfService.ts         # Terms of Service modal page object
-│   └── pages/                        # Page objects (Header, Multiply, Borrow, Earn, Trade, ProductsTopNavigation, etc.)
+├── .github/workflows/          # CI and CD GitHub Actions workflow pipelines
+├── docs/                       # Architectural documentation & technical guides
+├── scripts/                    # CLI test runners, repeater, and mock servers
+├── src/                        # Page objects, modals, and test fixtures
 ├── tests/
-│   ├── api/                          # API test specs
-│   └── e2e/
-│       ├── no-wallet/                 # E2E test specs without wallet (connect wallet modal, products & top navigation)
-│       ├── no-wallet-cross-browser/   # Cross-browser smoke specs across Firefox, WebKit, Mobile, Tablet
-│       └── with-wallet/               # E2E test specs with Synpress MetaMask wallet (position opening)
-└── utils/
-    ├── assertions/                   # Custom matchers & assertion helpers
-    ├── connectWallet.ts              # Helper to connect wallet and select network
-    ├── globalSetup.ts                # Global setup logger for target BASE_URL
-    ├── openPosition.ts               # Helper to configure and open positions
-    ├── switchNetwork.ts              # Helper to switch network with MetaMask approvals
-    ├── synpress/                     # Synpress wallet setup and cache utilities
-    └── verifyTermsAndAcceptIfNeeded.ts # Verifies and accepts Terms of Service if needed
+│   ├── api/                    # API test suites and schemas
+│   ├── e2e/                    # E2E test specs (no-wallet, with-wallet, cross-browser)
+│   └── performance/            # Grafana k6 performance testing suite
+└── utils/                      # Reusable Web3 helpers, constants, assertions
 ```
 
 ---
 
-## 📊 View Test Reports
+## 📊 Viewing Test Reports
 
-To view the HTML test report after running tests:
+After executing Playwright tests, open the interactive HTML test report:
 
 ```bash
 pnpm exec playwright show-report
