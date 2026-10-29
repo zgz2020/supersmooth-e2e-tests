@@ -4,9 +4,10 @@ on:
   workflow_call:
     inputs:
       baseUrl:
-        description: 'Base URL for the performance tests'
+        description: 'Base URL for the performance tests (falls back to vars.DEFAULT_BASE_URL or staging default)'
         type: 'string'
-        default: 'https://staging.supersmooth.fi/'
+        required: false
+        default: ''
       profile:
         description: 'Performance profile (smoke | load | stress | spike | soak)'
         type: 'string'
@@ -50,7 +51,7 @@ jobs:
 
       - name: 'Run performance test suite'
         env:
-          K6_BASE_URL: '${{ inputs.baseUrl }}'
+          K6_BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
           K6_PROFILE: '${{ inputs.profile }}'
           K6_SCENARIO: '${{ inputs.scenario }}'
           K6_TARGET: '${{ inputs.target }}'

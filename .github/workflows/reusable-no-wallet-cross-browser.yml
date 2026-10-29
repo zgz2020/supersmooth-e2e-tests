@@ -4,9 +4,10 @@ on:
   workflow_call:
     inputs:
       baseUrl:
-        description: 'Base URL for cross-browser tests'
+        description: 'Base URL for cross-browser tests (falls back to vars.DEFAULT_BASE_URL or staging default)'
         type: 'string'
-        default: 'https://staging.supersmooth.fi/'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -55,7 +56,7 @@ jobs:
 
       - name: 'Run cross-browser tests'
         env:
-          BASE_URL: '${{ inputs.baseUrl }}'
+          BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
           REPORT_FOLDER: 'cross-browser-${{ matrix.browser.project }}'
           # Firefox refuses to run as root when $HOME is owned by another user (/github/home -> pwuser)
           HOME: '/root'

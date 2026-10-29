@@ -4,9 +4,10 @@ on:
   workflow_call:
     inputs:
       baseUrl:
-        description: 'Base URL for the tests'
+        description: 'Base URL for the tests (falls back to vars.DEFAULT_BASE_URL or staging default)'
         type: 'string'
-        default: 'https://staging.supersmooth.fi/'
+        required: false
+        default: ''
       script:
         description: 'pnpm script to run (e.g. ci:with-wallet)'
         type: 'string'
@@ -43,14 +44,14 @@ jobs:
 
       - name: Build Synpress cache
         env:
-          BASE_URL: ${{ inputs.baseUrl }}
+          BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
           TEST_WALLET_PK: ${{ secrets.TEST_WALLET_PK }}
           TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
         run: pnpm ci:synpress-build-cache:base
 
       - name: 'Run tests'
         env:
-          BASE_URL: '${{ inputs.baseUrl }}'
+          BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
           TEST_WALLET_PK: ${{ secrets.TEST_WALLET_PK }}
           TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
         run: 'pnpm "${{ inputs.script }}"'

@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { defineConfig, devices } from '@playwright/test';
+import { normalizeBaseUrl } from './utils/constants/urls';
 
 dotenv.config();
 
@@ -33,7 +34,7 @@ export default defineConfig({
       }
     : undefined,
   use: {
-    baseURL: process.env.BASE_URL || 'https://staging.supersmooth.fi/',
+    baseURL: normalizeBaseUrl(process.env.BASE_URL),
     headless: process.env.HEADLESS ? true : false,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',

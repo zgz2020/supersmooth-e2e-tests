@@ -4,9 +4,10 @@ on:
   workflow_call:
     inputs:
       baseUrl:
-        description: 'Base URL for the tests'
+        description: 'Base URL for the tests (falls back to vars.DEFAULT_BASE_URL or staging default)'
         type: 'string'
-        default: 'https://staging.supersmooth.fi/'
+        required: false
+        default: ''
       script:
         description: 'pnpm script to run (e.g. ci:no-wallet)'
         type: 'string'
@@ -43,7 +44,7 @@ jobs:
 
       - name: 'Run tests'
         env:
-          BASE_URL: '${{ inputs.baseUrl }}'
+          BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
         run: 'pnpm "${{ inputs.script }}"'
 
       - name: 'Upload Playwright Report'
