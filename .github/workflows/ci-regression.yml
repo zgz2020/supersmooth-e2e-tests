@@ -16,9 +16,10 @@ on:
         type: 'string'
         required: true
       baseUrl:
-        description: 'Base URL for testing'
+        description: 'Base URL for testing (leave empty to use default staging URL)'
         type: 'string'
-        default: 'https://staging.supersmooth.fi/'
+        required: false
+        default: ''
 
 permissions:
   contents: read

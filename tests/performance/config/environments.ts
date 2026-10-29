@@ -1,3 +1,5 @@
+import { normalizeBaseUrl } from '../../../utils/constants/urls.ts';
+
 export interface PerformanceEnvironment {
   baseUrl: string;
   defaultHeaders: Record<string, string>;
@@ -48,12 +50,7 @@ export function getEnv(key: string): string | undefined {
 }
 
 export function getBaseUrl(): string {
-  const url =
-    (getEnv('K6_BASE_URL') || '').trim() ||
-    (getEnv('BASE_URL') || '').trim() ||
-    'https://staging.supersmooth.fi';
-
-  return url.replace(/\/+$/, '');
+  return normalizeBaseUrl(getEnv('K6_BASE_URL') || getEnv('BASE_URL'));
 }
 
 export const performanceEnv: PerformanceEnvironment = {

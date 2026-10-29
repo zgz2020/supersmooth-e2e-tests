@@ -5,6 +5,27 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { exec, spawn } from 'node:child_process';
 
+const loadDefaultBaseUrl = () => {
+  try {
+    const urlsFile = path.resolve('utils/constants/urls.ts');
+    if (fs.existsSync(urlsFile)) {
+      const content = fs.readFileSync(urlsFile, 'utf8');
+      const match = content.match(/export const DEFAULT_BASE_URL\s*=\s*['"]([^'"]+)['"]/);
+      if (match) return match[1];
+    }
+  } catch {
+    // fallback if file cannot be read
+  }
+  return 'https://staging.supersmooth.fi';
+};
+
+const DEFAULT_BASE_URL = loadDefaultBaseUrl();
+
+const normalizeBaseUrl = (url, fallback = DEFAULT_BASE_URL) => {
+  const base = (url || '').trim() || fallback;
+  return base.replace(/\/+$/, '');
+};
+
 const PROFILES = [
   { id: 'smoke', name: 'Smoke Test', desc: '1 VU, 30s (quick functional SLA check)' },
   { id: 'load', name: 'Load Test', desc: 'Ramps up to 20 VUs (realistic sustained traffic)' },
@@ -156,13 +177,12 @@ const promptTarget = async (rl) => {
 };
 
 const promptBaseUrl = async (rl) => {
-  const defaultBaseUrl =
-    process.env.K6_BASE_URL || process.env.BASE_URL || 'https://staging.supersmooth.fi';
+  const defaultBaseUrl = normalizeBaseUrl(process.env.K6_BASE_URL || process.env.BASE_URL);
   console.log('\n--- 3. Target Environment ---');
   console.log(`Current default: ${defaultBaseUrl}`);
 
   const input = await askQuestion(rl, `Target Base URL (press Enter to keep default): `);
-  return input || defaultBaseUrl;
+  return normalizeBaseUrl(input || defaultBaseUrl);
 };
 
 const promptAutoOpenReport = async (rl) => {
@@ -245,8 +265,10 @@ const main = async () => {
   } else {
     profile = profile || 'smoke';
     target = target || 'all';
-    baseUrl = baseUrl || process.env.BASE_URL || 'https://staging.supersmooth.fi';
+    baseUrl = normalizeBaseUrl(baseUrl || process.env.K6_BASE_URL || process.env.BASE_URL);
   }
+
+  baseUrl = normalizeBaseUrl(baseUrl);
 
   console.log('\n' + '='.repeat(70));
   console.log('⚡ STARTING PERFORMANCE RUN');

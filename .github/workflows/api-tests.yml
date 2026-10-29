@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       baseUrl:
-        description: 'Base URL for API tests'
+        description: 'Base URL for API tests (leave empty to use default staging URL)'
         type: 'string'
-        default: 'https://staging.supersmooth.fi/'
+        required: false
+        default: ''
 
 permissions:
   contents: read
