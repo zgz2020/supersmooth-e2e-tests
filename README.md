@@ -56,6 +56,7 @@ pnpm synpress-build-cache:base
 | **API Suites**      | Direct backend HTTP endpoints & schema validation       | `pnpm test:api`               |
 | **Cross-Browser**   | Responsive layout smoke matrix across engines & devices | `pnpm test:cross-browser`     |
 | **Performance**     | Grafana k6 high-throughput load and SLA tests           | `pnpm test:performance`       |
+| **Local dApp Fork** | Runs `aphelion-app` locally with Anvil mainnet/L2 state | `pnpm app:fork`               |
 | **Test Repeater**   | Interactive flakiness detection runner                  | `pnpm test:repeat`            |
 | **Code Quality**    | TypeScript type check and ESLint verification           | `pnpm typecheck && pnpm lint` |
 
@@ -92,13 +93,14 @@ Every execution generates dual native reports in `performance-reports/`:
 
 Detailed architectural documentation, setup guides, and references are organized under [`docs/`](docs/):
 
-| Guide                                                           | Description                                                                    |
-| :-------------------------------------------------------------- | :----------------------------------------------------------------------------- |
-| **[📜 Scripts Reference](docs/scripts-reference.md)**           | Complete breakdown of all scripts in `package.json` with execution flags       |
-| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                | Synpress v4 cache configuration, MetaMask automation, and wallet helpers       |
-| **[⚡ Performance Testing](docs/performance-testing-k6.md)**    | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide              |
-| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)** | Architecture, status reporting, and dispatch from `aphelion-app` to CI         |
-| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**     | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting |
+| Guide                                                            | Description                                                                    |
+| :--------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| **[📜 Scripts Reference](docs/scripts-reference.md)**            | Complete breakdown of all scripts in `package.json` with execution flags       |
+| **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)** | Run `aphelion-app` locally against Anvil state fork with pre-funded balances   |
+| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                 | Synpress v4 cache configuration, MetaMask automation, and wallet helpers       |
+| **[⚡ Performance Testing](docs/performance-testing-k6.md)**     | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide              |
+| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)**  | Architecture, status reporting, and dispatch from `aphelion-app` to CI         |
+| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**      | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting |
 
 ---
 

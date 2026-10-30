@@ -32,6 +32,8 @@ pnpm-debug.log*
 
 # Temporary files
 tmp/
+.temp/
 *.tmp.*
+*.pdf
 TODO.md
 TODO.*
