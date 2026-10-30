@@ -17,11 +17,16 @@ function loadDotEnv(): Record<string, string> {
   if (cachedDotEnv !== null) return cachedDotEnv;
   cachedDotEnv = {};
 
-  // In k6, open() resolves relative to this file (tests/performance/config/)
+  // In k6, resolve relative to this module using import.meta.resolve() to prevent
+  // relative path mismatch warnings when imported across subdirectories.
   const candidatePaths = ['../../../.env', '../../.env', './.env'];
   for (const candidate of candidatePaths) {
     try {
-      const raw = open(candidate);
+      const resolvedPath =
+        typeof import.meta !== 'undefined' && typeof import.meta.resolve === 'function'
+          ? import.meta.resolve(candidate)
+          : candidate;
+      const raw = open(resolvedPath);
       for (const line of raw.split('\n')) {
         const trimmed = line.trim();
         if (!trimmed || trimmed.startsWith('#')) continue;
