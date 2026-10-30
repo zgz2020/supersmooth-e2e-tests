@@ -113,11 +113,22 @@ Located in `scripts/`. Utilities for test maintenance and flakiness verification
 
 | Script             | Description                                                                              |
 | :----------------- | :--------------------------------------------------------------------------------------- |
+| `pnpm app:fork`    | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH & tokens    |
 | `pnpm test:repeat` | Interactive utility to execute a test suite multiple times in a loop to detect flakiness |
 
 ### CLI Usage:
 
 ```bash
+# Launch aphelion-app against Anvil fork (interactive prompt for network and tokens)
+pnpm app:fork
+
+# Launch against specific chain and block
+pnpm app:fork --chain=8453 --block=21000000
+
+# Pre-fund extra custom tokens with optional whale address
+pnpm app:fork --tokens="0xToken:10000"
+pnpm app:fork --tokens="0xToken:10000:0xWhaleAddress"
+
 # Run API tests twice
 pnpm test:repeat api 2
 
@@ -170,6 +181,7 @@ pnpm test:repeat cross-browser:webkit 1
 | `test:performance:api`              | `K6_SCENARIO=api pnpm test:performance`                           | Run k6 API target scenario          |
 | `test:performance:web`              | `K6_SCENARIO=web pnpm test:performance`                           | Run k6 Web target scenario          |
 | `test:repeat`                       | `node scripts/repeat-tests.js`                                    | Interactive test repeater utility   |
+| `app:fork`                          | `node scripts/run-app-fork.js`                                    | Run local dApp with Anvil fork      |
 | `synpress-build-cache:base`         | `pnpm synpress ./utils/synpress/wallet-setup`                     | Build local Synpress wallet cache   |
 | `ci:synpress-build-cache:base`      | `xvfb-run pnpm synpress-build-cache:base`                         | Build Synpress cache in CI          |
 | `ci:no-wallet`                      | `WORKERS='2' xvfb-run pnpm test:no-wallet`                        | Run no-wallet suite in CI           |
