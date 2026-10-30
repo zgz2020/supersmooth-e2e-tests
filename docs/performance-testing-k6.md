@@ -269,8 +269,8 @@ Every test execution automatically generates reports inside `performance-reports
    - Full time-series graphs for active VUs, requests per second, latency percentiles, and errors over the test timeline.
 4. **Execution History & Comparison Table** (`performance-reports/history/`):
    - Every execution is automatically timestamped and archived (e.g. `history/report-2026-10-29_13-30-00_smoke_all.html`).
-   - The primary `report.html` renders a **Recent Runs History & Comparison** table at the bottom comparing the last 20 runs side-by-side with execution date, profile, targets, request throughput, p95 latency, check pass rates, and direct links to historical reports.
-   - Automatically maintains the last 20 runs in `history/runs.json` with self-pruning.
+   - The primary `report.html` renders a **Recent Runs History & Comparison** table at the bottom comparing the last 20 runs **for the active profile** (e.g. comparing smoke against smoke, or load against load) with execution date, profile, targets, request throughput, p95 latency, check pass rates, and direct links to historical reports.
+   - Automatically maintains up to 50 runs across all profiles in `history/runs.json` with self-pruning.
 5. **Native JSON Summary** (`performance-reports/summary.json`):
    - Exported directly via native `handleSummary` for programmatic CI/CD consumption and metric trend tracking.
 6. **Live Web Dashboard** (`http://127.0.0.1:5665`):

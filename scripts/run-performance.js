@@ -316,7 +316,7 @@ const main = async () => {
             );
           }
 
-          // Housekeeping: automatically prune files not in the active 20 runs
+          // Housekeeping: automatically prune files not in the active runs in history (up to 50 runs)
           const allowedIds = new Set(history.map((r) => r.id));
           const historyDir = 'performance-reports/history';
           const existingFiles = fs.readdirSync(historyDir);

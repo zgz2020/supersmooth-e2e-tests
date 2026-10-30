@@ -114,7 +114,21 @@ export function formatDuration(ms?: number): string {
   return `${ms.toFixed(1)} ms`;
 }
 
-export function generateTextSummary(data: PerformanceSummary): string {
+export interface TextSummaryMeta {
+  profile?: string;
+  target?: string;
+  targetUrl?: string;
+}
+
+export interface HtmlReportOptions {
+  targetUrl?: string;
+  profile?: string;
+  target?: string;
+  history?: RunHistoryItem[];
+  isArchive?: boolean;
+}
+
+export function generateTextSummary(data: PerformanceSummary, meta?: TextSummaryMeta): string {
   const checks = extractChecks(data);
   const metrics = data.metrics || {};
   const duration = getMetricValues(metrics.http_req_duration);
@@ -130,6 +144,14 @@ export function generateTextSummary(data: PerformanceSummary): string {
   let out = '\n' + '='.repeat(70) + '\n';
   out += '                 PERFORMANCE TEST EXECUTION SUMMARY\n';
   out += '='.repeat(70) + '\n\n';
+
+  if (meta && (meta.profile || meta.target || meta.targetUrl)) {
+    out += '--- EXECUTION CONTEXT ---\n';
+    if (meta.profile) out += `  Profile             : ${meta.profile.toUpperCase()}\n`;
+    if (meta.target) out += `  Target              : ${meta.target}\n`;
+    if (meta.targetUrl) out += `  Target Base URL     : ${meta.targetUrl}\n`;
+    out += '\n';
+  }
 
   out += '--- ITEMISED CHECKS & VALIDATIONS ---\n';
   if (checks.length === 0) {
@@ -161,10 +183,26 @@ export function generateTextSummary(data: PerformanceSummary): string {
 
 export function generateHtmlReport(
   data: PerformanceSummary,
-  targetUrl?: string,
-  history?: RunHistoryItem[],
-  isArchive = false,
+  optionsOrTargetUrl?: string | HtmlReportOptions,
+  historyParam?: RunHistoryItem[],
+  isArchiveParam = false,
 ): string {
+  const options: HtmlReportOptions =
+    typeof optionsOrTargetUrl === 'object' && optionsOrTargetUrl !== null
+      ? optionsOrTargetUrl
+      : {
+          targetUrl: optionsOrTargetUrl,
+          history: historyParam,
+          isArchive: isArchiveParam,
+        };
+
+  const targetUrl = options.targetUrl;
+  const profile = options.profile || 'smoke';
+  const profileUpper = profile.toUpperCase();
+  const targetName = options.target || 'all';
+  const history = options.history;
+  const isArchive = Boolean(options.isArchive);
+
   const checks = extractChecks(data);
   const metrics = data.metrics || {};
   const duration = getMetricValues(metrics.http_req_duration);
@@ -254,14 +292,14 @@ export function generateHtmlReport(
             </tr>`;
           })
           .join('\n')
-      : '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No previous runs recorded</td></tr>';
+      : `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No previous ${escapeHtml(profile)} runs recorded</td></tr>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>k6 Performance Test Report</title>
+  <title>k6 Performance Test Report - ${escapeHtml(profileUpper)} (${escapeHtml(targetName)})</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -386,6 +424,9 @@ export function generateHtmlReport(
       <div>
         <h1>
           <span>k6 Performance Test Report</span>
+          <span class="badge" style="background: rgba(163, 113, 247, 0.15); color: #bc8cff; border: 1px solid #a371f7; text-transform: uppercase;">
+            ${escapeHtml(profileUpper)}
+          </span>
           <span class="badge ${allChecksPassed ? 'badge-pass' : 'badge-fail'}">
             ${allChecksPassed ? '✓ ALL CHECKS PASSED' : '✗ CHECKS FAILED'}
           </span>
@@ -398,6 +439,8 @@ export function generateHtmlReport(
     </header>
 
     <div class="meta-bar">
+      <div>Profile: <strong><code>${escapeHtml(profile)}</code></strong></div>
+      <div>Target: <strong><code>${escapeHtml(targetName)}</code></strong></div>
       <div>Executed at: <strong>${dateStr}</strong></div>
       <div>Target Base URL: <strong>${escapeHtml(targetUrl || 'Default Target')}</strong></div>
       <div>Total Checks: <strong>${totalChecks} (${passedChecks} passed, ${totalChecks - passedChecks} failed)</strong></div>
@@ -497,8 +540,8 @@ export function generateHtmlReport(
       history && history.length > 0
         ? `<section>
       <h2>
-        <span>📜 Execution History & Comparison</span>
-        <span style="font-size: 13px; font-weight: normal; color: var(--text-muted);">${history.length} recent runs stored</span>
+        <span>📜 Execution History & Comparison (${escapeHtml(profileUpper)} Profile)</span>
+        <span style="font-size: 13px; font-weight: normal; color: var(--text-muted);">${history.length} recent ${escapeHtml(profile)} run${history.length === 1 ? '' : 's'}</span>
       </h2>
       <table>
         <thead>

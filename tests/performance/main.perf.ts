@@ -43,8 +43,11 @@ export const options: Options = getProfileOptions();
 let cachedHistory: RunHistoryItem[] = [];
 
 try {
-  // k6 resolves open() relative to this script's directory (tests/performance/)
-  const rawHistory = open('../../performance-reports/history/runs.json');
+  const historyPath =
+    typeof import.meta !== 'undefined' && typeof import.meta.resolve === 'function'
+      ? import.meta.resolve('../../performance-reports/history/runs.json')
+      : '../../performance-reports/history/runs.json';
+  const rawHistory = open(historyPath);
   cachedHistory = JSON.parse(rawHistory);
   if (!Array.isArray(cachedHistory)) {
     cachedHistory = [];
@@ -91,12 +94,34 @@ export function handleSummary(data: PerformanceSummary): Record<string, string> 
     reportFile: `report-${runId}.html`,
   };
 
-  const updatedHistory = [currentRunItem, ...cachedHistory].slice(0, 20);
+  // 1. Persist cross-profile history in runs.json (retain up to 50 recent runs across all profiles)
+  const updatedAllHistory = [
+    currentRunItem,
+    ...cachedHistory.filter((item) => item.id !== currentRunItem.id),
+  ].slice(0, 50);
 
-  const rootReportHtml = generateHtmlReport(data, targetUrl, updatedHistory, false);
-  const archiveReportHtml = generateHtmlReport(data, targetUrl, updatedHistory, true);
+  // 2. Isolate comparison history in the HTML report to only show runs matching current profile
+  // Fall back to 'smoke' for any legacy historical entries without an explicit profile.
+  const profileHistory = updatedAllHistory
+    .filter((item) => (item.profile || 'smoke') === profile)
+    .slice(0, 20);
+
+  const rootReportHtml = generateHtmlReport(data, {
+    targetUrl,
+    profile,
+    target: rawTarget,
+    history: profileHistory,
+    isArchive: false,
+  });
+  const archiveReportHtml = generateHtmlReport(data, {
+    targetUrl,
+    profile,
+    target: rawTarget,
+    history: profileHistory,
+    isArchive: true,
+  });
   const jsonSummary = JSON.stringify(data, null, 2);
-  const historyJson = JSON.stringify(updatedHistory, null, 2);
+  const historyJson = JSON.stringify(updatedAllHistory, null, 2);
 
   return {
     'performance-reports/report.html': rootReportHtml,
@@ -104,7 +129,11 @@ export function handleSummary(data: PerformanceSummary): Record<string, string> 
     'performance-reports/history/runs.json': historyJson,
     [`performance-reports/history/report-${runId}.html`]: archiveReportHtml,
     [`performance-reports/history/summary-${runId}.json`]: jsonSummary,
-    stdout: generateTextSummary(data),
+    stdout: generateTextSummary(data, {
+      profile,
+      target: rawTarget,
+      targetUrl,
+    }),
   };
 }
 
