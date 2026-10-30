@@ -114,6 +114,21 @@ Located in [`utils/openPosition.ts`](../utils/openPosition.ts):
 
 - Helper to select collateral, configure leverage/deposit amounts, approve token allowances, and execute position openings.
 
+### 5. `getActiveVault`
+
+Located in [`utils/getActiveVault.ts`](../utils/getActiveVault.ts):
+
+```typescript
+const { url, collateral } = await getActiveVault(app.page.request, 'multiply', {
+  network: 'Base',
+  collateral: 'ETH',
+});
+```
+
+- Dynamically resolves live, non-deprecated pool routes using `/api/product-table/top-cards` with server-rendered catalog HTML fallback.
+- Ensures with-wallet tests navigate only to active pools matching the test wallet's funded token balances (e.g., `ETH`, `wstETH`, `cbETH`, `USDC` on Base).
+- See the dedicated **[Dynamic Vault Selection Guide](dynamic-vault-selection.md)** for full reference.
+
 ---
 
 ## 🤖 CI Execution & Framebuffer (xvfb)

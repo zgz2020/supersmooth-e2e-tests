@@ -89,18 +89,39 @@ Every execution generates dual native reports in `performance-reports/`:
 
 ---
 
+## 🛡️ Dynamic Vault Selection (`getActiveVault`)
+
+To prevent brittle tests caused by deprecated or unlisted liquidity pools (e.g., Aave V3 market deprecations), tests dynamically query active, deposit-ready vaults at runtime:
+
+```typescript
+import { getActiveVault } from './utils/getActiveVault';
+
+// Resolves active Base vault matching test wallet's funded collateral
+const { url, collateral } = await getActiveVault(request, 'multiply', {
+  network: 'Base',
+  collateral: 'ETH',
+});
+
+await app.vaultPage.openPage(url, { collateral });
+```
+
+> 📖 **Deep Dive:** Architecture, query options, and HTML fallback mechanics are detailed in the **[Dynamic Vault Selection Guide](docs/dynamic-vault-selection.md)**.
+
+---
+
 ## 📚 Documentation Hub
 
 Detailed architectural documentation, setup guides, and references are organized under [`docs/`](docs/):
 
-| Guide                                                            | Description                                                                    |
-| :--------------------------------------------------------------- | :----------------------------------------------------------------------------- |
-| **[📜 Scripts Reference](docs/scripts-reference.md)**            | Complete breakdown of all scripts in `package.json` with execution flags       |
-| **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)** | Run `aphelion-app` locally against Anvil state fork with pre-funded balances   |
-| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                 | Synpress v4 cache configuration, MetaMask automation, and wallet helpers       |
-| **[⚡ Performance Testing](docs/performance-testing-k6.md)**     | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide              |
-| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)**  | Architecture, status reporting, and dispatch from `aphelion-app` to CI         |
-| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**      | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting |
+| Guide                                                             | Description                                                                    |
+| :---------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| **[📜 Scripts Reference](docs/scripts-reference.md)**             | Complete breakdown of all scripts in `package.json` with execution flags       |
+| **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)** | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s     |
+| **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**  | Run `aphelion-app` locally against Anvil state fork with pre-funded balances   |
+| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                  | Synpress v4 cache configuration, MetaMask automation, and wallet helpers       |
+| **[⚡ Performance Testing](docs/performance-testing-k6.md)**      | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide              |
+| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)**   | Architecture, status reporting, and dispatch from `aphelion-app` to CI         |
+| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**       | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting |
 
 ---
 

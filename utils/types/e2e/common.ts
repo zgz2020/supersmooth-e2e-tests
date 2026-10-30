@@ -13,10 +13,13 @@ export type Token =
   | 'WBTC'
   | 'weETH'
   | 'WETH'
-  | 'wstETH';
+  | 'wstETH'
+  | (string & {});
 
 export type WaitToBeStableProps =
-  { collateral: Token; trade?: never } | { trade: true; collateral?: never };
+  | { withBalance: true; collateral?: never; trade?: never }
+  | { trade: true; collateral?: never; withBalance?: never }
+  | { collateral: Token; trade?: never; withBalance?: never };
 
 export type Wallets =
   | 'WalletConnect'

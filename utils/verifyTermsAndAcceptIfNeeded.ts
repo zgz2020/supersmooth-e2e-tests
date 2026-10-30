@@ -5,6 +5,7 @@ import type { TermsStatusResponse } from './types/api/termsStatus';
 import type { Token } from './types/e2e/common';
 import { openPosition } from './openPosition';
 import { defaultExpectTimeout } from './constants/timeouts';
+import { getActiveVault } from './getActiveVault';
 
 export interface VerifyTermsAndAcceptIfNeededParams {
   app: App;
@@ -19,8 +20,8 @@ export interface VerifyTermsAndAcceptIfNeededParams {
 export const DEFAULT_TERMS_WALLET_ADDRESS =
   process.env.TEST_WALLET_ADDRESS || '0x44E361c3D9dcd703D535f9c2883a4E104AD2F4d5';
 export const DEFAULT_POSITION_URL =
-  '/products/multiply/aaveV3/8453/0xA238Dd80C259a72e81d7e4664a9801593F98d1c5-0x4200000000000000000000000000000000000006-0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf';
-export const DEFAULT_DEPOSIT_AMOUNT = '0.0005';
+  '/products/multiply/morpho/8453/0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda';
+export const DEFAULT_DEPOSIT_AMOUNT = '0.00025';
 export const DEFAULT_COLLATERAL: Token = 'ETH';
 
 const checkTermsStatus = async (request: APIRequestContext, address: string): Promise<boolean> => {
@@ -63,8 +64,24 @@ export const verifyTermsAndAcceptIfNeeded = async ({
   }
 
   // Step 2: Perform UI flow to accept terms when not yet approved
+  let targetUrl = url;
+  let targetCollateral = collateral;
+
+  if (targetUrl === DEFAULT_POSITION_URL) {
+    try {
+      const active = await getActiveVault(apiRequest, 'multiply', {
+        network: 'Base',
+        collateral: 'ETH',
+      });
+      targetUrl = active.url;
+      targetCollateral = active.collateral;
+    } catch {
+      // Keep DEFAULT_POSITION_URL fallback
+    }
+  }
+
   // 2.1 Navigate to the position page
-  await app.vaultPage.openPage(url, { collateral });
+  await app.vaultPage.openPage(targetUrl, { collateral: targetCollateral });
 
   // 2.2 & 2.3 Enter deposit amount and open position to trigger the terms modal
   await openPosition({

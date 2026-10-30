@@ -12,8 +12,13 @@ export class ConfigurePosition {
   }
 
   @step
-  async waitToBeStable({ collateral, trade }: WaitToBeStableProps) {
-    if (trade) {
+  async waitToBeStable({ collateral, trade, withBalance }: WaitToBeStableProps) {
+    if (withBalance) {
+      // Matches formatted positive amounts (e.g. 0.00025, 5.6, 1,250.00) requiring at least one non-zero digit (balance > 0)
+      await expect(this.panelLocator.getByTestId(/^input-box-deposit-[\w-]*balance$/)).toHaveText(
+        /^(?=.*[1-9])[\d,.]+$/,
+      );
+    } else if (trade) {
       await expect(
         this.panelLocator.getByRole('button', { name: 'Deposit from Base' }),
       ).toBeVisible();
