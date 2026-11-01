@@ -24,6 +24,7 @@ export default defineConfig({
   workers: process.env.WORKERS !== undefined ? Number(process.env.WORKERS) || 1 : undefined,
   reporter: [
     ['html', { open: 'never', outputFolder: `playwright-reports/${process.env.REPORT_FOLDER}` }],
+    ['json', { outputFile: 'test-results/results.json' }],
   ],
   webServer: isFakeGeoRun
     ? {

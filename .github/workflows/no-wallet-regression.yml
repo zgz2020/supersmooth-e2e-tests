@@ -16,6 +16,7 @@ jobs:
   no-wallet-regression-tests:
     name: 'No-wallet Regression Tests'
     uses: './.github/workflows/reusable-no-wallet.yml'
+    secrets: inherit
     with:
       baseUrl: '${{ inputs.baseUrl }}'
       script: 'ci:no-wallet-regression'

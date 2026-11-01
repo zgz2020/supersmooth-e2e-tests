@@ -16,5 +16,6 @@ jobs:
   cross-browser-tests:
     name: 'No-wallet Cross-browser Tests'
     uses: './.github/workflows/reusable-no-wallet-cross-browser.yml'
+    secrets: inherit
     with:
       baseUrl: '${{ inputs.baseUrl }}'

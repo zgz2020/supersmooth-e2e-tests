@@ -10,6 +10,7 @@ export default tseslint.config(
       'playwright-report/**',
       'playwright-reports/**',
       'performance-reports/**',
+      'ai-reports/**',
       'test-results/**',
       '.cache-synpress/**',
       'dist/**',
@@ -66,7 +67,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['tests/performance/**/*.ts'],
+    files: ['tests/performance/**/*.ts', 'scripts/**/*.js'],
     rules: {
       'no-restricted-syntax': 'off',
     },

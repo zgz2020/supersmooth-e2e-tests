@@ -9,6 +9,7 @@ End-to-end (E2E), API, and performance testing suite for the Sovereign (SOV) Web
 - **E2E Testing:** [Playwright](https://playwright.dev/) (`@playwright/test`)
 - **Web3 Wallet Automation:** [Synpress](https://github.com/Synthetixio/synpress) (`@synthetixio/synpress` v4) with MetaMask
 - **Performance Testing:** [Grafana k6](https://k6.io/) & TypeScript
+- **Applied AI & Agentic QA:** Google Gemini Flash (`gemini-flash-latest`), heuristic failure triage engine, Discord webhook alerts
 - **Language & Runtime:** [TypeScript](https://www.typescriptlang.org/) / Node.js (v20+ LTS via `.nvmrc`)
 - **Package Manager:** [`pnpm`](https://pnpm.io/)
 
@@ -49,16 +50,17 @@ pnpm synpress-build-cache:base
 
 ## 🧪 Essential Test Commands
 
-| Test Suite          | Purpose                                                 | Command                       |
-| :------------------ | :------------------------------------------------------ | :---------------------------- |
-| **No-Wallet E2E**   | User flows without Web3 wallet connectivity             | `pnpm test:no-wallet`         |
-| **With-Wallet E2E** | MetaMask wallet connection, approvals, and trading      | `pnpm test:with-wallet`       |
-| **API Suites**      | Direct backend HTTP endpoints & schema validation       | `pnpm test:api`               |
-| **Cross-Browser**   | Responsive layout smoke matrix across engines & devices | `pnpm test:cross-browser`     |
-| **Performance**     | Grafana k6 high-throughput load and SLA tests           | `pnpm test:performance`       |
-| **Local dApp Fork** | Runs `aphelion-app` locally with Anvil mainnet/L2 state | `pnpm app:fork`               |
-| **Test Repeater**   | Interactive flakiness detection runner                  | `pnpm test:repeat`            |
-| **Code Quality**    | TypeScript type check and ESLint verification           | `pnpm typecheck && pnpm lint` |
+| Test Suite          | Purpose                                                                   | Command                       |
+| :------------------ | :------------------------------------------------------------------------ | :---------------------------- |
+| **No-Wallet E2E**   | User flows without Web3 wallet connectivity                               | `pnpm test:no-wallet`         |
+| **With-Wallet E2E** | MetaMask wallet connection, approvals, and trading                        | `pnpm test:with-wallet`       |
+| **API Suites**      | Direct backend HTTP endpoints & schema validation                         | `pnpm test:api`               |
+| **Cross-Browser**   | Responsive layout smoke matrix across engines & devices                   | `pnpm test:cross-browser`     |
+| **Performance**     | Grafana k6 high-throughput load and SLA tests                             | `pnpm test:performance`       |
+| **Local dApp Fork** | Runs `aphelion-app` locally with Anvil mainnet/L2 state                   | `pnpm app:fork`               |
+| **AI Test Triage**  | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs | `pnpm agent:triage`           |
+| **Test Repeater**   | Interactive flakiness detection runner                                    | `pnpm test:repeat`            |
+| **Code Quality**    | TypeScript type check and ESLint verification                             | `pnpm typecheck && pnpm lint` |
 
 > 📖 **Full Command List:** For the exhaustive list of all 36+ scripts, CI flags, and targeted browser commands, see the **[Scripts & Test Suites Reference](docs/scripts-reference.md)**.
 
@@ -109,6 +111,23 @@ await app.vaultPage.openPage(url, { collateral });
 
 ---
 
+## 🤖 Applied AI & Agentic QA Triage (`pnpm agent:triage`)
+
+An event-driven Applied AI test failure triage system that diagnoses failed Playwright runs, isolates transient RPC/network flakiness from DOM selector drift and genuine regressions, and drafts self-healing code diffs:
+
+```bash
+# Triage recent test run failures locally:
+pnpm agent:triage
+```
+
+- **Interactive CI Step Summary:** Automatically rendered to GitHub Actions `$GITHUB_STEP_SUMMARY` on `if: failure()`.
+- **Ready-to-Paste PR Comments:** Saved to `ai-reports/latest-github-comment-[suite].md` with GitHub alerts and diffs.
+- **Discord Webhook Alerts:** Dispatches instant rich diagnostic cards to mobile/desktop Discord channels.
+
+> 📖 **Deep Dive:** Architecture, failure taxonomy, and CI triggers are detailed in the **[Applied AI & Agentic QA Guide](docs/applied-ai-agent-qa.md)**.
+
+---
+
 ## 📚 Documentation Hub
 
 Detailed architectural documentation, setup guides, and references are organized under [`docs/`](docs/):
@@ -116,6 +135,7 @@ Detailed architectural documentation, setup guides, and references are organized
 | Guide                                                             | Description                                                                    |
 | :---------------------------------------------------------------- | :----------------------------------------------------------------------------- |
 | **[📜 Scripts Reference](docs/scripts-reference.md)**             | Complete breakdown of all scripts in `package.json` with execution flags       |
+| **[🤖 Applied AI Test Triage](docs/applied-ai-agent-qa.md)**      | Autonomous failure diagnosis, self-healing diff generation, and CI triggers    |
 | **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)** | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s     |
 | **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**  | Run `aphelion-app` locally against Anvil state fork with pre-funded balances   |
 | **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                  | Synpress v4 cache configuration, MetaMask automation, and wallet helpers       |
@@ -130,8 +150,10 @@ Detailed architectural documentation, setup guides, and references are organized
 ```text
 .
 ├── .github/workflows/          # CI and CD GitHub Actions workflow pipelines
+├── ai-reports/                 # AI triage markdown diagnoses & PR comment markups
 ├── docs/                       # Architectural documentation & technical guides
 ├── scripts/                    # CLI test runners, repeater, and mock servers
+│   └── qa-agent/               # Applied AI failure harvester & triage engine
 ├── src/                        # Page objects, modals, and test fixtures
 ├── tests/
 │   ├── api/                    # API test suites and schemas
