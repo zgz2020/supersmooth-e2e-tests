@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 2 # Ensures HEAD~1 is available for AI failure triage diffs
 
       - name: 'Setup pnpm'
         uses: 'pnpm/action-setup@v4'
@@ -46,6 +48,21 @@ jobs:
         env:
           BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
         run: 'pnpm "${{ inputs.script }}"'
+
+      - name: '🤖 AI Agent Test Triage'
+        if: failure()
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: pnpm agent:triage
+
+      - name: 'Upload AI Triage Report'
+        uses: 'actions/upload-artifact@v4'
+        if: failure()
+        with:
+          name: 'ai-triage-report-no-wallet'
+          path: 'ai-reports'
+          retention-days: 30
 
       - name: 'Upload Playwright Report'
         uses: 'actions/upload-artifact@v4'

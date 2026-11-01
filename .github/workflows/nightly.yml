@@ -10,16 +10,19 @@ permissions:
 jobs:
   api-tests:
     uses: './.github/workflows/reusable-api-tests.yml'
+    secrets: inherit
     with:
       script: 'test:api'
 
   no-wallet-tests:
     uses: './.github/workflows/reusable-no-wallet.yml'
+    secrets: inherit
     with:
       script: 'ci:no-wallet'
 
   cross-browser-tests:
     uses: './.github/workflows/reusable-no-wallet-cross-browser.yml'
+    secrets: inherit
 
   with-wallet-tests:
     uses: './.github/workflows/reusable-with-wallet.yml'

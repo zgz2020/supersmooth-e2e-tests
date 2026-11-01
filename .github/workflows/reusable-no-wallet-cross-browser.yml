@@ -38,6 +38,8 @@ jobs:
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 2 # Ensures HEAD~1 is available for AI failure triage diffs
 
       - name: 'Setup pnpm'
         uses: 'pnpm/action-setup@v4'
@@ -61,6 +63,22 @@ jobs:
           # Firefox refuses to run as root when $HOME is owned by another user (/github/home -> pwuser)
           HOME: '/root'
         run: 'xvfb-run pnpm playwright test --project=${{ matrix.browser.project }}'
+
+      - name: '🤖 AI Agent Test Triage'
+        if: failure()
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          HOME: '/root'
+        run: pnpm agent:triage
+
+      - name: 'Upload AI Triage Report'
+        uses: 'actions/upload-artifact@v4'
+        if: failure()
+        with:
+          name: 'ai-triage-report-${{ matrix.browser.project }}'
+          path: 'ai-reports'
+          retention-days: 30
 
       - name: 'Upload test report artifact'
         if: 'always()'

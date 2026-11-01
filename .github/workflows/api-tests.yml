@@ -16,6 +16,7 @@ jobs:
   api-tests:
     name: 'API Tests'
     uses: './.github/workflows/reusable-api-tests.yml'
+    secrets: inherit
     with:
       baseUrl: '${{ inputs.baseUrl }}'
       script: 'test:api'

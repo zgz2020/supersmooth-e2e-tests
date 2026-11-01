@@ -13,6 +13,7 @@ test-results/
 playwright-report/
 playwright-reports/
 performance-reports/
+ai-reports/
 blob-report/
 coverage/
 cypress/screenshots/
@@ -37,3 +38,4 @@ tmp/
 *.pdf
 TODO.md
 TODO.*
+GEMINI.md

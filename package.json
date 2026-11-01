@@ -51,7 +51,9 @@
     "test:performance:web": "K6_SCENARIO=web pnpm test:performance",
     "// --- TEST UTILITIES ---": "",
     "test:repeat": "node scripts/repeat-tests.js",
-    "app:fork": "node scripts/run-app-fork.js"
+    "app:fork": "node scripts/run-app-fork.js",
+    "// --- APPLIED AI & AGENT QA ---": "",
+    "agent:triage": "node scripts/qa-agent/triage-agent.js"
   },
   "keywords": [
     "e2e",

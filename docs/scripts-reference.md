@@ -12,7 +12,7 @@ A comprehensive guide to all `pnpm` scripts configured in [`package.json`](../pa
 - [Cross-Browser Suite](#cross-browser-suite)
 - [API Testing Suites](#api-testing-suites)
 - [Grafana k6 Performance Testing](#grafana-k6-performance-testing)
-- [Test Utilities & Flakiness Checker](#test-utilities--flakiness-checker)
+- [Test Utilities & AI Diagnostics](#test-utilities--ai-diagnostics)
 - [Code Quality & Build](#code-quality--build)
 - [Complete Reference Table](#complete-reference-table)
 
@@ -107,18 +107,22 @@ Located in `tests/performance`. High-throughput benchmark suites with tiered tag
 
 ---
 
-## 🔁 Test Utilities & Flakiness Checker
+## 🔁 Test Utilities & AI Diagnostics
 
-Located in `scripts/`. Utilities for test maintenance and flakiness verification.
+Located in `scripts/`. Utilities for test maintenance, local blockchain simulation, flakiness verification, and AI failure diagnosis.
 
-| Script             | Description                                                                              |
-| :----------------- | :--------------------------------------------------------------------------------------- |
-| `pnpm app:fork`    | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH & tokens    |
-| `pnpm test:repeat` | Interactive utility to execute a test suite multiple times in a loop to detect flakiness |
+| Script              | Description                                                                              |
+| :------------------ | :--------------------------------------------------------------------------------------- |
+| `pnpm app:fork`     | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH & tokens    |
+| `pnpm test:repeat`  | Interactive utility to execute a test suite multiple times in a loop to detect flakiness |
+| `pnpm agent:triage` | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs    |
 
 ### CLI Usage:
 
 ```bash
+# Triage recent test run failures with AI analysis
+pnpm agent:triage
+
 # Launch aphelion-app against Anvil fork (interactive prompt for network and tokens)
 pnpm app:fork
 
@@ -181,6 +185,7 @@ pnpm test:repeat cross-browser:webkit 1
 | `test:performance:api`              | `K6_SCENARIO=api pnpm test:performance`                           | Run k6 API target scenario          |
 | `test:performance:web`              | `K6_SCENARIO=web pnpm test:performance`                           | Run k6 Web target scenario          |
 | `test:repeat`                       | `node scripts/repeat-tests.js`                                    | Interactive test repeater utility   |
+| `agent:triage`                      | `node scripts/qa-agent/triage-agent.js`                           | AI failure diagnosis & diff reports |
 | `app:fork`                          | `node scripts/run-app-fork.js`                                    | Run local dApp with Anvil fork      |
 | `synpress-build-cache:base`         | `pnpm synpress ./utils/synpress/wallet-setup`                     | Build local Synpress wallet cache   |
 | `ci:synpress-build-cache:base`      | `xvfb-run pnpm synpress-build-cache:base`                         | Build Synpress cache in CI          |

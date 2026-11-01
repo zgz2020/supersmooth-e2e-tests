@@ -28,18 +28,21 @@ permissions:
 jobs:
   api-tests:
     uses: './.github/workflows/reusable-api-tests.yml'
+    secrets: inherit
     with:
       baseUrl: '${{ inputs.baseUrl }}'
       script: 'test:api:regression'
 
   no-wallet-tests:
     uses: './.github/workflows/reusable-no-wallet.yml'
+    secrets: inherit
     with:
       baseUrl: '${{ inputs.baseUrl }}'
       script: 'ci:no-wallet-regression'
 
   cross-browser-tests:
     uses: './.github/workflows/reusable-no-wallet-cross-browser.yml'
+    secrets: inherit
     with:
       baseUrl: '${{ inputs.baseUrl }}'
 
