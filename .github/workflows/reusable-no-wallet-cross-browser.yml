@@ -10,7 +10,9 @@ on:
         default: ''
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
   cross-browser-tests:
@@ -39,7 +41,10 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
         with:
-          fetch-depth: 2 # Ensures HEAD~1 is available for AI failure triage diffs
+          fetch-depth: 0 # Ensures full commit history is available for AI failure triage diffs
+
+      - name: 'Configure Git Safe Directory'
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: 'Setup pnpm'
         uses: 'pnpm/action-setup@v4'
@@ -72,6 +77,14 @@ jobs:
           HOME: '/root'
         run: pnpm agent:triage
 
+      - name: '🩹 Autonomous Self-Healing PR Generator'
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
+          HOME: '/root'
+        run: node scripts/qa-agent/heal-agent.js --create-pr --suite=cross-browser
+
       - name: 'Upload AI Triage Report'
         uses: 'actions/upload-artifact@v4'
         if: failure()
@@ -79,6 +92,48 @@ jobs:
           name: 'ai-triage-report-${{ matrix.browser.project }}'
           path: 'ai-reports'
           retention-days: 30
+
+      - name: '💬 Post AI Triage Sticky Comment to PR'
+        if: failure() && github.event_name == 'pull_request'
+        uses: 'actions/github-script@v7'
+        with:
+          script: |
+            const fs = require('fs');
+            const commentFile = `ai-reports/latest-github-comment-cross-browser.md`;
+            const fallbackFile = 'ai-reports/latest-github-comment.md';
+            const targetPath = fs.existsSync(commentFile) ? commentFile : fallbackFile;
+            if (!fs.existsSync(targetPath)) return;
+
+            const triageMarkdown = fs.readFileSync(targetPath, 'utf8');
+            const commentHeader = `<!-- ai-qa-triage-cross-browser-${context.payload.matrix?.browser?.project || 'cb'} -->`;
+            const commentBody = `${commentHeader}\n${triageMarkdown}`;
+            const issueNumber = context.issue.number;
+            if (!issueNumber) return;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+            });
+
+            const existingComment = comments.find(c => c.body && c.body.includes(commentHeader));
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: commentBody,
+              });
+              console.log(`Updated sticky triage comment #${existingComment.id}`);
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: commentBody,
+              });
+              console.log('Created new sticky triage comment on PR');
+            }
 
       - name: 'Upload test report artifact'
         if: 'always()'

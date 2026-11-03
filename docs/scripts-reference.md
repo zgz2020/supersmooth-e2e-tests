@@ -111,17 +111,25 @@ Located in `tests/performance`. High-throughput benchmark suites with tiered tag
 
 Located in `scripts/`. Utilities for test maintenance, local blockchain simulation, flakiness verification, and AI failure diagnosis.
 
-| Script              | Description                                                                              |
-| :------------------ | :--------------------------------------------------------------------------------------- |
-| `pnpm app:fork`     | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH & tokens    |
-| `pnpm test:repeat`  | Interactive utility to execute a test suite multiple times in a loop to detect flakiness |
-| `pnpm agent:triage` | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs    |
+| Script               | Description                                                                              |
+| :------------------- | :--------------------------------------------------------------------------------------- |
+| `pnpm app:fork`      | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH & tokens    |
+| `pnpm test:repeat`   | Interactive utility to execute a test suite multiple times in a loop to detect flakiness |
+| `pnpm agent:triage`  | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs    |
+| `pnpm agent:heal`    | Reads proposed patches, applies selector updates, and validates fixes in Playwright      |
+| `pnpm agent:heal:pr` | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR  |
 
 ### CLI Usage:
 
 ```bash
 # Triage recent test run failures with AI analysis
 pnpm agent:triage
+
+# Automatically apply self-healing locator patches and verify
+pnpm agent:heal
+
+# Apply fix, verify, and autonomously open a Pull Request
+pnpm agent:heal:pr
 
 # Launch aphelion-app against Anvil fork (interactive prompt for network and tokens)
 pnpm app:fork
@@ -186,6 +194,8 @@ pnpm test:repeat cross-browser:webkit 1
 | `test:performance:web`              | `K6_SCENARIO=web pnpm test:performance`                           | Run k6 Web target scenario          |
 | `test:repeat`                       | `node scripts/repeat-tests.js`                                    | Interactive test repeater utility   |
 | `agent:triage`                      | `node scripts/qa-agent/triage-agent.js`                           | AI failure diagnosis & diff reports |
+| `agent:heal`                        | `node scripts/qa-agent/heal-agent.js`                             | Apply self-healing patches & verify |
+| `agent:heal:pr`                     | `node scripts/qa-agent/heal-agent.js --create-pr`                 | Apply fix, verify, & open GitHub PR |
 | `app:fork`                          | `node scripts/run-app-fork.js`                                    | Run local dApp with Anvil fork      |
 | `synpress-build-cache:base`         | `pnpm synpress ./utils/synpress/wallet-setup`                     | Build local Synpress wallet cache   |
 | `ci:synpress-build-cache:base`      | `xvfb-run pnpm synpress-build-cache:base`                         | Build Synpress cache in CI          |

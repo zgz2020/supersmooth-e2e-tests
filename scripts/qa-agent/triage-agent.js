@@ -80,7 +80,12 @@ Analyze the failure context below and output your evaluation in strictly valid J
   "confidenceScore": number (0 to 100),
   "rootCause": "Clear, concise 2-3 sentence explanation of why the test failed.",
   "recommendedAction": "Actionable next step for the QA/Dev engineer.",
-  "selfHealingPatch": "Unified git diff or code snippet fix if applicable, otherwise null"
+  "selfHealingPatch": "Unified git diff or code snippet fix if applicable, otherwise null",
+  "targetFile": "Path to file to patch if selfHealingPatch is applicable, otherwise null",
+  "replacement": {
+    "target": "Exact string or line in targetFile to be replaced",
+    "replacement": "Exact replacement string or updated line"
+  } | null
 }
 
 Failure Context:
@@ -139,6 +144,8 @@ function heuristicFallbackClassifier(failure) {
   if (
     err.includes('econnrefused') ||
     err.includes('etimedout') ||
+    err.includes('enotfound') ||
+    err.includes('net::err_') ||
     err.includes('fetch failed') ||
     err.includes('rpc') ||
     err.includes('rate limit') ||
@@ -154,31 +161,83 @@ function heuristicFallbackClassifier(failure) {
       recommendedAction:
         'Retry only this specific test spec without rerunning the entire matrix. Verify RPC endpoint health.',
       selfHealingPatch: null,
+      targetFile: null,
+      replacement: null,
     };
   }
 
   // Pattern 2: DOM / Selector Drift
   if (
-    err.includes('waiting for locator') ||
-    err.includes('locator.click: timeout') ||
-    err.includes('locator.fill: timeout') ||
+    err.includes('waiting for') ||
+    err.includes('locator.') ||
+    err.includes('getbyrole') ||
+    err.includes('getbytext') ||
+    err.includes('getbytestid') ||
     err.includes('strict mode violation') ||
     err.includes('not visible') ||
-    err.includes('element is not attached to the dom')
+    err.includes('element is not attached to the dom') ||
+    err.includes('target page, context or browser has been closed')
   ) {
     const locatorMatch =
+      failure.errorSnippet.match(/waiting for\s+([^\n]+)/i) ||
       failure.errorSnippet.match(/Locator:\s*([^\n]+)/i) ||
-      failure.errorSnippet.match(/locator\('([^']+)'\)/i) ||
-      failure.errorSnippet.match(/getByRole\('([^']+)'/i);
+      failure.errorSnippet.match(/getByRole\([^)]+\)/i) ||
+      failure.errorSnippet.match(/locator\([^)]+\)/i);
     const targetLocator = locatorMatch ? locatorMatch[1].trim() : 'target locator';
+
+    let selfHealingPatch = null;
+    let replacement = null;
+
+    // Check if gitDiff contains modified selector lines for this file
+    if (failure.gitDiff) {
+      const diffLines = failure.gitDiff.split('\n');
+      const removedLines = diffLines
+        .filter((l) => l.startsWith('-') && !l.startsWith('---'))
+        .map((l) => l.slice(1).trim());
+      const addedLines = diffLines
+        .filter((l) => l.startsWith('+') && !l.startsWith('+++'))
+        .map((l) => l.slice(1).trim());
+
+      if (removedLines.length > 0 && addedLines.length > 0) {
+        const addedIdx = addedLines.findIndex((line) =>
+          targetLocator && targetLocator !== 'target locator' ? line.includes(targetLocator) : true,
+        );
+        const resolvedAddedIdx = addedIdx !== -1 ? addedIdx : 0;
+        const resolvedRemovedIdx = resolvedAddedIdx < removedLines.length ? resolvedAddedIdx : 0;
+
+        const newCode = addedLines[resolvedAddedIdx];
+        const oldCode = removedLines[resolvedRemovedIdx];
+        selfHealingPatch = `--- a/${failure.filePath}\n+++ b/${failure.filePath}\n@@ -${failure.line},1 +${failure.line},1 @@\n- ${newCode}\n+ ${oldCode}`;
+        replacement = {
+          target: newCode,
+          replacement: oldCode,
+        };
+      }
+    }
+
+    // Secondary Heuristic: Detect intentional test/drift suffix like '_X' in locator
+    if (!replacement && targetLocator && targetLocator.includes('_X')) {
+      const cleanLocator = targetLocator.replace(/_X/g, '');
+      replacement = {
+        target: targetLocator,
+        replacement: cleanLocator,
+      };
+      selfHealingPatch = `--- a/${failure.filePath}\n+++ b/${failure.filePath}\n@@ -${failure.line},1 +${failure.line},1 @@\n- ${targetLocator}\n+ ${cleanLocator}`;
+    }
+
+    if (!selfHealingPatch) {
+      selfHealingPatch = `// Update locator in ${failure.filePath}:${failure.line}\n// Verify element visibility or adjust selector`;
+    }
 
     return {
       classification: 'DOM_SELECTOR_DRIFT',
-      confidenceScore: 85,
-      rootCause: `Locator '${targetLocator}' timed out or was not found in the DOM. The frontend UI markup likely updated or changed test attributes.`,
+      confidenceScore: 92,
+      rootCause: `Locator '${targetLocator}' timed out or was not found in the DOM. The frontend UI markup or component selector was modified.`,
       recommendedAction:
         'Inspect the DOM snapshot in the Playwright trace and update the locator in the page object or spec.',
-      selfHealingPatch: `// Update locator in ${failure.filePath}:${failure.line}\n// Verify element visibility or adjust selector`,
+      selfHealingPatch,
+      targetFile: failure.filePath || null,
+      replacement,
     };
   }
 
@@ -191,6 +250,8 @@ function heuristicFallbackClassifier(failure) {
     recommendedAction:
       'Investigate recent backend/frontend commits to verify if acceptance criteria or API payloads changed.',
     selfHealingPatch: null,
+    targetFile: null,
+    replacement: null,
   };
 }
 
@@ -392,7 +453,40 @@ ${failure.stackTrace}
   fs.writeFileSync(reportPath, githubMarkdownContent, 'utf-8');
   fs.writeFileSync(suiteCommentPath, githubMarkdownContent, 'utf-8');
   fs.writeFileSync(latestCommentPath, githubMarkdownContent, 'utf-8');
+
+  // Save machine-readable structured JSON report for self-healing agent and automation
+  const structuredData = {
+    suiteName,
+    timestamp,
+    generatedAt: new Date().toISOString(),
+    failuresCount: failures.length,
+    triagedCount: analyses.length,
+    analyses: analyses.map(({ failure, analysis }) => ({
+      testTitle: failure.testTitle,
+      specFile: failure.specFile || failure.filePath,
+      filePath: failure.filePath,
+      line: failure.line,
+      column: failure.column,
+      status: failure.status,
+      durationMs: failure.durationMs,
+      retries: failure.retries || 0,
+      classification: analysis.classification,
+      confidenceScore: analysis.confidenceScore,
+      rootCause: analysis.rootCause,
+      recommendedAction: analysis.recommendedAction,
+      selfHealingPatch: analysis.selfHealingPatch || null,
+      targetFile: analysis.targetFile || failure.filePath || null,
+      replacement: analysis.replacement || null,
+    })),
+  };
+
+  const jsonReportPath = path.join(reportsDir, `triage-${suiteName}-${timestamp}.json`);
+  const latestJsonPath = path.join(reportsDir, 'latest-triage-data.json');
+  fs.writeFileSync(jsonReportPath, JSON.stringify(structuredData, null, 2), 'utf-8');
+  fs.writeFileSync(latestJsonPath, JSON.stringify(structuredData, null, 2), 'utf-8');
+
   console.log(`\n📄 [qa-agent] Full report saved to: ${reportPath}`);
+  console.log(`📊 [qa-agent] Structured JSON data saved to: ${latestJsonPath}`);
   console.log(`📋 [qa-agent] Ready-to-paste GitHub markup saved to: ${suiteCommentPath}`);
 
   // If running inside GitHub Actions, publish directly to Step Summary

@@ -50,17 +50,18 @@ pnpm synpress-build-cache:base
 
 ## 🧪 Essential Test Commands
 
-| Test Suite          | Purpose                                                                   | Command                       |
-| :------------------ | :------------------------------------------------------------------------ | :---------------------------- |
-| **No-Wallet E2E**   | User flows without Web3 wallet connectivity                               | `pnpm test:no-wallet`         |
-| **With-Wallet E2E** | MetaMask wallet connection, approvals, and trading                        | `pnpm test:with-wallet`       |
-| **API Suites**      | Direct backend HTTP endpoints & schema validation                         | `pnpm test:api`               |
-| **Cross-Browser**   | Responsive layout smoke matrix across engines & devices                   | `pnpm test:cross-browser`     |
-| **Performance**     | Grafana k6 high-throughput load and SLA tests                             | `pnpm test:performance`       |
-| **Local dApp Fork** | Runs `aphelion-app` locally with Anvil mainnet/L2 state                   | `pnpm app:fork`               |
-| **AI Test Triage**  | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs | `pnpm agent:triage`           |
-| **Test Repeater**   | Interactive flakiness detection runner                                    | `pnpm test:repeat`            |
-| **Code Quality**    | TypeScript type check and ESLint verification                             | `pnpm typecheck && pnpm lint` |
+| Test Suite          | Purpose                                                                       | Command                       |
+| :------------------ | :---------------------------------------------------------------------------- | :---------------------------- |
+| **No-Wallet E2E**   | User flows without Web3 wallet connectivity                                   | `pnpm test:no-wallet`         |
+| **With-Wallet E2E** | MetaMask wallet connection, approvals, and trading                            | `pnpm test:with-wallet`       |
+| **API Suites**      | Direct backend HTTP endpoints & schema validation                             | `pnpm test:api`               |
+| **Cross-Browser**   | Responsive layout smoke matrix across engines & devices                       | `pnpm test:cross-browser`     |
+| **Performance**     | Grafana k6 high-throughput load and SLA tests                                 | `pnpm test:performance`       |
+| **Local dApp Fork** | Runs `aphelion-app` locally with Anvil mainnet/L2 state                       | `pnpm app:fork`               |
+| **AI Test Triage**  | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs     | `pnpm agent:triage`           |
+| **AI Self-Healing** | Automatically applies proposed selector patches and verifies fix in isolation | `pnpm agent:heal`             |
+| **Test Repeater**   | Interactive flakiness detection runner                                        | `pnpm test:repeat`            |
+| **Code Quality**    | TypeScript type check and ESLint verification                                 | `pnpm typecheck && pnpm lint` |
 
 > 📖 **Full Command List:** For the exhaustive list of all 36+ scripts, CI flags, and targeted browser commands, see the **[Scripts & Test Suites Reference](docs/scripts-reference.md)**.
 
@@ -111,16 +112,24 @@ await app.vaultPage.openPage(url, { collateral });
 
 ---
 
-## 🤖 Applied AI & Agentic QA Triage (`pnpm agent:triage`)
+## 🤖 Applied AI & Autonomous QA (`pnpm agent:triage` & `agent:heal`)
 
-An event-driven Applied AI test failure triage system that diagnoses failed Playwright runs, isolates transient RPC/network flakiness from DOM selector drift and genuine regressions, and drafts self-healing code diffs:
+An event-driven Applied AI test failure triage and self-healing system that diagnoses failed Playwright runs, isolates transient RPC/network flakiness from DOM selector drift and genuine regressions, drafts self-healing code diffs, and automatically repairs broken selectors:
 
 ```bash
-# Triage recent test run failures locally:
+# 1. Triage recent test run failures:
 pnpm agent:triage
+
+# 2. Automatically apply proposed selector fixes & verify in Playwright isolation:
+pnpm agent:heal
+
+# 3. Apply fix, verify in isolation, and open an autonomous GitHub Pull Request:
+pnpm agent:heal:pr
 ```
 
 - **Interactive CI Step Summary:** Automatically rendered to GitHub Actions `$GITHUB_STEP_SUMMARY` on `if: failure()`.
+- **Autonomous Self-Healing PRs:** In CI (or via `--create-pr`), verified fixes are committed to dedicated branches and opened as PRs with `ai-self-heal` labels.
+- **Sticky GitHub PR Bot:** In-place updates existing diagnostic comments on pull requests using `actions/github-script`.
 - **Ready-to-Paste PR Comments:** Saved to `ai-reports/latest-github-comment-[suite].md` with GitHub alerts and diffs.
 - **Discord Webhook Alerts:** Dispatches instant rich diagnostic cards to mobile/desktop Discord channels.
 

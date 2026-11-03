@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import console from 'node:console';
 import { execSync } from 'node:child_process';
 
@@ -30,6 +31,12 @@ export function extractFailureContext(resultsJsonPath = 'test-results/results.js
   return failures.map(enrichFailureWithCodeAndDiff);
 }
 
+function stripAnsi(str) {
+  if (typeof str !== 'string') return '';
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/\u001b\[[0-9;]*m/g, '');
+}
+
 function collectFailuresFromSuite(suites, failures) {
   for (const suite of suites) {
     if (suite.specs) {
@@ -50,20 +57,66 @@ function collectFailuresFromSuite(suites, failures) {
           // Inspect only the final execution attempt to avoid duplicate triage on retried tests
           const finalResult = results[results.length - 1];
           if (finalResult.status === 'failed' || finalResult.status === 'timedOut') {
-            const errMsg =
-              finalResult.error?.message || finalResult.error?.value || 'Unknown error';
+            const rawErrors =
+              finalResult.errors && finalResult.errors.length > 0
+                ? finalResult.errors
+                : [finalResult.error].filter(Boolean);
+
+            // Find specific error that contains action/locator failure details
+            const specificError =
+              rawErrors.find(
+                (e) => e.message && !stripAnsi(e.message).startsWith('Test timeout of'),
+              ) ||
+              rawErrors[0] ||
+              {};
+
+            let resolvedSpecFile = spec.file;
+            if (resolvedSpecFile && !fs.existsSync(resolvedSpecFile)) {
+              const candidate = path.join('tests', resolvedSpecFile);
+              if (fs.existsSync(candidate)) {
+                resolvedSpecFile = candidate;
+              }
+            }
+
+            // Resolve actual failing file and line (e.g. Page Object vs Spec)
+            let resolvedFilePath = resolvedSpecFile;
+            let resolvedLine = spec.line;
+            let resolvedColumn = spec.column;
+
+            if (specificError.location?.file) {
+              const relPath = path.relative(process.cwd(), specificError.location.file);
+              if (fs.existsSync(relPath)) {
+                resolvedFilePath = relPath;
+                resolvedLine = specificError.location.line;
+                resolvedColumn = specificError.location.column;
+              }
+            }
+
+            // Combine messages and stack traces cleanly without ANSI codes
+            const combinedError = rawErrors
+              .map((e) => stripAnsi(e.message || ''))
+              .filter(Boolean)
+              .join('\n\n');
+
+            const combinedStack = rawErrors
+              .map((e) => stripAnsi(e.stack || ''))
+              .filter(Boolean)
+              .join('\n\n');
+
             failures.push({
               testTitle: spec.title || suite.title,
               projectName: test.projectName || '',
-              filePath: spec.file,
-              line: spec.line,
-              column: spec.column,
+              specFile: resolvedSpecFile,
+              specLine: spec.line,
+              filePath: resolvedFilePath,
+              line: resolvedLine,
+              column: resolvedColumn,
               status: finalResult.status,
               durationMs: finalResult.duration,
               retries: finalResult.retry || 0,
               attempts: results.length,
-              errorSnippet: errMsg.slice(0, 1500),
-              stackTrace: (finalResult.error?.stack || '').slice(0, 1500),
+              errorSnippet: (combinedError || 'Unknown error').slice(0, 2500),
+              stackTrace: combinedStack.slice(0, 2500),
               attachments: (finalResult.attachments || []).map((att) => ({
                 name: att.name,
                 contentType: att.contentType,
@@ -143,17 +196,32 @@ function enrichFailureWithCodeAndDiff(failure) {
   }
 
   let gitDiff = '';
-  try {
-    if (resolvedPath && fs.existsSync(resolvedPath)) {
-      // Precedence:
-      // 1. Branch comparison vs origin/main if available (CI PR / branch runs)
-      // 2. Commit comparison vs HEAD~1 (if fetch-depth >= 2 or local checkout)
-      // 3. Working tree diff vs HEAD (uncommitted/staged modifications)
-      const diffCmd = `git diff origin/main...HEAD -- "${resolvedPath}" 2>/dev/null || git diff HEAD~1 -- "${resolvedPath}" 2>/dev/null || git diff HEAD -- "${resolvedPath}" 2>/dev/null`;
-      gitDiff = execSync(diffCmd, { encoding: 'utf-8' }).trim();
+  if (resolvedPath && fs.existsSync(resolvedPath)) {
+    const tryGit = (cmd) => {
+      try {
+        return execSync(cmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+      } catch {
+        return '';
+      }
+    };
+
+    // 1. Uncommitted working tree modifications (local dev changes)
+    gitDiff = tryGit(`git diff HEAD -- "${resolvedPath}"`);
+
+    // 2. Recent commit diff for this specific file on the branch (local branch history)
+    if (!gitDiff) {
+      gitDiff = tryGit(`git log -p -n 1 -- "${resolvedPath}"`);
     }
-  } catch {
-    gitDiff = '';
+
+    // 3. Commit comparison vs HEAD~1
+    if (!gitDiff) {
+      gitDiff = tryGit(`git diff HEAD~1 -- "${resolvedPath}"`);
+    }
+
+    // 4. Branch comparison vs origin/main
+    if (!gitDiff) {
+      gitDiff = tryGit(`git diff origin/main...HEAD -- "${resolvedPath}"`);
+    }
   }
 
   return {
