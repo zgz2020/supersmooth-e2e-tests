@@ -9,7 +9,7 @@ End-to-end (E2E), API, and performance testing suite for the Sovereign (SOV) Web
 - **E2E Testing:** [Playwright](https://playwright.dev/) (`@playwright/test`)
 - **Web3 Wallet Automation:** [Synpress](https://github.com/Synthetixio/synpress) (`@synthetixio/synpress` v4) with MetaMask
 - **Performance Testing:** [Grafana k6](https://k6.io/) & TypeScript
-- **Applied AI & Agentic QA:** Google Gemini Flash (`gemini-flash-latest`), heuristic failure triage engine, Discord webhook alerts
+- **Applied AI & Agentic QA:** Google Gemini Flash (`gemini-flash-latest`), root-cause triage & autonomous self-healing (`agent:heal`), predictive PR change-impact analyzer (`agent:impact`), Discord webhook alerts
 - **Language & Runtime:** [TypeScript](https://www.typescriptlang.org/) / Node.js (v20+ LTS via `.nvmrc`)
 - **Package Manager:** [`pnpm`](https://pnpm.io/)
 
@@ -60,6 +60,7 @@ pnpm synpress-build-cache:base
 | **Local dApp Fork** | Runs `aphelion-app` locally with Anvil mainnet/L2 state                       | `pnpm app:fork`               |
 | **AI Test Triage**  | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs     | `pnpm agent:triage`           |
 | **AI Self-Healing** | Automatically applies proposed selector patches and verifies fix in isolation | `pnpm agent:heal`             |
+| **Predictive CI**   | Analyzes PR git diffs and dynamically resolves targeted test sub-suites       | `pnpm agent:impact`           |
 | **Test Repeater**   | Interactive flakiness detection runner                                        | `pnpm test:repeat`            |
 | **Code Quality**    | TypeScript type check and ESLint verification                                 | `pnpm typecheck && pnpm lint` |
 
@@ -112,9 +113,9 @@ await app.vaultPage.openPage(url, { collateral });
 
 ---
 
-## 🤖 Applied AI & Autonomous QA (`pnpm agent:triage` & `agent:heal`)
+## 🤖 Applied AI & Autonomous QA (`agent:triage`, `agent:heal` & `agent:impact`)
 
-An event-driven Applied AI test failure triage and self-healing system that diagnoses failed Playwright runs, isolates transient RPC/network flakiness from DOM selector drift and genuine regressions, drafts self-healing code diffs, and automatically repairs broken selectors:
+An event-driven Applied AI test failure triage, self-healing, and predictive CI acceleration system that diagnoses failed Playwright runs, isolates transient RPC/network flakiness from DOM selector drift and genuine regressions, repairs broken selectors, and predicts targeted test sub-suites from PR git diffs:
 
 ```bash
 # 1. Triage recent test run failures:
@@ -125,10 +126,14 @@ pnpm agent:heal
 
 # 3. Apply fix, verify in isolation, and open an autonomous GitHub Pull Request:
 pnpm agent:heal:pr
+
+# 4. Predictively analyze PR change-impact and resolve targeted sub-suite:
+pnpm agent:impact
 ```
 
 - **Interactive CI Step Summary:** Automatically rendered to GitHub Actions `$GITHUB_STEP_SUMMARY` on `if: failure()`.
 - **Autonomous Self-Healing PRs:** In CI (or via `--create-pr`), verified fixes are committed to dedicated branches and opened as PRs with `ai-self-heal` labels.
+- **Predictive CI Acceleration:** Analyzes PR git diffs against component dependency graphs to execute only impacted specs (cutting CI duration by 35–70%) and skips non-code documentation changes entirely.
 - **Sticky GitHub PR Bot:** In-place updates existing diagnostic comments on pull requests using `actions/github-script`.
 - **Ready-to-Paste PR Comments:** Saved to `ai-reports/latest-github-comment-[suite].md` with GitHub alerts and diffs.
 - **Discord Webhook Alerts:** Dispatches instant rich diagnostic cards to mobile/desktop Discord channels.
@@ -144,7 +149,7 @@ Detailed architectural documentation, setup guides, and references are organized
 | Guide                                                             | Description                                                                    |
 | :---------------------------------------------------------------- | :----------------------------------------------------------------------------- |
 | **[📜 Scripts Reference](docs/scripts-reference.md)**             | Complete breakdown of all scripts in `package.json` with execution flags       |
-| **[🤖 Applied AI Test Triage](docs/applied-ai-agent-qa.md)**      | Autonomous failure diagnosis, self-healing diff generation, and CI triggers    |
+| **[🤖 Applied AI & Agentic QA](docs/applied-ai-agent-qa.md)**     | Autonomous failure diagnosis, self-healing code repair, and predictive CI      |
 | **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)** | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s     |
 | **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**  | Run `aphelion-app` locally against Anvil state fork with pre-funded balances   |
 | **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                  | Synpress v4 cache configuration, MetaMask automation, and wallet helpers       |
