@@ -1,0 +1,180 @@
+name: 'Predictive PR CI'
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+  workflow_dispatch:
+    inputs:
+      files:
+        description: 'Optional comma-separated files to simulate impact analysis (e.g. "src/pages/vaultPage.ts")'
+        type: 'string'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  analyze-impact:
+    name: '🧠 Predictive Change-Impact Analyzer'
+    runs-on: 'ubuntu-24.04'
+    outputs:
+      runType: ${{ steps.analyzer.outputs.runType }}
+      hasTargetedTests: ${{ steps.analyzer.outputs.hasTargetedTests }}
+      specList: ${{ steps.analyzer.outputs.specList }}
+      projectArgs: ${{ steps.analyzer.outputs.projectArgs }}
+      hasWalletTests: ${{ steps.analyzer.outputs.hasWalletTests }}
+      savingsPercentage: ${{ steps.analyzer.outputs.savingsPercentage }}
+      targetCount: ${{ steps.analyzer.outputs.targetCount }}
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 0
+
+      - name: 'Configure Git Safe Directory'
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Execute AI Change-Impact Analyzer'
+        id: 'analyzer'
+        run: |
+          if [ -n "${{ inputs.files }}" ]; then
+            node scripts/qa-agent/pr-impact-analyzer.js --files="${{ inputs.files }}"
+          else
+            node scripts/qa-agent/pr-impact-analyzer.js --base=origin/${{ github.base_ref || 'main' }} --head=HEAD
+          fi
+
+  run-targeted-tests:
+    name: '⚡ Run Targeted Test Sub-Suite'
+    needs: 'analyze-impact'
+    if: needs.analyze-impact.outputs.hasTargetedTests == 'true'
+    runs-on: 'ubuntu-24.04'
+    container:
+      image: 'mcr.microsoft.com/playwright:v1.49.0-noble'
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 0
+
+      - name: 'Configure Git Safe Directory'
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Install xvfb'
+        run: apt-get update -y && apt-get -y install xvfb && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+      - name: 'Build Synpress Cache (Conditional)'
+        if: needs.analyze-impact.outputs.hasWalletTests == 'true'
+        env:
+          BASE_URL: "${{ vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
+          TEST_WALLET_PK: ${{ secrets.TEST_WALLET_PK }}
+          TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
+        run: pnpm ci:synpress-build-cache:base
+
+      - name: 'Run Targeted Specs'
+        env:
+          BASE_URL: "${{ vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
+          TEST_WALLET_PK: ${{ secrets.TEST_WALLET_PK }}
+          TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
+          REPORT_FOLDER: 'pr-predictive'
+          CI: 'true'
+          HEADLESS: 'true'
+        run: |
+          xvfb-run pnpm playwright test ${{ needs.analyze-impact.outputs.specList }} ${{ needs.analyze-impact.outputs.projectArgs }}
+
+      - name: '🤖 AI Agent Test Triage'
+        if: failure()
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: 'pnpm agent:triage --suite=pr-predictive'
+
+      - name: '💬 Update Sticky PR Triage Comment'
+        if: failure() && github.event_name == 'pull_request'
+        uses: 'actions/github-script@v7'
+        with:
+          script: |
+            const fs = require('fs');
+            const commentFile = 'ai-reports/latest-github-comment-pr-predictive.md';
+            const fallbackFile = 'ai-reports/latest-github-comment.md';
+            const targetPath = fs.existsSync(commentFile) ? commentFile : fallbackFile;
+            if (!fs.existsSync(targetPath)) return;
+
+            const triageMarkdown = fs.readFileSync(targetPath, 'utf8');
+            const commentHeader = '<!-- ai-qa-triage-pr-predictive -->';
+            const commentBody = `${commentHeader}\n${triageMarkdown}`;
+            const issueNumber = context.issue.number;
+            if (!issueNumber) return;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+            });
+
+            const existingComment = comments.find(c => c.body && c.body.includes(commentHeader));
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: commentBody,
+              });
+              console.log(`Updated sticky triage comment #${existingComment.id}`);
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: commentBody,
+              });
+              console.log('Created new sticky triage comment on PR');
+            }
+
+      - name: 'Upload Playwright Report'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'pr-predictive-report'
+          path: 'playwright-reports/pr-predictive'
+          retention-days: 14
+
+  skip-notification:
+    name: '⚪ Documentation Skip Notification'
+    needs: 'analyze-impact'
+    if: needs.analyze-impact.outputs.runType == 'SKIP_DOCS'
+    runs-on: 'ubuntu-24.04'
+    steps:
+      - name: 'Log Docs Skip'
+        run: |
+          echo "Documentation or non-code files modified."
+          echo "Skipping test execution to conserve cloud runner compute minutes (100% saved)."

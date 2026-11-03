@@ -55,7 +55,9 @@
     "// --- APPLIED AI & AGENT QA ---": "",
     "agent:triage": "node scripts/qa-agent/triage-agent.js",
     "agent:heal": "node scripts/qa-agent/heal-agent.js",
-    "agent:heal:pr": "node scripts/qa-agent/heal-agent.js --create-pr"
+    "agent:heal:pr": "node scripts/qa-agent/heal-agent.js --create-pr",
+    "agent:impact": "node scripts/qa-agent/pr-impact-analyzer.js",
+    "test:agent": "node scripts/qa-agent/pr-impact-analyzer.test.js"
   },
   "keywords": [
     "e2e",
