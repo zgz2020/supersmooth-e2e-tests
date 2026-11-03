@@ -57,7 +57,8 @@
     "agent:heal": "node scripts/qa-agent/heal-agent.js",
     "agent:heal:pr": "node scripts/qa-agent/heal-agent.js --create-pr",
     "agent:impact": "node scripts/qa-agent/pr-impact-analyzer.js",
-    "test:agent": "node scripts/qa-agent/pr-impact-analyzer.test.js"
+    "agent:cleanup-branches": "node scripts/qa-agent/cleanup-branches.js",
+    "test:agent": "node scripts/qa-agent/pr-impact-analyzer.test.js && node scripts/qa-agent/batch-safety-and-retention.test.js"
   },
   "keywords": [
     "e2e",

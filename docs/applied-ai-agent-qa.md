@@ -90,10 +90,20 @@ pnpm agent:heal --no-verify
 pnpm agent:heal:pr
 ```
 
-- **Rollback Safety:** Creates an in-memory / temporary backup before patching. If the repaired test does not pass Playwright verification, changes are automatically rolled back.
+- **Rollback Safety & Batch Snapshot Registry:** Uses `SnapshotRegistry` to record base snapshots and verified intermediate states. When multiple tests fail in the same Page Object or spec file, failure of a subsequent patch rolls back exclusively to the last validated passing stage, ensuring earlier passing fixes in the same file are never overwritten.
 - **Autonomous PR Generator:** When `--create-pr` is supplied (or in CI), the agent branches off (`ai-heal/<suite>-<timestamp>`), commits only the verified fixes, and pushes to the remote:
   - If GitHub Actions PR creation is enabled in organization settings, it opens a Pull Request automatically with the `ai-self-heal` label.
   - If organization policies restrict GitHub Actions from opening PRs directly (HTTP 403), the agent gracefully detects this, logs the new branch name, and generates a **1-click pre-filled Pull Request creation URL** in the CI job summary and logs.
+- **Automated Branch Retention & Pruning (`pnpm agent:cleanup-branches`):**
+  Prunes stale or merged `ai-heal/*` remote repair branches according to retention policy (default: 30 days):
+  ```bash
+  # Preview branches eligible for deletion without modifying remote:
+  pnpm agent:cleanup-branches --dry-run
+
+  # Prune merged branches and unmerged branches older than 30 days:
+  pnpm agent:cleanup-branches
+  ```
+  Also runs autonomously every Sunday at 03:00 UTC via `.github/workflows/cleanup-ai-branches.yml`.
 
 ---
 

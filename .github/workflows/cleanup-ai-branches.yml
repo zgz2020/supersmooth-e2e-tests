@@ -1,0 +1,48 @@
+name: '🧹 Cleanup AI Repair Branches'
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # Every Sunday at 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Branch age threshold in days for unmerged branches'
+        type: 'string'
+        required: false
+        default: '30'
+      dry_run:
+        description: 'Preview branches without deleting them (Dry Run)'
+        type: 'boolean'
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup-branches:
+    name: 'Prune Stale & Merged Repair Branches'
+    runs-on: 'ubuntu-24.04'
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 0
+
+      - name: 'Configure Git Safe Directory'
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: 'Execute Branch Retention Pruning'
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          DAYS_ARG="${{ inputs.days || '30' }}"
+          node scripts/qa-agent/cleanup-branches.js --days="$DAYS_ARG" $DRY_RUN_FLAG

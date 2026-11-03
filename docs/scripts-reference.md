@@ -111,15 +111,16 @@ Located in `tests/performance`. High-throughput benchmark suites with tiered tag
 
 Located in `scripts/`. Utilities for test maintenance, local blockchain simulation, flakiness verification, and AI failure diagnosis.
 
-| Script               | Description                                                                               |
-| :------------------- | :---------------------------------------------------------------------------------------- |
-| `pnpm app:fork`      | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH & tokens     |
-| `pnpm test:repeat`   | Interactive utility to execute a test suite multiple times in a loop to detect flakiness  |
-| `pnpm agent:triage`  | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs     |
-| `pnpm agent:heal`    | Reads proposed patches, applies selector updates, and validates fixes in Playwright       |
-| `pnpm agent:heal:pr` | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR   |
-| `pnpm agent:impact`  | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites |
-| `pnpm test:agent`    | Runs automated unit test suite for the change-impact predictive analyzer                  |
+| Script                        | Description                                                                               |
+| :---------------------------- | :---------------------------------------------------------------------------------------- |
+| `pnpm app:fork`               | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH & tokens     |
+| `pnpm test:repeat`            | Interactive utility to execute a test suite multiple times in a loop to detect flakiness  |
+| `pnpm agent:triage`           | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs     |
+| `pnpm agent:heal`             | Reads proposed patches, applies selector updates, and validates fixes in Playwright       |
+| `pnpm agent:heal:pr`          | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR   |
+| `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites |
+| `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                       |
+| `pnpm test:agent`             | Runs automated unit test suite for AI QA utilities (predictive analyzer & batch safety)   |
 
 ### CLI Usage:
 
@@ -138,6 +139,9 @@ pnpm agent:impact
 
 # Run unit tests for predictive analyzer
 pnpm test:agent
+
+# Clean up stale or merged ai-heal remote branches (dry run preview)
+pnpm agent:cleanup-branches --dry-run
 
 # Launch aphelion-app against Anvil fork (interactive prompt for network and tokens)
 pnpm app:fork
