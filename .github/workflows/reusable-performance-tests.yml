@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   performance-tests:
-    name: 'Run k6 Performance Tests'
+    name: 'Run k6 (${{ inputs.profile }} / ${{ inputs.scenario }})'
     runs-on: 'ubuntu-24.04'
 
     steps:
@@ -49,13 +49,25 @@ jobs:
       - name: 'Install dependencies'
         run: 'pnpm install --frozen-lockfile'
 
-      - name: 'Run performance test suite'
+      - name: 'Run k6 (${{ inputs.profile }} / ${{ inputs.scenario }})'
         env:
           K6_BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
           K6_PROFILE: '${{ inputs.profile }}'
           K6_SCENARIO: '${{ inputs.scenario }}'
           K6_TARGET: '${{ inputs.target }}'
         run: 'pnpm test:performance'
+
+      - name: '📋 Publish Execution Context to Step Summary'
+        if: always()
+        run: |
+          echo "## ⚡ Performance Test Execution Context" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Profile** | \`${{ inputs.profile }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Scenario** | \`${{ inputs.scenario }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Target(s)** | \`${{ inputs.target != '' && inputs.target || 'all' }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Base URL** | \`${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}\` |" >> $GITHUB_STEP_SUMMARY
 
       - name: 'Upload Performance Reports'
         uses: 'actions/upload-artifact@v4'
