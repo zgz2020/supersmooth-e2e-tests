@@ -53,7 +53,9 @@
     "test:repeat": "node scripts/repeat-tests.js",
     "app:fork": "node scripts/run-app-fork.js",
     "// --- APPLIED AI & AGENT QA ---": "",
-    "agent:triage": "node scripts/qa-agent/triage-agent.js"
+    "agent:triage": "node scripts/qa-agent/triage-agent.js",
+    "agent:heal": "node scripts/qa-agent/heal-agent.js",
+    "agent:heal:pr": "node scripts/qa-agent/heal-agent.js --create-pr"
   },
   "keywords": [
     "e2e",
