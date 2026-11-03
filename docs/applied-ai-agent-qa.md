@@ -148,14 +148,57 @@ pnpm test:agent
 
 ---
 
+## 🕷️ Autonomous Route Health Crawler & Route Auditor (`pnpm agent:crawl`)
+
+The **Autonomous Route Crawler** (`scripts/qa-agent/crawl-vaults.js`) addresses dynamic DeFi liquidity pool link breakage (resolving **Aphelion-Co/aphelion-app#1649**). It dynamically crawls all active pool and market positions without requiring hand-crafted test files for each new pool.
+
+### 🎯 Key Capabilities:
+
+- **Comprehensive Route Discovery:** Discovers active liquidity pool routes from both top-cards endpoints (`/api/product-table/top-cards`) AND the **full product tables below top-cards** across all catalog pages (`/products/multiply`, `/products/borrow`, `/products/earn`), strategy views (`?strategy=yield-loops`, `?strategy=automated-strategies`), and table pagination pages across Ethereum (`1`), Base (`8453`), Robinhood (`4663`), and Arbitrum (`42161`).
+- **404 & Error Boundary Detection:** Concurrently verifies every route for HTTP 200, absence of `"Page not found"` fallback boundaries, and absence of unhandled React error boundary crashes.
+- **Automated Route Health Audit:** Generates markdown (`ai-reports/route-health-audit.md`) and JSON (`ai-reports/latest-route-audit.json`) audit reports with network-by-network health scores.
+- **Auto-Scaffolder (`--scaffold`):** Generates boilerplate Playwright specs following repository POM conventions for newly launched pools.
+
+### 🛠️ CLI Options & Usage:
+
+```bash
+# Run comprehensive audit across all top-cards and paginated product tables:
+pnpm agent:crawl
+
+# Filter crawl by chain (e.g. Robinhood network 4663 or Base 8453):
+pnpm agent:crawl --chain=4663
+pnpm agent:crawl --chain=8453
+
+# Filter by product type:
+pnpm agent:crawl --product=yieldLoop
+
+# Cap audit to first N routes or adjust pagination depth:
+pnpm agent:crawl --limit=50
+pnpm agent:crawl --max-pages=5
+
+# Audit only top-cards without paginating tables:
+pnpm agent:crawl --top-cards-only
+
+# Auto-scaffold new Playwright specs for discovered routes:
+pnpm agent:crawl --scaffold
+
+# Run unit tests:
+pnpm test:agent
+```
+
+---
+
 ## 📁 Generated Reports in `ai-reports/`
 
 Every execution writes outputs inside [`ai-reports/`](../ai-reports/):
 
 1. **Structured JSON Data (Automation & Self-Healing):**
    - `latest-triage-data.json` (Machine-readable diagnostics for `pnpm agent:heal`)
-   - `triage-[suite]-[timestamp].json`
-2. **Suite-Specific Timestamped Markdown History:**
+   - `latest-route-audit.json` (Machine-readable route audit results from `pnpm agent:crawl`)
+   - `latest-branch-cleanup.json` (Branch retention results from `pnpm agent:cleanup-branches`)
+   - `latest-impact-analysis.json` (Predictive test selection from `pnpm agent:impact`)
+2. **Markdown Audit & Triage History:**
+   - `route-health-audit.md` (Autonomous route health and 404 audit report)
    - `triage-no-wallet-[timestamp].md`
    - `triage-with-wallet-[timestamp].md`
    - `triage-api-[timestamp].md`
