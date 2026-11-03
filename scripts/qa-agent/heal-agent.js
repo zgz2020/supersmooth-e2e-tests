@@ -10,6 +10,107 @@ const REPORTS_DIR = path.resolve(process.cwd(), 'ai-reports');
 const LATEST_JSON_PATH = path.join(REPORTS_DIR, 'latest-triage-data.json');
 
 /**
+ * Atomic Snapshot & State Registry for Batch Healing
+ *
+ * Tracks base snapshots of files before any modifications, records staged/verified
+ * updates per file, and ensures rollbacks revert only to the last verified state
+ * (never clobbering previously validated fixes in the same file).
+ */
+export class SnapshotRegistry {
+  constructor() {
+    this.baseSnapshots = new Map();
+    this.stagedContent = new Map();
+    this.backupFiles = new Set();
+  }
+
+  registerFile(filePath) {
+    if (!this.baseSnapshots.has(filePath)) {
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        this.baseSnapshots.set(filePath, content);
+        this.stagedContent.set(filePath, content);
+      }
+    }
+  }
+
+  getCurrentContent(filePath) {
+    if (this.stagedContent.has(filePath)) {
+      return this.stagedContent.get(filePath);
+    }
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      this.registerFile(filePath);
+      return content;
+    }
+    return null;
+  }
+
+  createDiskBackup(filePath) {
+    this.registerFile(filePath);
+    const backupFile = `${filePath}.bak.${Date.now()}.${Math.random().toString(36).slice(2, 6)}`;
+    const current = this.getCurrentContent(filePath);
+    if (current !== null) {
+      fs.writeFileSync(backupFile, current, 'utf-8');
+      this.backupFiles.add(backupFile);
+    }
+    return backupFile;
+  }
+
+  removeDiskBackup(backupFile) {
+    if (backupFile && fs.existsSync(backupFile)) {
+      try {
+        fs.unlinkSync(backupFile);
+      } catch {
+        // ignore
+      }
+      this.backupFiles.delete(backupFile);
+    }
+  }
+
+  commitStage(filePath, content) {
+    this.stagedContent.set(filePath, content);
+  }
+
+  rollbackToLastStage(filePath, backupFile) {
+    if (this.stagedContent.has(filePath)) {
+      const lastGoodContent = this.stagedContent.get(filePath);
+      fs.writeFileSync(filePath, lastGoodContent, 'utf-8');
+    } else if (this.baseSnapshots.has(filePath)) {
+      fs.writeFileSync(filePath, this.baseSnapshots.get(filePath), 'utf-8');
+    }
+    if (backupFile) {
+      this.removeDiskBackup(backupFile);
+    }
+  }
+
+  rollbackAll() {
+    for (const [filePath, originalContent] of this.baseSnapshots.entries()) {
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.writeFileSync(filePath, originalContent, 'utf-8');
+        }
+      } catch (err) {
+        console.warn(`⚠️ [SnapshotRegistry] Could not rollback ${filePath}: ${err.message}`);
+      }
+    }
+    this.cleanupAllBackups();
+  }
+
+  cleanupAllBackups() {
+    for (const backupFile of this.backupFiles) {
+      if (fs.existsSync(backupFile)) {
+        try {
+          fs.unlinkSync(backupFile);
+        } catch {
+          // ignore
+        }
+      }
+    }
+    this.backupFiles.clear();
+  }
+}
+
+/**
  * Autonomous Self-Healing Agent (pnpm agent:heal)
  *
  * Reads latest failure triage data, extracts proposed self-healing patches,
@@ -77,6 +178,13 @@ async function main() {
 
   let appliedCount = 0;
   const successfullyHealed = [];
+  const snapshotRegistry = new SnapshotRegistry();
+
+  const cleanupHandler = () => {
+    snapshotRegistry.cleanupAllBackups();
+  };
+  process.on('SIGINT', cleanupHandler);
+  process.on('SIGTERM', cleanupHandler);
 
   for (let i = 0; i < healableItems.length; i++) {
     const item = healableItems[i];
@@ -94,7 +202,8 @@ async function main() {
       continue;
     }
 
-    const originalContent = fs.readFileSync(targetFile, 'utf-8');
+    snapshotRegistry.registerFile(targetFile);
+    const originalContent = snapshotRegistry.getCurrentContent(targetFile);
     let patchedContent = null;
     let patchDescription = '';
 
@@ -158,9 +267,8 @@ async function main() {
       continue;
     }
 
-    // Backup original file
-    const backupFile = `${targetFile}.bak.${Date.now()}`;
-    fs.writeFileSync(backupFile, originalContent, 'utf-8');
+    // Backup current stage
+    const backupFile = snapshotRegistry.createDiskBackup(targetFile);
 
     try {
       // Write patched content
@@ -188,7 +296,8 @@ async function main() {
             env: { ...process.env, HEADLESS: 'true' },
           });
           console.log('✅ Verification PASSED! Healed test now passes.');
-          fs.unlinkSync(backupFile);
+          snapshotRegistry.commitStage(targetFile, patchedContent);
+          snapshotRegistry.removeDiskBackup(backupFile);
           appliedCount++;
           successfullyHealed.push({
             item,
@@ -201,14 +310,14 @@ async function main() {
             const out = err.stdout.toString().slice(0, 500);
             if (out.trim()) console.log(`   Output: ${out.trim()}`);
           }
-          console.warn('↩️  Rolling back changes from backup...');
-          fs.writeFileSync(targetFile, originalContent, 'utf-8');
-          fs.unlinkSync(backupFile);
-          console.log('🔄 Reverted file to original state.\n');
+          console.warn('↩️  Rolling back changes to last validated stage...');
+          snapshotRegistry.rollbackToLastStage(targetFile, backupFile);
+          console.log('🔄 Reverted file to last validated state.\n');
           continue;
         }
       } else {
-        fs.unlinkSync(backupFile);
+        snapshotRegistry.commitStage(targetFile, patchedContent);
+        snapshotRegistry.removeDiskBackup(backupFile);
         appliedCount++;
         successfullyHealed.push({
           item,
@@ -219,12 +328,12 @@ async function main() {
       }
     } catch (err) {
       console.error(`❌ Error during patching: ${err.message}`);
-      if (fs.existsSync(backupFile)) {
-        fs.writeFileSync(targetFile, originalContent, 'utf-8');
-        fs.unlinkSync(backupFile);
-      }
+      snapshotRegistry.rollbackToLastStage(targetFile, backupFile);
     }
   }
+
+  // Cleanup any lingering backups
+  snapshotRegistry.cleanupAllBackups();
 
   console.log(
     `\n🏁 [qa-agent:heal] Self-healing complete. Successfully healed: ${appliedCount} test(s).\n`,
@@ -464,7 +573,9 @@ function parseTriageFromMarkdown(markdown) {
   return { analyses };
 }
 
-main().catch((err) => {
-  console.error('[qa-agent:heal] Fatal error:', err);
-  process.exit(1);
-});
+if (process.argv[1] && process.argv[1].endsWith('heal-agent.js')) {
+  main().catch((err) => {
+    console.error('[qa-agent:heal] Fatal error:', err);
+    process.exit(1);
+  });
+}
