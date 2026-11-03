@@ -120,7 +120,8 @@ Located in `scripts/`. Utilities for test maintenance, local blockchain simulati
 | `pnpm agent:heal:pr`          | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR   |
 | `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites |
 | `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                       |
-| `pnpm test:agent`             | Runs automated unit test suite for AI QA utilities (predictive analyzer & batch safety)   |
+| `pnpm agent:crawl`            | Autonomously discovers dynamic pool routes and audits for 404 boundaries (Issue #1649)    |
+| `pnpm test:agent`             | Runs automated unit test suite for AI QA utilities (crawler, impact analyzer, snapshots)  |
 
 ### CLI Usage:
 
@@ -137,7 +138,12 @@ pnpm agent:heal:pr
 # Analyze PR change-impact and resolve targeted test sub-suite
 pnpm agent:impact
 
-# Run unit tests for predictive analyzer
+# Autonomously crawl dynamic liquidity pools and audit for 404 errors (Issue #1649)
+pnpm agent:crawl
+pnpm agent:crawl --chain=8453
+pnpm agent:crawl --scaffold
+
+# Run unit tests for AI agent QA utilities
 pnpm test:agent
 
 # Clean up stale or merged ai-heal remote branches (dry run preview)
@@ -208,6 +214,10 @@ pnpm test:repeat cross-browser:webkit 1
 | `agent:triage`                      | `node scripts/qa-agent/triage-agent.js`                           | AI failure diagnosis & diff reports |
 | `agent:heal`                        | `node scripts/qa-agent/heal-agent.js`                             | Apply self-healing patches & verify |
 | `agent:heal:pr`                     | `node scripts/qa-agent/heal-agent.js --create-pr`                 | Apply fix, verify, & open GitHub PR |
+| `agent:impact`                      | `node scripts/qa-agent/pr-impact-analyzer.js`                     | PR impact analyzer & test selector  |
+| `agent:cleanup-branches`            | `node scripts/qa-agent/cleanup-branches.js`                       | Prune stale/merged ai-heal branches |
+| `agent:crawl`                       | `node scripts/qa-agent/crawl-vaults.js`                           | Dynamic route crawler & 404 auditor |
+| `test:agent`                        | `node scripts/qa-agent/...test.js`                                | Run AI agent test suites            |
 | `app:fork`                          | `node scripts/run-app-fork.js`                                    | Run local dApp with Anvil fork      |
 | `synpress-build-cache:base`         | `pnpm synpress ./utils/synpress/wallet-setup`                     | Build local Synpress wallet cache   |
 | `ci:synpress-build-cache:base`      | `xvfb-run pnpm synpress-build-cache:base`                         | Build Synpress cache in CI          |

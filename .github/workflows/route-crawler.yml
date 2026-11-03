@@ -1,0 +1,76 @@
+name: 'Dynamic Route Health Crawler'
+
+on:
+  schedule:
+    # Run twice per week: Tuesdays (2) and Fridays (5) at 04:00 UTC
+    - cron: '0 4 * * 2,5'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Target Application Host'
+        required: false
+        default: 'https://staging.supersmooth.fi'
+        type: 'string'
+      chain:
+        description: 'Filter Chain ID (1 = Ethereum, 8453 = Base, 4663 = Robinhood, 42161 = Arbitrum)'
+        required: false
+        default: ''
+        type: 'string'
+      product:
+        description: 'Filter Product Type (multiply, borrow, earn, yieldLoop)'
+        required: false
+        default: ''
+        type: 'string'
+      concurrency:
+        description: 'Concurrent audit workers'
+        required: false
+        default: '10'
+        type: 'string'
+
+concurrency:
+  group: 'route-crawler-${{ github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  crawl-and-audit:
+    name: '🕷️ Dynamic Route Health Crawler'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Execute Autonomous Route Crawler'
+        env:
+          BASE_URL: "${{ inputs.base_url || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
+          CHAIN_FILTER: '${{ inputs.chain }}'
+          PRODUCT_FILTER: '${{ inputs.product }}'
+          CONCURRENCY: "${{ inputs.concurrency || '5' }}"
+        run: |
+          ARGS="--base-url=${BASE_URL} --concurrency=${CONCURRENCY}"
+          if [ -n "${CHAIN_FILTER}" ]; then
+            ARGS="${ARGS} --chain=${CHAIN_FILTER}"
+          fi
+          if [ -n "${PRODUCT_FILTER}" ]; then
+            ARGS="${ARGS} --product=${PRODUCT_FILTER}"
+          fi
+          node scripts/qa-agent/crawl-vaults.js ${ARGS}
+
+      - name: 'Upload Route Health Reports'
+        if: always()
+        uses: 'actions/upload-artifact@v4'
+        with:
+          name: 'route-health-audit'
+          path: 'ai-reports/'
+          retention-days: 14

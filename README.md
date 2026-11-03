@@ -50,19 +50,20 @@ pnpm synpress-build-cache:base
 
 ## 🧪 Essential Test Commands
 
-| Test Suite          | Purpose                                                                       | Command                       |
-| :------------------ | :---------------------------------------------------------------------------- | :---------------------------- |
-| **No-Wallet E2E**   | User flows without Web3 wallet connectivity                                   | `pnpm test:no-wallet`         |
-| **With-Wallet E2E** | MetaMask wallet connection, approvals, and trading                            | `pnpm test:with-wallet`       |
-| **API Suites**      | Direct backend HTTP endpoints & schema validation                             | `pnpm test:api`               |
-| **Cross-Browser**   | Responsive layout smoke matrix across engines & devices                       | `pnpm test:cross-browser`     |
-| **Performance**     | Grafana k6 high-throughput load and SLA tests                                 | `pnpm test:performance`       |
-| **Local dApp Fork** | Runs `aphelion-app` locally with Anvil mainnet/L2 state                       | `pnpm app:fork`               |
-| **AI Test Triage**  | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs     | `pnpm agent:triage`           |
-| **AI Self-Healing** | Automatically applies proposed selector patches and verifies fix in isolation | `pnpm agent:heal`             |
-| **Predictive CI**   | Analyzes PR git diffs and dynamically resolves targeted test sub-suites       | `pnpm agent:impact`           |
-| **Test Repeater**   | Interactive flakiness detection runner                                        | `pnpm test:repeat`            |
-| **Code Quality**    | TypeScript type check and ESLint verification                                 | `pnpm typecheck && pnpm lint` |
+| Test Suite           | Purpose                                                                        | Command                       |
+| :------------------- | :----------------------------------------------------------------------------- | :---------------------------- |
+| **No-Wallet E2E**    | User flows without Web3 wallet connectivity                                    | `pnpm test:no-wallet`         |
+| **With-Wallet E2E**  | MetaMask wallet connection, approvals, and trading                             | `pnpm test:with-wallet`       |
+| **API Suites**       | Direct backend HTTP endpoints & schema validation                              | `pnpm test:api`               |
+| **Cross-Browser**    | Responsive layout smoke matrix across engines & devices                        | `pnpm test:cross-browser`     |
+| **Performance**      | Grafana k6 high-throughput load and SLA tests                                  | `pnpm test:performance`       |
+| **Local dApp Fork**  | Runs `aphelion-app` locally with Anvil mainnet/L2 state                        | `pnpm app:fork`               |
+| **AI Test Triage**   | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs      | `pnpm agent:triage`           |
+| **AI Self-Healing**  | Automatically applies proposed selector patches and verifies fix in isolation  | `pnpm agent:heal`             |
+| **AI Route Crawler** | Dynamically discovers liquidity pools and audits routes for 404s (Issue #1649) | `pnpm agent:crawl`            |
+| **Predictive CI**    | Analyzes PR git diffs and dynamically resolves targeted test sub-suites        | `pnpm agent:impact`           |
+| **Test Repeater**    | Interactive flakiness detection runner                                         | `pnpm test:repeat`            |
+| **Code Quality**     | TypeScript type check and ESLint verification                                  | `pnpm typecheck && pnpm lint` |
 
 > 📖 **Full Command List:** For the exhaustive list of all 36+ scripts, CI flags, and targeted browser commands, see the **[Scripts & Test Suites Reference](docs/scripts-reference.md)**.
 
@@ -129,12 +130,16 @@ pnpm agent:heal:pr
 
 # 4. Predictively analyze PR change-impact and resolve targeted sub-suite:
 pnpm agent:impact
+
+# 5. Dynamically crawl active liquidity pool routes and audit for 404s (Issue #1649):
+pnpm agent:crawl
 ```
 
 - **Interactive CI Step Summary:** Automatically rendered to GitHub Actions `$GITHUB_STEP_SUMMARY` on `if: failure()`.
 - **Autonomous Self-Healing PRs:** In CI (or via `--create-pr`), verified fixes are committed to dedicated branches and opened as PRs with `ai-self-heal` labels.
 - **Batch Safety & Branch Retention:** Atomic `SnapshotRegistry` prevents state corruption during multi-failure repairs, and automated maintenance (`agent:cleanup-branches`) prunes stale/merged repair branches.
 - **Predictive CI Acceleration:** Analyzes PR git diffs against component dependency graphs to execute only impacted specs (cutting CI duration by 35–70%) and skips non-code documentation changes entirely.
+- **Dynamic Route Health Auditing:** Autonomously crawls live pools across Ethereum, Base, Robinhood, and Arbitrum to detect 404 boundaries and unhandled exceptions (resolving Issue #1649).
 - **Sticky GitHub PR Bot:** In-place updates existing diagnostic comments on pull requests using `actions/github-script`.
 - **Ready-to-Paste PR Comments:** Saved to `ai-reports/latest-github-comment-[suite].md` with GitHub alerts and diffs.
 - **Discord Webhook Alerts:** Dispatches instant rich diagnostic cards to mobile/desktop Discord channels.
