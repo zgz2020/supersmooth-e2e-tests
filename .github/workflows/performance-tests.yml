@@ -1,4 +1,5 @@
 name: 'Performance Tests'
+run-name: "Performance Tests [${{ inputs.profile }} / ${{ inputs.scenario }}${{ inputs.target != '' && format(' ({0})', inputs.target) || '' }}]"
 
 on:
   workflow_dispatch:
@@ -42,7 +43,7 @@ permissions:
 
 jobs:
   performance-tests:
-    name: 'Performance Tests'
+    name: 'Performance Tests (${{ inputs.profile }} / ${{ inputs.scenario }})'
     uses: './.github/workflows/reusable-performance-tests.yml'
     with:
       baseUrl: '${{ inputs.baseUrl }}'
