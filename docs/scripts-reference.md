@@ -121,6 +121,7 @@ Located in `scripts/`. Utilities for test maintenance, local blockchain simulati
 | `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites |
 | `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                       |
 | `pnpm agent:crawl`            | Autonomously discovers dynamic pool routes and audits for 404 boundaries (Issue #1649)    |
+| `pnpm agent:crawl:all`        | Exhaustively crawls all table pages across products without pagination caps until the end |
 | `pnpm test:agent`             | Runs automated unit test suite for AI QA utilities (crawler, impact analyzer, snapshots)  |
 
 ### CLI Usage:

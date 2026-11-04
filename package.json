@@ -59,6 +59,7 @@
     "agent:impact": "node scripts/qa-agent/pr-impact-analyzer.js",
     "agent:cleanup-branches": "node scripts/qa-agent/cleanup-branches.js",
     "agent:crawl": "node scripts/qa-agent/crawl-vaults.js",
+    "agent:crawl:all": "node scripts/qa-agent/crawl-vaults.js --all-pages",
     "test:agent": "node scripts/qa-agent/pr-impact-analyzer.test.js && node scripts/qa-agent/batch-safety-and-retention.test.js && node scripts/qa-agent/crawl-vaults.test.js"
   },
   "keywords": [

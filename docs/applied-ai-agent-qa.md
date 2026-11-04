@@ -162,8 +162,13 @@ The **Autonomous Route Crawler** (`scripts/qa-agent/crawl-vaults.js`) addresses 
 ### 🛠️ CLI Options & Usage:
 
 ```bash
-# Run comprehensive audit across all top-cards and paginated product tables:
+# Run comprehensive audit across all top-cards and paginated product tables (first 10 pages):
 pnpm agent:crawl
+
+# Exhaustively crawl absolutely all table pages until catalogs naturally end:
+pnpm agent:crawl:all
+# Or pass the flag directly:
+pnpm agent:crawl --all-pages
 
 # Filter crawl by chain (e.g. Robinhood network 4663 or Base 8453):
 pnpm agent:crawl --chain=4663

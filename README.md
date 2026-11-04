@@ -50,20 +50,20 @@ pnpm synpress-build-cache:base
 
 ## 🧪 Essential Test Commands
 
-| Test Suite           | Purpose                                                                        | Command                       |
-| :------------------- | :----------------------------------------------------------------------------- | :---------------------------- |
-| **No-Wallet E2E**    | User flows without Web3 wallet connectivity                                    | `pnpm test:no-wallet`         |
-| **With-Wallet E2E**  | MetaMask wallet connection, approvals, and trading                             | `pnpm test:with-wallet`       |
-| **API Suites**       | Direct backend HTTP endpoints & schema validation                              | `pnpm test:api`               |
-| **Cross-Browser**    | Responsive layout smoke matrix across engines & devices                        | `pnpm test:cross-browser`     |
-| **Performance**      | Grafana k6 high-throughput load and SLA tests                                  | `pnpm test:performance`       |
-| **Local dApp Fork**  | Runs `aphelion-app` locally with Anvil mainnet/L2 state                        | `pnpm app:fork`               |
-| **AI Test Triage**   | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs      | `pnpm agent:triage`           |
-| **AI Self-Healing**  | Automatically applies proposed selector patches and verifies fix in isolation  | `pnpm agent:heal`             |
-| **AI Route Crawler** | Dynamically discovers liquidity pools and audits routes for 404s (Issue #1649) | `pnpm agent:crawl`            |
-| **Predictive CI**    | Analyzes PR git diffs and dynamically resolves targeted test sub-suites        | `pnpm agent:impact`           |
-| **Test Repeater**    | Interactive flakiness detection runner                                         | `pnpm test:repeat`            |
-| **Code Quality**     | TypeScript type check and ESLint verification                                  | `pnpm typecheck && pnpm lint` |
+| Test Suite           | Purpose                                                                        | Command                                        |
+| :------------------- | :----------------------------------------------------------------------------- | :--------------------------------------------- |
+| **No-Wallet E2E**    | User flows without Web3 wallet connectivity                                    | `pnpm test:no-wallet`                          |
+| **With-Wallet E2E**  | MetaMask wallet connection, approvals, and trading                             | `pnpm test:with-wallet`                        |
+| **API Suites**       | Direct backend HTTP endpoints & schema validation                              | `pnpm test:api`                                |
+| **Cross-Browser**    | Responsive layout smoke matrix across engines & devices                        | `pnpm test:cross-browser`                      |
+| **Performance**      | Grafana k6 high-throughput load and SLA tests                                  | `pnpm test:performance`                        |
+| **Local dApp Fork**  | Runs `aphelion-app` locally with Anvil mainnet/L2 state                        | `pnpm app:fork`                                |
+| **AI Test Triage**   | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs      | `pnpm agent:triage`                            |
+| **AI Self-Healing**  | Automatically applies proposed selector patches and verifies fix in isolation  | `pnpm agent:heal`                              |
+| **AI Route Crawler** | Dynamically discovers liquidity pools and audits routes for 404s (Issue #1649) | `pnpm agent:crawl` (or `pnpm agent:crawl:all`) |
+| **Predictive CI**    | Analyzes PR git diffs and dynamically resolves targeted test sub-suites        | `pnpm agent:impact`                            |
+| **Test Repeater**    | Interactive flakiness detection runner                                         | `pnpm test:repeat`                             |
+| **Code Quality**     | TypeScript type check and ESLint verification                                  | `pnpm typecheck && pnpm lint`                  |
 
 > 📖 **Full Command List:** For the exhaustive list of all 36+ scripts, CI flags, and targeted browser commands, see the **[Scripts & Test Suites Reference](docs/scripts-reference.md)**.
 
