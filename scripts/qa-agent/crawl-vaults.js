@@ -453,7 +453,12 @@ export async function discoverAllRoutes(options = {}) {
   const baseUrl = (options.baseUrl || 'https://staging.supersmooth.fi').replace(/\/$/, '');
   const chainFilter = options.chainFilter || null;
   const productFilter = options.productFilter || null;
-  const maxPages = options.maxPages !== undefined ? options.maxPages : 10;
+  const allPages = options.allPages === true;
+  const maxPages = allPages
+    ? Number.POSITIVE_INFINITY
+    : options.maxPages !== undefined
+      ? options.maxPages
+      : 10;
   const includeTables = options.includeTables !== false;
   const includeTopCards = options.includeTopCards !== false;
 
@@ -476,7 +481,7 @@ export async function discoverAllRoutes(options = {}) {
           const json = await res.json();
           const routes = extractRoutesFromTopCards(json, q.productType);
           for (const r of routes) {
-            if (chainFilter && r.chainId !== chainFilter) continue;
+            if (chainFilter && String(r.chainId) !== String(chainFilter)) continue;
             discoveredMap.set(r.url, r);
           }
         }
@@ -491,29 +496,47 @@ export async function discoverAllRoutes(options = {}) {
     for (const target of CATALOG_TARGETS) {
       if (productFilter && target.productType !== productFilter) continue;
 
+      const seenTargetUrls = new Set();
       let pageNum = 1;
       while (pageNum <= maxPages) {
         const separator = target.path.includes('?') ? '&' : '?';
         const urlWithPage = `${baseUrl}${target.path}${separator}page=${pageNum}`;
 
+        let res;
         try {
-          const res = await fetcher(urlWithPage);
-          if (!res.ok) break;
+          res = await fetcher(urlWithPage);
+        } catch (err) {
+          // Retry once on transient network glitch
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          try {
+            res = await fetcher(urlWithPage);
+          } catch {
+            console.warn(
+              `⚠️ [crawler] Failed to fetch page ${pageNum} for ${target.name}: ${err?.message || err}`,
+            );
+            break;
+          }
+        }
+        if (!res || !res.ok) break;
 
+        try {
           const html = await res.text();
           const routes = extractRoutesFromHtml(html, target.productType);
 
-          let newRoutesOnPage = 0;
+          let globalNewOnPage = 0;
           for (const r of routes) {
-            if (chainFilter && r.chainId !== chainFilter) continue;
+            if (!seenTargetUrls.has(r.url)) {
+              seenTargetUrls.add(r.url);
+              globalNewOnPage++;
+            }
+            if (chainFilter && String(r.chainId) !== String(chainFilter)) continue;
             if (!discoveredMap.has(r.url)) {
               discoveredMap.set(r.url, r);
-              newRoutesOnPage++;
             }
           }
 
-          // If no position routes found on this page or no new items on subsequent page, reached end
-          if (routes.length === 0 || (newRoutesOnPage === 0 && pageNum > 1)) {
+          // Only break if the catalog page itself is empty or returning looped/duplicate cards
+          if (routes.length === 0 || (globalNewOnPage === 0 && pageNum > 1)) {
             break;
           }
 
@@ -553,6 +576,7 @@ Options:
   --product=<type>     Filter to specific product (multiply, borrow, earn, yieldLoop)
   --concurrency=<n>    Max concurrent audit workers (default: 5)
   --max-pages=<n>      Max table pagination pages per catalog section (default: 10)
+  --all-pages          Crawl all paginated table pages until the catalog ends naturally
   --limit=<n>          Cap audit to first N discovered routes
   --top-cards-only     Only audit top-cards without crawling paginated tables
   --scaffold           Output auto-scaffolded Playwright spec
@@ -569,18 +593,26 @@ Options:
   const chainFilter = getArg('chain', null);
   const productFilter = getArg('product', null);
   const concurrency = Number.parseInt(getArg('concurrency', '10'), 10) || 10;
-  const maxPages = Number.parseInt(getArg('max-pages', '10'), 10) || 10;
+  const allPages = hasFlag('all-pages');
+  const maxPages = allPages
+    ? Number.POSITIVE_INFINITY
+    : Number.parseInt(getArg('max-pages', '10'), 10) || 10;
   const limit = getArg('limit', null) ? Number.parseInt(getArg('limit'), 10) : null;
   const topCardsOnly = hasFlag('top-cards-only');
   const doScaffold = hasFlag('scaffold');
   const asJson = hasFlag('json');
 
+  let scopeLabel = 'Top Cards + Product Tables (First 10 Pages)';
+  if (topCardsOnly) {
+    scopeLabel = 'Top Cards Only';
+  } else if (allPages) {
+    scopeLabel = 'Top Cards + Full Product Tables (All Pages / Exhaustive)';
+  }
+
   console.log(`🕷️ Starting Autonomous Route Crawler...`);
   console.log(`   Base Host:    ${baseUrl}`);
   console.log(`   Concurrency:  ${concurrency}`);
-  console.log(
-    `   Scope:        ${topCardsOnly ? 'Top Cards Only' : 'Top Cards + Full Product Tables (All Pages)'}`,
-  );
+  console.log(`   Scope:        ${scopeLabel}`);
   if (chainFilter)
     console.log(`   Chain Filter: ${chainFilter} (${CHAIN_NAMES[chainFilter] || 'Unknown'})`);
   if (productFilter) console.log(`   Product:      ${productFilter}`);
@@ -592,6 +624,7 @@ Options:
     chainFilter,
     productFilter,
     maxPages,
+    allPages,
     includeTables: !topCardsOnly,
     includeTopCards: true,
   });

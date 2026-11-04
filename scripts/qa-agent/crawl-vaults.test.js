@@ -186,19 +186,143 @@ async function runTests() {
     );
   }
 
+  // Test 8: discoverAllRoutes with allPages: true crawls until page returns 0 new routes
+  {
+    const requestedPages = [];
+    const mockFetcher = async (url) => {
+      if (url.includes('/api/product-table/top-cards')) {
+        return { ok: true, json: async () => ({ cards: [] }) };
+      }
+      const pageMatch = url.match(/page=(\d+)/);
+      const pageNum = pageMatch ? Number.parseInt(pageMatch[1], 10) : 1;
+      requestedPages.push(pageNum);
+
+      if (pageNum <= 4) {
+        return {
+          ok: true,
+          text: async () =>
+            `<a href="/products/borrow/morpho/8453/0xpool${pageNum}">Pool ${pageNum}</a>`,
+        };
+      }
+      return { ok: true, text: async () => '' };
+    };
+
+    const routes = await discoverAllRoutes({
+      fetcher: mockFetcher,
+      baseUrl: 'https://staging.supersmooth.fi',
+      productFilter: 'borrow',
+      allPages: true,
+      includeTopCards: false,
+      includeTables: true,
+    });
+
+    assert.strictEqual(routes.length, 4);
+    assert.deepStrictEqual(requestedPages, [1, 2, 3, 4, 5]);
+    console.log(
+      '  ✓ Test 8 Passed: discoverAllRoutes with allPages: true crawls until page returns 0 new routes',
+    );
+  }
+
+  // Test 9: discoverAllRoutes does not prematurely abort with chainFilter on sparse pages and handles numeric chainId
+  {
+    const requestedPages = [];
+    const mockFetcher = async (url) => {
+      if (url.includes('/api/product-table/top-cards')) {
+        return { ok: true, json: async () => ({ cards: [] }) };
+      }
+      const pageMatch = url.match(/page=(\d+)/);
+      const pageNum = pageMatch ? Number.parseInt(pageMatch[1], 10) : 1;
+      requestedPages.push(pageNum);
+
+      // Page 1: Robinhood (4663)
+      // Page 2: Only Ethereum (1) -> 0 matching Robinhood items
+      // Page 3: Robinhood (4663) -> must NOT be skipped!
+      // Page 4: Empty -> natural catalog end
+      if (pageNum === 1) {
+        return {
+          ok: true,
+          text: async () => `<a href="/products/borrow/morpho/4663/0xrh1">RH 1</a>`,
+        };
+      }
+      if (pageNum === 2) {
+        return {
+          ok: true,
+          text: async () => `<a href="/products/borrow/morpho/1/0xeth1">ETH 1</a>`,
+        };
+      }
+      if (pageNum === 3) {
+        return {
+          ok: true,
+          text: async () => `<a href="/products/borrow/morpho/4663/0xrh2">RH 2</a>`,
+        };
+      }
+      return { ok: true, text: async () => '' };
+    };
+
+    const routes = await discoverAllRoutes({
+      fetcher: mockFetcher,
+      baseUrl: 'https://staging.supersmooth.fi',
+      productFilter: 'borrow',
+      chainFilter: 4663, // Numeric chain ID to verify type coercion
+      maxPages: 5,
+      includeTopCards: false,
+      includeTables: true,
+    });
+
+    assert.strictEqual(routes.length, 2);
+    assert.ok(routes.some((r) => r.url.includes('0xrh1')));
+    assert.ok(routes.some((r) => r.url.includes('0xrh2')));
+    assert.deepStrictEqual(requestedPages, [1, 2, 3, 4]);
+    console.log(
+      '  ✓ Test 9 Passed: discoverAllRoutes does not prematurely abort with chainFilter on sparse pages',
+    );
+  }
+
+  // Test 10: discoverAllRoutes retries on transient network errors
+  {
+    let attempts = 0;
+    const mockFetcher = async (url) => {
+      if (url.includes('/api/product-table/top-cards')) {
+        return { ok: true, json: async () => ({ cards: [] }) };
+      }
+      attempts++;
+      if (attempts === 1) {
+        throw new Error('Transient ECONNRESET');
+      }
+      return {
+        ok: true,
+        text: async () => `<a href="/products/borrow/morpho/8453/0xretried">Retried</a>`,
+      };
+    };
+
+    const routes = await discoverAllRoutes({
+      fetcher: mockFetcher,
+      baseUrl: 'https://staging.supersmooth.fi',
+      productFilter: 'borrow',
+      maxPages: 1,
+      includeTopCards: false,
+      includeTables: true,
+    });
+
+    assert.strictEqual(attempts, 2);
+    assert.strictEqual(routes.length, 1);
+    assert.ok(routes[0].url.includes('0xretried'));
+    console.log('  ✓ Test 10 Passed: discoverAllRoutes retries on transient network errors');
+  }
+
   // --- SUITE 3: HTML Health & 404 Boundary Evaluation ---
   console.log('\n📦 Suite 3: HTML Health & 404 Boundary Evaluation (Issue #1649)');
 
-  // Test 8: checkHtmlHealth detects HTTP 404 status code
+  // Test 11: checkHtmlHealth detects HTTP 404 status code
   {
     const health = checkHtmlHealth('', 404);
     assert.strictEqual(health.healthy, false);
     assert.strictEqual(health.has404Fallback, true);
     assert.match(health.reason, /404/);
-    console.log('  ✓ Test 8 Passed: checkHtmlHealth detects HTTP 404 status code');
+    console.log('  ✓ Test 11 Passed: checkHtmlHealth detects HTTP 404 status code');
   }
 
-  // Test 9: checkHtmlHealth detects DOM "Page not found" fallback
+  // Test 12: checkHtmlHealth detects DOM "Page not found" fallback
   {
     const htmlWith404 = `
       <html>
@@ -214,10 +338,10 @@ async function runTests() {
     assert.strictEqual(health.healthy, false);
     assert.strictEqual(health.has404Fallback, true);
     assert.match(health.reason, /Page not found/);
-    console.log('  ✓ Test 9 Passed: checkHtmlHealth detects DOM "Page not found" fallback');
+    console.log('  ✓ Test 12 Passed: checkHtmlHealth detects DOM "Page not found" fallback');
   }
 
-  // Test 10: checkHtmlHealth detects unhandled React error boundary
+  // Test 13: checkHtmlHealth detects unhandled React error boundary
   {
     const htmlWithError = `
       <html>
@@ -229,10 +353,10 @@ async function runTests() {
     const health = checkHtmlHealth(htmlWithError, 200);
     assert.strictEqual(health.healthy, false);
     assert.strictEqual(health.hasErrorBoundary, true);
-    console.log('  ✓ Test 10 Passed: checkHtmlHealth detects unhandled React error boundary');
+    console.log('  ✓ Test 13 Passed: checkHtmlHealth detects unhandled React error boundary');
   }
 
-  // Test 11: checkHtmlHealth passes for healthy position DOM
+  // Test 14: checkHtmlHealth passes for healthy position DOM
   {
     const healthyHtml = `
       <html>
@@ -248,13 +372,13 @@ async function runTests() {
     assert.strictEqual(health.healthy, true);
     assert.strictEqual(health.has404Fallback, false);
     assert.strictEqual(health.hasErrorBoundary, false);
-    console.log('  ✓ Test 11 Passed: checkHtmlHealth passes for healthy position DOM');
+    console.log('  ✓ Test 14 Passed: checkHtmlHealth passes for healthy position DOM');
   }
 
   // --- SUITE 4: Concurrent Auditing, Reporting & Spec Scaffolding ---
   console.log('\n📦 Suite 4: Concurrent Auditing, Reporting & Spec Scaffolding');
 
-  // Test 12: auditAllRoutes audits routes concurrently with mock fetch
+  // Test 15: auditAllRoutes audits routes concurrently with mock fetch
   {
     const mockRoutes = [
       {
@@ -299,10 +423,10 @@ async function runTests() {
     assert.strictEqual(pass.status, 'PASS');
     assert.strictEqual(fail.status, 'FAIL');
     assert.strictEqual(fail.has404Fallback, true);
-    console.log('  ✓ Test 12 Passed: auditAllRoutes audits routes concurrently with mock fetch');
+    console.log('  ✓ Test 15 Passed: auditAllRoutes audits routes concurrently with mock fetch');
   }
 
-  // Test 13: generateAuditReport outputs Markdown summary with stats
+  // Test 16: generateAuditReport outputs Markdown summary with stats
   {
     const results = [
       {
@@ -333,10 +457,10 @@ async function runTests() {
     assert.match(md, /50\.0%/);
     assert.match(md, /Robinhood/);
     assert.match(md, /Defective Routes Detected/);
-    console.log('  ✓ Test 13 Passed: generateAuditReport outputs Markdown summary with stats');
+    console.log('  ✓ Test 16 Passed: generateAuditReport outputs Markdown summary with stats');
   }
 
-  // Test 14: scaffoldSpec generates clean Playwright test suite
+  // Test 17: scaffoldSpec generates clean Playwright test suite
   {
     const routes = [
       {
@@ -351,10 +475,10 @@ async function runTests() {
     assert.match(code, /import \{ test \} from '\.\.\/\.\.\/\.\.\/src\/fixtures';/);
     assert.match(code, /app\.vaultPage\.openPage\('\/products\/yield-loop\/spark\/1\/0x3333'\);/);
     assert.match(code, /app\.vaultPage\.shouldBeVisible\(\);/);
-    console.log('  ✓ Test 14 Passed: scaffoldSpec generates clean Playwright test suite');
+    console.log('  ✓ Test 17 Passed: scaffoldSpec generates clean Playwright test suite');
   }
 
-  console.log('\n🎉 All 14 Autonomous Route Crawler tests passed successfully!\n');
+  console.log('\n🎉 All 17 Autonomous Route Crawler tests passed successfully!\n');
 }
 
 runTests().catch((err) => {

@@ -26,6 +26,16 @@ on:
         required: false
         default: '10'
         type: 'string'
+      all_pages:
+        description: 'Exhaustively crawl all table pages (unconstrained pagination)'
+        required: false
+        default: true
+        type: 'boolean'
+      max_pages:
+        description: 'Max pages to crawl when all_pages is false (default: 10)'
+        required: false
+        default: '10'
+        type: 'string'
 
 concurrency:
   group: 'route-crawler-${{ github.ref }}'
@@ -56,9 +66,15 @@ jobs:
           BASE_URL: "${{ inputs.base_url || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
           CHAIN_FILTER: '${{ inputs.chain }}'
           PRODUCT_FILTER: '${{ inputs.product }}'
-          CONCURRENCY: "${{ inputs.concurrency || '5' }}"
+          CONCURRENCY: "${{ inputs.concurrency || '10' }}"
+          ALL_PAGES: "${{ github.event_name == 'schedule' || inputs.all_pages != false }}"
         run: |
           ARGS="--base-url=${BASE_URL} --concurrency=${CONCURRENCY}"
+          if [ "${ALL_PAGES}" = "true" ]; then
+            ARGS="${ARGS} --all-pages"
+          else
+            ARGS="${ARGS} --max-pages=${{ inputs.max_pages || '10' }}"
+          fi
           if [ -n "${CHAIN_FILTER}" ]; then
             ARGS="${ARGS} --chain=${CHAIN_FILTER}"
           fi
