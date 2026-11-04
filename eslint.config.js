@@ -15,6 +15,7 @@ export default tseslint.config(
       '.cache-synpress/**',
       'dist/**',
       '.env',
+      '.temp/**',
     ],
   },
   js.configs.recommended,
