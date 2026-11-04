@@ -220,6 +220,8 @@ pnpm test:repeat cross-browser:webkit 1
 | `agent:crawl`                       | `node scripts/qa-agent/crawl-vaults.js`                           | Dynamic route crawler & 404 auditor |
 | `test:agent`                        | `node scripts/qa-agent/...test.js`                                | Run AI agent test suites            |
 | `app:fork`                          | `node scripts/run-app-fork.js`                                    | Run local dApp with Anvil fork      |
+| `rpc:gateway`                       | `node scripts/local-rpc-gateway.js`                               | Run local RPC gateway proxy         |
+| `test:local-node`                   | `docker compose -f docker-compose.test.yml up ...`                | Run containerized Anvil + API tests |
 | `synpress-build-cache:base`         | `pnpm synpress ./utils/synpress/wallet-setup`                     | Build local Synpress wallet cache   |
 | `ci:synpress-build-cache:base`      | `xvfb-run pnpm synpress-build-cache:base`                         | Build Synpress cache in CI          |
 | `ci:no-wallet`                      | `WORKERS='2' xvfb-run pnpm test:no-wallet`                        | Run no-wallet suite in CI           |

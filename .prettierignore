@@ -3,3 +3,4 @@ playwright-reports
 test-results
 pnpm-lock.yaml
 .env
+.temp

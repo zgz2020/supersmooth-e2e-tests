@@ -50,6 +50,8 @@
     "test:performance:api": "K6_SCENARIO=api pnpm test:performance",
     "test:performance:web": "K6_SCENARIO=web pnpm test:performance",
     "// --- TEST UTILITIES ---": "",
+    "rpc:gateway": "node scripts/local-rpc-gateway.js",
+    "test:local-node": "docker compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from e2e-runner",
     "test:repeat": "node scripts/repeat-tests.js",
     "app:fork": "node scripts/run-app-fork.js",
     "// --- APPLIED AI & AGENT QA ---": "",
