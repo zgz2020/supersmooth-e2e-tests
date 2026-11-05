@@ -16,6 +16,7 @@
  */
 
 import http from 'node:http';
+import https from 'node:https';
 import console from 'node:console';
 import process from 'node:process';
 import { Buffer } from 'node:buffer';
@@ -55,10 +56,11 @@ function sendJson(res, statusCode, data) {
 
 async function forwardToAnvil(anvilUrl, payload) {
   const url = new URL(anvilUrl);
+  const client = url.protocol === 'https:' ? https : http;
   const body = JSON.stringify(payload);
 
   return new Promise((resolve, reject) => {
-    const req = http.request(
+    const req = client.request(
       url,
       {
         method: 'POST',

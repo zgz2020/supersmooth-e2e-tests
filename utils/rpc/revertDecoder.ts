@@ -25,13 +25,26 @@ export const PANIC_REASONS: Record<number, string> = {
  * - Custom errors (extracts 4-byte selector)
  */
 export function decodeRevertReason(errorData: unknown): DecodedRevert {
-  if (typeof errorData !== 'string' || !errorData.startsWith('0x')) {
+  let hexString: string | undefined;
+
+  if (typeof errorData === 'string') {
+    hexString = errorData;
+  } else if (errorData && typeof errorData === 'object') {
+    const candidate = (errorData as Record<string, unknown>).data;
+    if (typeof candidate === 'string') {
+      hexString = candidate;
+    } else if (candidate && typeof candidate === 'object') {
+      hexString = (candidate as Record<string, unknown>).data as string;
+    }
+  }
+
+  if (!hexString || typeof hexString !== 'string' || !hexString.startsWith('0x')) {
     return { type: 'Unknown', raw: String(errorData ?? '') };
   }
 
-  const cleanHex = errorData.slice(2);
+  const cleanHex = hexString.slice(2);
   if (cleanHex.length < 8) {
-    return { type: 'Unknown', raw: errorData };
+    return { type: 'Unknown', raw: hexString };
   }
 
   const selector = `0x${cleanHex.slice(0, 8).toLowerCase()}`;
@@ -52,13 +65,13 @@ export function decodeRevertReason(errorData: unknown): DecodedRevert {
           type: 'Error',
           selector,
           message,
-          raw: errorData,
+          raw: hexString,
         };
       } catch {
-        return { type: 'Error', selector, message: 'Unparseable Error(string)', raw: errorData };
+        return { type: 'Error', selector, message: 'Unparseable Error(string)', raw: hexString };
       }
     }
-    return { type: 'Error', selector, message: '', raw: errorData };
+    return { type: 'Error', selector, message: '', raw: hexString };
   }
 
   if (selector === PANIC_SELECTOR) {
@@ -72,7 +85,7 @@ export function decodeRevertReason(errorData: unknown): DecodedRevert {
         selector,
         code,
         reason: PANIC_REASONS[code] || `Unknown panic code (${code})`,
-        raw: errorData,
+        raw: hexString,
       };
     }
   }
@@ -80,6 +93,6 @@ export function decodeRevertReason(errorData: unknown): DecodedRevert {
   return {
     type: 'Custom',
     selector,
-    raw: errorData,
+    raw: hexString,
   };
 }

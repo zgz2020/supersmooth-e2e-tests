@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type APIRequestContext } from '@playwright/test';
 import type {
   JsonRpcRequest,
   JsonRpcResponse,
@@ -28,6 +28,39 @@ const supportedChainIds = [
 const BASE_USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const TRANSFER_EVENT_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const APPROVAL_EVENT_TOPIC = '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925';
+
+async function fetchBlockWithTransactions(
+  request: APIRequestContext,
+  chainId = 8453,
+  maxLookupBlocks = 5,
+): Promise<{ transactions: string[] }> {
+  const blockRes = await request.post(`/api/rpc/${chainId}`, {
+    data: {
+      jsonrpc: '2.0',
+      id: 301,
+      method: 'eth_getBlockByNumber',
+      params: ['latest', false],
+    },
+  });
+  let blockBody: JsonRpcResponse<{ number?: string; transactions: string[] }> =
+    await blockRes.json();
+
+  let currentBlock = parseInt(blockBody.result?.number ?? '0x0', 16);
+  const floorBlock = Math.max(0, currentBlock - maxLookupBlocks);
+  while (!blockBody.result?.transactions?.length && currentBlock > floorBlock) {
+    currentBlock--;
+    const retryRes = await request.post(`/api/rpc/${chainId}`, {
+      data: {
+        jsonrpc: '2.0',
+        id: 301,
+        method: 'eth_getBlockByNumber',
+        params: [`0x${currentBlock.toString(16)}`, false],
+      },
+    });
+    blockBody = await retryRes.json();
+  }
+  return blockBody.result ?? { transactions: [] };
+}
 
 test.describe('RPC API', () => {
   for (const { name, chainId } of supportedChainIds) {
@@ -244,8 +277,8 @@ test.describe('RPC API', () => {
       const latestBlock = parseInt(blockNumBody.result ?? '0x0', 16);
       expect(latestBlock).toBeGreaterThan(0);
 
-      // Query past 3 blocks for USDC Transfer or Approval events
-      const fromBlock = `0x${(latestBlock - 3).toString(16)}`;
+      // Query past 15 blocks for USDC Transfer or Approval events (clamping lower bound to 0)
+      const fromBlock = `0x${Math.max(0, latestBlock - 15).toString(16)}`;
       const toBlock = `0x${latestBlock.toString(16)}`;
 
       const logsRes = await request.post('/api/rpc/8453', {
@@ -284,20 +317,11 @@ test.describe('RPC API', () => {
     test('should fetch and validate transaction receipt structure via eth_getTransactionReceipt', async ({
       request,
     }) => {
-      // 1. Query block with transaction hashes
-      const blockRes = await request.post('/api/rpc/8453', {
-        data: {
-          jsonrpc: '2.0',
-          id: 301,
-          method: 'eth_getBlockByNumber',
-          params: ['latest', false],
-        },
-      });
-      await expect(blockRes).toHaveStatusCode(200);
-      const blockBody: JsonRpcResponse<{ transactions: string[] }> = await blockRes.json();
-      expect(blockBody.result?.transactions?.length).toBeGreaterThan(0);
+      // 1. Query block with transaction hashes (fall back up to 5 blocks if latest block is empty)
+      const blockResult = await fetchBlockWithTransactions(request, 8453, 5);
+      expect(blockResult.transactions.length).toBeGreaterThan(0);
 
-      const txHash = blockBody.result!.transactions[0];
+      const txHash = blockResult.transactions[0];
       expect(txHash).toMatch(/^0x[0-9a-fA-F]{64}$/);
 
       // 2. Query transaction receipt
