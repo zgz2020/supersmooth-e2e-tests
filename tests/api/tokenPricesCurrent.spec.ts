@@ -4,6 +4,18 @@ import { validateSchema } from '../../utils/schema/validator';
 import type { TokenPricesCurrentResponse } from '../../utils/types/api/tokenPricesCurrent';
 import '../../utils/assertions/matchers';
 
+function assertPriceSanity(prices: Record<string, number>): void {
+  expect(
+    Object.keys(prices).length,
+    'Prices dictionary should contain at least one entry',
+  ).toBeGreaterThan(0);
+  for (const [coin, price] of Object.entries(prices)) {
+    expect(Number.isFinite(price), `Price for ${coin} must be finite`).toBe(true);
+    expect(price, `Price for ${coin} must be strictly positive`).toBeGreaterThan(0);
+    expect(Number.isNaN(price), `Price for ${coin} must not be NaN`).toBe(false);
+  }
+}
+
 test.describe('Token Prices Current API', () => {
   test('should fetch token prices current without params', async ({ request }) => {
     const response = await request.get('/api/token-prices/current');
@@ -33,6 +45,7 @@ test.describe('Token Prices Current API', () => {
       Object.keys(body.prices).length,
       'Response prices object should contain price entries for requested coins',
     ).toBeGreaterThan(0);
+    assertPriceSanity(body.prices);
   });
 
   test('should fetch token prices across multiple chains', async ({ request }) => {
@@ -49,6 +62,7 @@ test.describe('Token Prices Current API', () => {
 
     const body: TokenPricesCurrentResponse = await response.json();
     await validateSchema({ schema: tokenPricesCurrentSchema, json: body });
+    assertPriceSanity(body.prices);
 
     for (const coinKey of coins.split(',')) {
       expect(typeof body.prices[coinKey], `Price for ${coinKey} should be a number`).toBe('number');
@@ -70,6 +84,7 @@ test.describe('Token Prices Current API', () => {
       typeof body.prices[lowercaseCoin],
       'Price for lowercase address should be a number',
     ).toBe('number');
+    assertPriceSanity(body.prices);
   });
 
   test('should ignore extra unexpected query parameter and return 200', async ({ request }) => {
@@ -84,6 +99,7 @@ test.describe('Token Prices Current API', () => {
 
     const body: TokenPricesCurrentResponse = await response.json();
     await validateSchema({ schema: tokenPricesCurrentSchema, json: body });
+    assertPriceSanity(body.prices);
   });
 
   test('should return empty prices object when coins parameter is malformed', async ({

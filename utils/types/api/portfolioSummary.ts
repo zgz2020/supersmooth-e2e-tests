@@ -13,4 +13,5 @@ export interface PortfolioSummaryResponse {
   borrowedChange7d: number | null;
   borrowedChange7dUsd: number;
   chainBreakdown: ChainBreakdown[];
+  positionCount?: number;
 }

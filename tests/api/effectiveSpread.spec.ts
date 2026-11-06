@@ -8,6 +8,19 @@ import type {
 } from '../../utils/types/api/effectiveSpread';
 import '../../utils/assertions/matchers';
 
+function assertSpreadSanity(spreadBps: number | null, network: string, product: string): void {
+  if (spreadBps !== null) {
+    expect(
+      Number.isFinite(spreadBps),
+      `Effective spread for ${product} on ${network} must be finite`,
+    ).toBe(true);
+    expect(
+      spreadBps,
+      `Effective spread for ${product} on ${network} must be non-negative`,
+    ).toBeGreaterThanOrEqual(0);
+  }
+}
+
 const products: EffectiveSpreadProduct[] = ['borrow', 'multiply', 'yieldLoop'];
 
 test.describe('Effective Spread API', () => {
@@ -27,6 +40,7 @@ test.describe('Effective Spread API', () => {
 
         const body: EffectiveSpreadResponse = await response.json();
         await validateSchema({ schema: effectiveSpreadSchema, json: body });
+        assertSpreadSanity(body.spreadBps, network, product);
       });
     }
   }
