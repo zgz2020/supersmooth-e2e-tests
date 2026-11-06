@@ -23,6 +23,7 @@ export const portfolioSummarySchema: JSONSchemaType<PortfolioSummaryResponse> = 
         required: ['chainId', 'valueUsd', 'sharePercent'],
       },
     },
+    positionCount: { type: 'number', nullable: true },
   },
   required: [
     'supersmoothPortfolioUsd',
