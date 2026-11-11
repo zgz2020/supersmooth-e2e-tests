@@ -48,12 +48,3 @@ export interface JsonRpcTransactionReceipt {
   depositNonce?: string;
   depositReceiptVersion?: string;
 }
-
-export interface DecodedRevert {
-  type: 'Error' | 'Panic' | 'Custom' | 'Unknown';
-  selector?: string;
-  message?: string;
-  code?: number;
-  reason?: string;
-  raw: string;
-}
