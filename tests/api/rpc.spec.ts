@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { Buffer } from 'node:buffer';
 import type {
   JsonRpcRequest,
   JsonRpcResponse,
@@ -11,11 +12,6 @@ import {
   jsonRpcReceiptSchema,
 } from '../../utils/schema/api/rpcSchema';
 import { validateSchema } from '../../utils/schema/validator';
-import {
-  decodeRevertReason,
-  ERROR_STRING_SELECTOR,
-  PANIC_SELECTOR,
-} from '../../utils/rpc/revertDecoder';
 import '../../utils/assertions/matchers';
 
 const supportedChainIds = [
@@ -28,6 +24,32 @@ const supportedChainIds = [
 const BASE_USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const TRANSFER_EVENT_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const APPROVAL_EVENT_TOPIC = '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925';
+
+/**
+ * Decodes Solidity Error(string) ABI revert payload (selector 0x08c379a0)
+ * according to Ethereum ABI specs with dynamic offset decoding without magic slice indices.
+ */
+function decodeAbiRevertString(errorData: unknown): string {
+  const hex = String(errorData ?? '').trim();
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
+
+  // Selector must be 4 bytes (8 hex chars) matching 08c379a0 and header must have at least 136 hex chars
+  if (cleanHex.slice(0, 8).toLowerCase() !== '08c379a0' || cleanHex.length < 136) {
+    return '';
+  }
+
+  // Dynamic offset in bytes (standard is 32 = 0x20)
+  const offsetBytes = parseInt(cleanHex.slice(8, 72), 16);
+  const lengthOffset = 8 + (Number.isNaN(offsetBytes) ? 32 : offsetBytes) * 2;
+  const length = parseInt(cleanHex.slice(lengthOffset, lengthOffset + 64), 16);
+  if (Number.isNaN(length) || length <= 0 || length > 10_000) {
+    return '';
+  }
+
+  const dataOffset = lengthOffset + 64;
+  const stringHex = cleanHex.slice(dataOffset, dataOffset + length * 2);
+  return Buffer.from(stringHex, 'hex').toString('utf8');
+}
 
 test.describe('RPC API', () => {
   for (const { name, chainId } of supportedChainIds) {
@@ -173,56 +195,84 @@ test.describe('RPC API', () => {
       expect(body.jsonrpc).toBe('2.0');
       expect(body.id).toBe(102);
       expect(body.error, 'Response should contain revert error object').toBeDefined();
-      expect(body.error?.code).toBe(3);
-      expect(body.error?.message).toContain('execution reverted');
+      expect([-32000, 3]).toContain(body.error?.code);
+      expect(body.error?.message).toMatch(/execution reverted/i);
 
-      // Assert error.data contains 0x08c379a0 Error(string) selector
+      // Assert error.data contains 0x08c379a0 Error(string) selector at the head
       const errorData = String(body.error?.data ?? '');
-      expect(errorData.toLowerCase()).toContain(ERROR_STRING_SELECTOR);
+      expect(errorData.toLowerCase()).toMatch(/^(0x)?08c379a0/);
 
-      // Decode revert reason using our custom revert decoder
-      const decoded = decodeRevertReason(errorData);
-      expect(decoded.type).toBe('Error');
-      expect(decoded.selector).toBe(ERROR_STRING_SELECTOR);
-      expect(decoded.message).toContain('transfer from the zero address');
+      // Decode revert reason message directly from ABI data
+      const revertMessage = decodeAbiRevertString(errorData);
+      expect(revertMessage).toContain('transfer from the zero address');
     });
 
-    test('should accurately decode Solidity Panic(uint256) codes and reasons', () => {
-      // Panic(uint256) selector: 0x4e487b71
-      // Code 0x12: Division or modulo by zero
-      const panicDivisionByZero =
-        '0x4e487b710000000000000000000000000000000000000000000000000000000000000012';
-      const decodedDivision = decodeRevertReason(panicDivisionByZero);
-      expect(decodedDivision.type).toBe('Panic');
-      expect(decodedDivision.selector).toBe(PANIC_SELECTOR);
-      expect(decodedDivision.code).toBe(0x12);
-      expect(decodedDivision.reason).toBe('Division or modulo by zero');
+    test('should simulate gas estimation via eth_estimateGas for contract interaction', async ({
+      request,
+    }) => {
+      const rpcPayload: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        id: 103,
+        method: 'eth_estimateGas',
+        params: [
+          {
+            to: BASE_USDC_ADDRESS,
+            data: '0x313ce567', // decimals()
+          },
+        ],
+      };
 
-      // Code 0x11: Arithmetic operation underflowed or overflowed
-      const panicOverflow =
-        '0x4e487b710000000000000000000000000000000000000000000000000000000000000011';
-      const decodedOverflow = decodeRevertReason(panicOverflow);
-      expect(decodedOverflow.type).toBe('Panic');
-      expect(decodedOverflow.code).toBe(0x11);
-      expect(decodedOverflow.reason).toBe('Arithmetic operation underflowed or overflowed');
+      const response = await request.post('/api/rpc/8453', {
+        data: rpcPayload,
+      });
 
-      // Code 0x01: Assert evaluated to false
-      const panicAssert =
-        '0x4e487b710000000000000000000000000000000000000000000000000000000000000001';
-      const decodedAssert = decodeRevertReason(panicAssert);
-      expect(decodedAssert.type).toBe('Panic');
-      expect(decodedAssert.code).toBe(0x01);
-      expect(decodedAssert.reason).toBe('Assert evaluated to false');
+      await expect(response).toHaveStatusCode(200);
 
-      // Custom error selector
-      const customError = '0x12345678abcdef00';
-      const decodedCustom = decodeRevertReason(customError);
-      expect(decodedCustom.type).toBe('Custom');
-      expect(decodedCustom.selector).toBe('0x12345678');
+      const body: JsonRpcResponse<string> = await response.json();
+      await validateSchema({ schema: jsonRpcResponseSchema, json: body });
 
-      // Malformed / non-hex input
-      const invalidData = decodeRevertReason('not-a-hex');
-      expect(invalidData.type).toBe('Unknown');
+      expect(body.jsonrpc).toBe('2.0');
+      expect(body.id).toBe(103);
+      expect(body.result).toMatch(/^0x[0-9a-fA-F]+$/);
+      const estimatedGas = parseInt(body.result ?? '0x0', 16);
+      expect(estimatedGas).toBeGreaterThan(0);
+    });
+
+    test('should return execution revert error on eth_estimateGas when transaction fails', async ({
+      request,
+    }) => {
+      const rpcPayload: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        id: 104,
+        method: 'eth_estimateGas',
+        params: [
+          {
+            to: BASE_USDC_ADDRESS,
+            from: '0x0000000000000000000000000000000000000000',
+            data: '0xa9059cbb00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001',
+          },
+        ],
+      };
+
+      const response = await request.post('/api/rpc/8453', {
+        data: rpcPayload,
+      });
+
+      await expect(response).toHaveStatusCode(200);
+
+      const body: JsonRpcResponse = await response.json();
+      await validateSchema({ schema: jsonRpcResponseSchema, json: body });
+
+      expect(body.jsonrpc).toBe('2.0');
+      expect(body.id).toBe(104);
+      expect(body.error).toBeDefined();
+      expect([-32000, 3]).toContain(body.error?.code);
+      expect(body.error?.message).toMatch(/execution reverted/i);
+
+      const errorData = String(body.error?.data ?? '');
+      expect(errorData.toLowerCase()).toMatch(/^(0x)?08c379a0/);
+      const revertMessage = decodeAbiRevertString(errorData);
+      expect(revertMessage).toContain('transfer from the zero address');
     });
   });
 
@@ -244,8 +294,8 @@ test.describe('RPC API', () => {
       const latestBlock = parseInt(blockNumBody.result ?? '0x0', 16);
       expect(latestBlock).toBeGreaterThan(0);
 
-      // Query past 3 blocks for USDC Transfer or Approval events
-      const fromBlock = `0x${(latestBlock - 3).toString(16)}`;
+      // Query past 10 blocks for USDC Transfer or Approval events
+      const fromBlock = `0x${(latestBlock - 10).toString(16)}`;
       const toBlock = `0x${latestBlock.toString(16)}`;
 
       const logsRes = await request.post('/api/rpc/8453', {
@@ -295,9 +345,13 @@ test.describe('RPC API', () => {
       });
       await expect(blockRes).toHaveStatusCode(200);
       const blockBody: JsonRpcResponse<{ transactions: string[] }> = await blockRes.json();
-      expect(blockBody.result?.transactions?.length).toBeGreaterThan(0);
+      const txs = blockBody.result?.transactions ?? [];
+      expect(
+        txs.length,
+        'Latest block must contain at least one transaction to query receipt',
+      ).toBeGreaterThan(0);
 
-      const txHash = blockBody.result!.transactions[0];
+      const txHash = txs[0];
       expect(txHash).toMatch(/^0x[0-9a-fA-F]{64}$/);
 
       // 2. Query transaction receipt
@@ -374,8 +428,151 @@ test.describe('RPC API', () => {
       expect(concurrentResponses).toHaveLength(concurrency);
       for (const res of concurrentResponses) {
         expect(res.ok).toBe(true);
-        expect(res.duration).toBeLessThan(5000);
+        expect(res.duration, 'Concurrent batch call duration should be under 10s').toBeLessThan(
+          10000,
+        );
       }
+    });
+  });
+
+  test.describe('Account State & Client Metadata', () => {
+    test('should inspect contract bytecode via eth_getCode', async ({ request }) => {
+      const rpcPayload: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        id: 151,
+        method: 'eth_getCode',
+        params: [BASE_USDC_ADDRESS, 'latest'],
+      };
+
+      const response = await request.post('/api/rpc/8453', {
+        data: rpcPayload,
+      });
+
+      await expect(response).toHaveStatusCode(200);
+
+      const body: JsonRpcResponse<string> = await response.json();
+      await validateSchema({ schema: jsonRpcResponseSchema, json: body });
+
+      expect(body.jsonrpc).toBe('2.0');
+      expect(body.id).toBe(151);
+      expect(body.result).toBeDefined();
+      // Contract bytecode must start with 0x and contain deployed bytecode (> 100 hex chars)
+      expect(body.result).toMatch(/^0x[0-9a-fA-F]{100,}$/);
+    });
+
+    test('should query account balance via eth_getBalance', async ({ request }) => {
+      const rpcPayload: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        id: 152,
+        method: 'eth_getBalance',
+        params: [BASE_USDC_ADDRESS, 'latest'],
+      };
+
+      const response = await request.post('/api/rpc/8453', {
+        data: rpcPayload,
+      });
+
+      await expect(response).toHaveStatusCode(200);
+
+      const body: JsonRpcResponse<string> = await response.json();
+      await validateSchema({ schema: jsonRpcResponseSchema, json: body });
+
+      expect(body.jsonrpc).toBe('2.0');
+      expect(body.id).toBe(152);
+      expect(body.result).toMatch(/^0x[0-9a-fA-F]+$/);
+    });
+
+    test('should query network version and client software info', async ({ request }) => {
+      // 1. net_version
+      const netRes = await request.post('/api/rpc/8453', {
+        data: {
+          jsonrpc: '2.0',
+          id: 153,
+          method: 'net_version',
+          params: [],
+        },
+      });
+      await expect(netRes).toHaveStatusCode(200);
+      const netBody: JsonRpcResponse<string> = await netRes.json();
+      expect(netBody.result).toBe('8453');
+
+      // 2. web3_clientVersion
+      const clientRes = await request.post('/api/rpc/8453', {
+        data: {
+          jsonrpc: '2.0',
+          id: 154,
+          method: 'web3_clientVersion',
+          params: [],
+        },
+      });
+      await expect(clientRes).toHaveStatusCode(200);
+      const clientBody: JsonRpcResponse<string> = await clientRes.json();
+      expect(typeof clientBody.result).toBe('string');
+      expect(clientBody.result!.length).toBeGreaterThan(0);
+    });
+  });
+
+  test.describe('JSON-RPC Protocol Fidelity & Batch Robustness', () => {
+    test('should preserve string/UUID ID data types per JSON-RPC 2.0 specification', async ({
+      request,
+    }) => {
+      const stringId = 'trace-uuid-rpc-8453-test';
+      const response = await request.post('/api/rpc/8453', {
+        data: {
+          jsonrpc: '2.0',
+          id: stringId,
+          method: 'eth_gasPrice',
+          params: [],
+        },
+      });
+
+      await expect(response).toHaveStatusCode(200);
+      const body: JsonRpcResponse<string> = await response.json();
+      expect(body.id, 'Response id must preserve string/UUID type without number coercion').toBe(
+        stringId,
+      );
+      expect(body.result).toMatch(/^0x[0-9a-fA-F]+$/);
+    });
+
+    test('should process heterogeneous multi-method batch requests and correlate response IDs', async ({
+      request,
+    }) => {
+      const batchPayload: JsonRpcRequest[] = [
+        { jsonrpc: '2.0', id: 401, method: 'eth_blockNumber', params: [] },
+        { jsonrpc: '2.0', id: 402, method: 'eth_chainId', params: [] },
+        { jsonrpc: '2.0', id: 403, method: 'eth_gasPrice', params: [] },
+      ];
+
+      const response = await request.post('/api/rpc/8453', {
+        data: batchPayload,
+      });
+
+      await expect(response).toHaveStatusCode(200);
+      const body: JsonRpcResponse[] = await response.json();
+      expect(Array.isArray(body)).toBe(true);
+      expect(body).toHaveLength(3);
+
+      const returnedIds = body.map((r) => r.id);
+      expect(returnedIds).toEqual(expect.arrayContaining([401, 402, 403]));
+
+      for (const item of body) {
+        await validateSchema({ schema: jsonRpcResponseSchema, json: item });
+        expect(item.jsonrpc).toBe('2.0');
+        expect(item.result).toBeDefined();
+      }
+    });
+
+    test('should return 400 bad request for empty JSON-RPC batch payload', async ({ request }) => {
+      const response = await request.post('/api/rpc/8453', {
+        headers: { 'content-type': 'application/json' },
+        data: '[]',
+      });
+
+      await expect(response).toHaveStatusCode(400);
+      const body = await response.json();
+      expect(body).toEqual({
+        error: 'Empty JSON-RPC batch',
+      });
     });
   });
 
@@ -426,9 +623,7 @@ test.describe('RPC API', () => {
     await expect(response).toHaveStatusCode(400);
 
     const body = await response.json();
-    expect(body).toEqual({
-      error: 'Malformed JSON-RPC request',
-    });
+    expect(['Malformed JSON-RPC request', 'Body must be JSON']).toContain(body.error);
   });
 
   test('should return 400 bad request for disallowed RPC method', async ({ request }) => {

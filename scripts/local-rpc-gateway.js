@@ -144,7 +144,7 @@ const server = http.createServer(async (req, res) => {
 
   req.on('end', async () => {
     if (!rawBody.trim()) {
-      sendJson(res, 400, { error: 'Malformed JSON-RPC request' });
+      sendJson(res, 400, { error: 'Body must be JSON' });
       return;
     }
 
@@ -152,7 +152,12 @@ const server = http.createServer(async (req, res) => {
     try {
       parsedPayload = JSON.parse(rawBody);
     } catch {
-      sendJson(res, 400, { error: 'Malformed JSON-RPC request' });
+      sendJson(res, 400, { error: 'Body must be JSON' });
+      return;
+    }
+
+    if (Array.isArray(parsedPayload) && parsedPayload.length === 0) {
+      sendJson(res, 400, { error: 'Empty JSON-RPC batch' });
       return;
     }
 
