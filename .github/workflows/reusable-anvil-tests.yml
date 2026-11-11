@@ -1,0 +1,124 @@
+name: '⚙️ [Reusable] Anvil Fork Tests'
+
+on:
+  workflow_call:
+    inputs:
+      forkBaseUrl:
+        description: 'Base URL for aphelion-app frontend (default: http://localhost:3000)'
+        type: 'string'
+        required: false
+        default: 'http://localhost:3000'
+      forkChainId:
+        description: 'EVM Chain ID to fork: 1 (Ethereum Mainnet), 8453 (Base), 42161 (Arbitrum)'
+        type: 'string'
+        required: false
+        default: '1'
+      script:
+        description: 'pnpm script to execute (default: ci:anvil)'
+        type: 'string'
+        required: false
+        default: 'ci:anvil'
+
+permissions:
+  contents: read
+
+jobs:
+  anvil-fork-tests:
+    name: 'Run Anvil Fork E2E Tests'
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.0-noble
+    env:
+      # Job-level so step `if:` conditions can read them (step-level env is not visible there)
+      CAN_START_APP: ${{ secrets.APHELION_STATUS_TOKEN != '' && secrets.APHELION_APP_ENV != '' }}
+      FORK_BASE_URL: ${{ inputs.forkBaseUrl }}
+
+    steps:
+      - name: 'Checkout sov-e2e-tests'
+        uses: 'actions/checkout@v4'
+        with:
+          path: sov-e2e-tests
+          fetch-depth: 0
+
+      - name: 'Configure Git Safe Directory'
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE/sov-e2e-tests"
+
+      - name: 'Install Foundry (Anvil)'
+        uses: 'foundry-rs/foundry-toolchain@v1'
+        with:
+          # Pinned stable release, so CI does not change under us; bump deliberately
+          version: v1.8.7
+
+      - name: 'Verify Anvil Installation'
+        run: anvil --version
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: 'sov-e2e-tests/pnpm-lock.yaml'
+
+      - name: 'Install E2E dependencies'
+        working-directory: sov-e2e-tests
+        run: pnpm install --frozen-lockfile
+
+      # Optional: run aphelion-app on the runner. Needs two secrets:
+      #   APHELION_STATUS_TOKEN - read access to Aphelion-Co/aphelion-app
+      #   APHELION_APP_ENV      - full contents of the app's root .env (the app reads it via dotenv)
+      - name: 'Checkout aphelion-app'
+        if: env.CAN_START_APP == 'true'
+        uses: 'actions/checkout@v4'
+        with:
+          repository: Aphelion-Co/aphelion-app
+          token: ${{ secrets.APHELION_STATUS_TOKEN }}
+          path: aphelion-app
+
+      - name: 'Build & Start aphelion-app'
+        if: env.CAN_START_APP == 'true'
+        working-directory: aphelion-app
+        env:
+          APHELION_APP_ENV: ${{ secrets.APHELION_APP_ENV }}
+        run: |
+          printf '%s\n' "$APHELION_APP_ENV" > .env
+          pnpm install --frozen-lockfile
+          pnpm build-app
+          pnpm --filter @sovereign/app start -p 3000 &
+
+      # Fails with an actionable message instead of every test timing out against a dead URL
+      - name: 'Verify fork app is reachable'
+        run: |
+          for i in $(seq 1 60); do
+            if node -e "fetch(process.env.FORK_BASE_URL).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"; then
+              echo "App reachable at $FORK_BASE_URL"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::No app reachable at $FORK_BASE_URL. Either set the APHELION_STATUS_TOKEN and APHELION_APP_ENV secrets so CI can start aphelion-app, or pass a reachable forkBaseUrl."
+          exit 1
+
+      - name: 'Run Anvil Playwright Tests'
+        working-directory: sov-e2e-tests
+        env:
+          ANVIL_FORK_CHAIN: ${{ inputs.forkChainId }}
+        run: pnpm "${{ inputs.script }}"
+
+      - name: '🤖 AI Agent Test Triage'
+        if: failure()
+        working-directory: sov-e2e-tests
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: pnpm agent:triage || true
+
+      - name: 'Upload Playwright Report'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'anvil-fork-report'
+          path: 'sov-e2e-tests/playwright-reports/anvil'
+          retention-days: 14

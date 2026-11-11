@@ -21,7 +21,8 @@ export const connectWallet = async ({
 
   await app.header.shouldHaveShortAddress();
 
-  await app.header.openWalletFeatures();
-
-  await switchNetwork({ app, metamask, network });
+  if (network && network !== 'Ethereum') {
+    await app.header.openWalletFeatures();
+    await switchNetwork({ app, metamask, network });
+  }
 };

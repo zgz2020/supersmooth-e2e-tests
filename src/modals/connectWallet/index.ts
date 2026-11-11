@@ -34,4 +34,9 @@ export class ConnectWallet {
   async openSearch() {
     await this.page.getByRole('button', { name: 'Search Wallet' }).click();
   }
+
+  @step
+  async closeModal() {
+    await this.page.keyboard.press('Escape');
+  }
 }

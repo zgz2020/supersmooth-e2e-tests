@@ -2,14 +2,17 @@ import { expect, type APIRequestContext } from '@playwright/test';
 import type { MetaMask } from '@synthetixio/synpress/playwright';
 import type { App } from '../src/app';
 import type { TermsStatusResponse } from './types/api/termsStatus';
-import type { Token } from './types/e2e/common';
+import type { FixturesNetwork, Token } from './types/e2e/common';
 import { openPosition } from './openPosition';
 import { defaultExpectTimeout } from './constants/timeouts';
 import { getActiveVault } from './getActiveVault';
+import { FALLBACK_MARKETS, vaultPath } from './constants/urls';
+import { defaultTestWalletAddress } from './constants/addresses';
 
 export interface VerifyTermsAndAcceptIfNeededParams {
   app: App;
   metamask: MetaMask;
+  network?: FixturesNetwork;
   address?: string;
   request?: APIRequestContext;
   collateral?: Token;
@@ -18,9 +21,20 @@ export interface VerifyTermsAndAcceptIfNeededParams {
 }
 
 export const DEFAULT_TERMS_WALLET_ADDRESS =
-  process.env.TEST_WALLET_ADDRESS || '0x44E361c3D9dcd703D535f9c2883a4E104AD2F4d5';
-export const DEFAULT_POSITION_URL =
-  '/products/multiply/morpho/8453/0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda';
+  process.env.TEST_WALLET_ADDRESS || defaultTestWalletAddress;
+export const DEFAULT_POSITION_URL_BASE = vaultPath(
+  'multiply',
+  'morpho',
+  8453,
+  FALLBACK_MARKETS.morphoEthBase,
+);
+export const DEFAULT_POSITION_URL_ETHEREUM = vaultPath(
+  'multiply',
+  'spark',
+  1,
+  FALLBACK_MARKETS.sparkWethUsdsEthereum,
+);
+export const DEFAULT_POSITION_URL = DEFAULT_POSITION_URL_BASE;
 export const DEFAULT_DEPOSIT_AMOUNT = '0.00025';
 export const DEFAULT_COLLATERAL: Token = 'ETH';
 
@@ -49,11 +63,12 @@ const checkTermsStatus = async (request: APIRequestContext, address: string): Pr
 export const verifyTermsAndAcceptIfNeeded = async ({
   app,
   metamask,
+  network = 'Base',
   address = DEFAULT_TERMS_WALLET_ADDRESS,
   request,
   collateral = DEFAULT_COLLATERAL,
   depositAmount = DEFAULT_DEPOSIT_AMOUNT,
-  url = DEFAULT_POSITION_URL,
+  url,
 }: VerifyTermsAndAcceptIfNeededParams): Promise<void> => {
   const apiRequest = request ?? app.page.request;
 
@@ -67,16 +82,17 @@ export const verifyTermsAndAcceptIfNeeded = async ({
   let targetUrl = url;
   let targetCollateral = collateral;
 
-  if (targetUrl === DEFAULT_POSITION_URL) {
+  if (!targetUrl || targetUrl === DEFAULT_POSITION_URL) {
     try {
       const active = await getActiveVault(apiRequest, 'multiply', {
-        network: 'Base',
-        collateral: 'ETH',
+        network,
+        collateral,
       });
       targetUrl = active.url;
       targetCollateral = active.collateral;
     } catch {
-      // Keep DEFAULT_POSITION_URL fallback
+      targetUrl =
+        network === 'Ethereum' ? DEFAULT_POSITION_URL_ETHEREUM : DEFAULT_POSITION_URL_BASE;
     }
   }
 

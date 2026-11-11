@@ -14,12 +14,21 @@ export class VaultPage {
   }
 
   @step
-  async openPage(url: string, args?: { collateral?: Token; withBalance?: boolean }) {
+  async openPage(
+    url: string,
+    args?: { collateral?: Token; withBalance?: boolean; timeout?: number },
+  ) {
     await this.page.goto(url);
     if (args?.withBalance) {
-      await this.rightSidePanel.configurePosition.waitToBeStable({ withBalance: true });
+      await this.rightSidePanel.configurePosition.waitToBeStable({
+        withBalance: true,
+        timeout: args.timeout,
+      });
     } else if (args?.collateral) {
-      await this.rightSidePanel.configurePosition.waitToBeStable({ collateral: args.collateral });
+      await this.rightSidePanel.configurePosition.waitToBeStable({
+        collateral: args.collateral,
+        timeout: args.timeout,
+      });
     }
   }
 

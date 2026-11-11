@@ -1,0 +1,28 @@
+name: 'Anvil Fork Tests'
+
+on:
+  workflow_dispatch:
+    inputs:
+      forkBaseUrl:
+        description: 'Base URL for aphelion-app frontend (default: http://localhost:3000)'
+        type: 'string'
+        required: false
+        default: 'http://localhost:3000'
+      forkChainId:
+        description: 'Chain ID to fork: 1 (Ethereum Mainnet), 8453 (Base), 42161 (Arbitrum)'
+        type: 'string'
+        required: false
+        default: '1'
+
+permissions:
+  contents: read
+
+jobs:
+  anvil-tests:
+    name: 'Anvil Fork E2E Tests'
+    uses: './.github/workflows/reusable-anvil-tests.yml'
+    secrets: inherit
+    with:
+      forkBaseUrl: '${{ inputs.forkBaseUrl }}'
+      forkChainId: '${{ inputs.forkChainId }}'
+      script: 'ci:anvil'

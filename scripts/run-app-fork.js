@@ -19,7 +19,7 @@
  */
 
 import { Buffer } from 'node:buffer';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import console from 'node:console';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -84,6 +84,31 @@ function getEnv(key) {
   return process.env[key] || localDotEnv[key];
 }
 
+// aphelion-app requires these (see its package.json "engines"); checked up front so a
+// mismatch fails with a clear message instead of a confusing error deep in `pnpm dev-app`
+const MIN_NODE_VERSION = [20, 9];
+const MIN_PNPM_MAJOR = 9;
+
+function checkToolVersions() {
+  const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);
+  if (
+    nodeMajor < MIN_NODE_VERSION[0] ||
+    (nodeMajor === MIN_NODE_VERSION[0] && nodeMinor < MIN_NODE_VERSION[1])
+  ) {
+    return `Node ${MIN_NODE_VERSION.join('.')}+ is required (found ${process.versions.node}).`;
+  }
+  let pnpmVersion = '';
+  try {
+    pnpmVersion = execFileSync('pnpm', ['--version'], { encoding: 'utf8' }).trim();
+  } catch {
+    return 'pnpm was not found on PATH.';
+  }
+  if (Number(pnpmVersion.split('.')[0]) < MIN_PNPM_MAJOR) {
+    return `pnpm ${MIN_PNPM_MAJOR}+ is required (found ${pnpmVersion}).`;
+  }
+  return null;
+}
+
 // -----------------------------------------------------------------------------
 // Curated Public Archive RPC Registry
 // -----------------------------------------------------------------------------
@@ -93,10 +118,10 @@ const RPC_REGISTRY = {
     currency: 'ETH',
     defaultBlock: null,
     rpcs: [
-      'https://cloudflare-eth.com',
-      'https://eth.llamarpc.com',
-      'https://rpc.ankr.com/eth',
+      'https://gateway.tenderly.co/public/mainnet',
       'https://ethereum-rpc.publicnode.com',
+      'https://rpc.mevblocker.io',
+      'https://eth.drpc.org',
     ],
     tokens: [
       {
@@ -140,12 +165,7 @@ const RPC_REGISTRY = {
     name: 'Base',
     currency: 'ETH',
     defaultBlock: null,
-    rpcs: [
-      'https://mainnet.base.org',
-      'https://base.llamarpc.com',
-      'https://1rpc.io/base',
-      'https://base-rpc.publicnode.com',
-    ],
+    rpcs: ['https://mainnet.base.org', 'https://base.llamarpc.com', 'https://1rpc.io/base'],
     tokens: [
       {
         symbol: 'USDC',
@@ -174,12 +194,7 @@ const RPC_REGISTRY = {
     name: 'Arbitrum One',
     currency: 'ETH',
     defaultBlock: null,
-    rpcs: [
-      'https://arb1.arbitrum.io/rpc',
-      'https://arbitrum.llamarpc.com',
-      'https://1rpc.io/arb',
-      'https://arbitrum-one-rpc.publicnode.com',
-    ],
+    rpcs: ['https://arb1.arbitrum.io/rpc', 'https://arbitrum.llamarpc.com', 'https://1rpc.io/arb'],
     tokens: [
       {
         symbol: 'USDC',
@@ -254,7 +269,7 @@ function askQuestion(rl, query) {
 // -----------------------------------------------------------------------------
 // Helper: JSON-RPC over HTTP
 // -----------------------------------------------------------------------------
-async function jsonRpc(url, method, params = [], timeout = 8000) {
+async function jsonRpc(url, method, params = [], timeout = 20000) {
   const body = JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params });
   const parsed = new URL(url);
   const isHttps = parsed.protocol === 'https:';
@@ -402,6 +417,20 @@ ${colors.cyan}${colors.bold}====================================================
     // -------------------------------------------------------------------------
     // 1. Resolve aphelion-app Directory
     // -------------------------------------------------------------------------
+    const toolError = checkToolVersions();
+    if (toolError) {
+      log.error(toolError);
+      process.exit(1);
+    }
+
+    const testWallet = getEnv('TEST_WALLET_ADDRESS');
+    if (!testWallet) {
+      log.error(
+        'TEST_WALLET_ADDRESS is not set. Add it to .env (see .env.example) to choose the wallet to fund.',
+      );
+      process.exit(1);
+    }
+
     let appDir = cliArgs.appDir || getEnv('APHELION_APP_DIR');
 
     if (!appDir) {
@@ -458,29 +487,7 @@ ${colors.cyan}${colors.bold}====================================================
     );
 
     // -------------------------------------------------------------------------
-    // 3. Resolve RPC Endpoint
-    // -------------------------------------------------------------------------
-    let rpcUrl = cliArgs.forkUrl || getEnv('ANVIL_FORK_URL') || getEnv('FORK_RPC_URL');
-
-    if (!rpcUrl) {
-      log.info(`Resolving reliable public archive RPC for ${chainConfig.name}...`);
-      for (const candidate of chainConfig.rpcs) {
-        try {
-          await jsonRpc(candidate, 'eth_blockNumber', [], 4000);
-          rpcUrl = candidate;
-          break;
-        } catch {
-          // try next
-        }
-      }
-      if (!rpcUrl) {
-        rpcUrl = chainConfig.rpcs[0];
-      }
-    }
-    log.success(`Using Archive RPC: ${colors.dim}${rpcUrl}${colors.reset}`);
-
-    // -------------------------------------------------------------------------
-    // 4. Block Height Pinning
+    // 3 & 4. Resolve Candidate RPCs & Block Height Pinning
     // -------------------------------------------------------------------------
     let blockNumber = cliArgs.block;
     if (blockNumber === undefined) {
@@ -491,8 +498,13 @@ ${colors.cyan}${colors.bold}====================================================
       blockNumber = blockInput.trim() || null;
     }
 
+    const candidateRpcs =
+      cliArgs.forkUrl || getEnv('ANVIL_FORK_URL') || getEnv('FORK_RPC_URL')
+        ? [cliArgs.forkUrl || getEnv('ANVIL_FORK_URL') || getEnv('FORK_RPC_URL')]
+        : chainConfig.rpcs;
+
     // -------------------------------------------------------------------------
-    // 5. Detect and Launch Anvil
+    // 5. Detect and Launch Anvil (with Multi-RPC Failover)
     // -------------------------------------------------------------------------
     const anvilBin = findAnvilBinary();
     if (!anvilBin) {
@@ -505,67 +517,97 @@ ${colors.cyan}${colors.bold}====================================================
     }
     log.success(`Using Anvil binary: ${colors.dim}${anvilBin}${colors.reset}`);
 
-    const anvilArgs = [
-      '--fork-url',
-      rpcUrl,
-      '--chain-id',
-      chainId.toString(),
-      '--port',
-      '8545',
-      '--auto-impersonate',
-      '--code-size-limit',
-      '40000',
-      '--gas-limit',
-      '30000000',
-    ];
-
-    if (blockNumber) {
-      anvilArgs.push('--fork-block-number', blockNumber.toString());
-      log.info(`Pinned Block Number: ${blockNumber}`);
-    }
-
-    log.info(`Starting Anvil state fork on http://127.0.0.1:8545...`);
-    anvilProcess = spawn(anvilBin, anvilArgs, {
-      detached: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
-    anvilProcess.stdout.on('data', (d) => {
-      const text = d.toString().trim();
-      if (text.includes('Listening on') || text.includes('Block Number:')) {
-        log.anvil(text.split('\n')[0]);
-      }
-    });
-
-    anvilProcess.stderr.on('data', (d) => {
-      const text = d.toString().trim();
-      if (text) log.anvil(`${colors.yellow}${text.split('\n')[0]}${colors.reset}`);
-    });
-
-    // Wait for Anvil to become healthy
     let isHealthy = false;
-    for (let i = 0; i < 40; i++) {
-      try {
-        await jsonRpc('http://127.0.0.1:8545', 'eth_blockNumber', [], 1000);
-        isHealthy = true;
+    let successfulRpc = '';
+
+    for (const rpcUrl of candidateRpcs) {
+      log.info(`Attempting Anvil fork using: ${colors.dim}${rpcUrl}${colors.reset}...`);
+
+      const anvilArgs = [
+        '--fork-url',
+        rpcUrl,
+        '--chain-id',
+        chainId.toString(),
+        '--port',
+        '8545',
+        '--auto-impersonate',
+        '--code-size-limit',
+        '40000',
+        '--gas-limit',
+        '30000000',
+        '--compute-units-per-second',
+        '100',
+        '--retries',
+        '5',
+        '--timeout',
+        '30000',
+        '--fork-retry-backoff',
+        '1000',
+      ];
+
+      if (blockNumber) {
+        anvilArgs.push('--fork-block-number', blockNumber.toString());
+      }
+
+      anvilProcess = spawn(anvilBin, anvilArgs, {
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      anvilProcess.stdout.on('data', (d) => {
+        const text = d.toString().trim();
+        if (text.includes('Listening on') || text.includes('Block Number:')) {
+          log.anvil(text.split('\n')[0]);
+        }
+      });
+
+      anvilProcess.stderr.on('data', (d) => {
+        const text = d.toString().trim();
+        if (text) {
+          log.anvil(`${colors.yellow}${text.split('\n')[0]}${colors.reset}`);
+        }
+      });
+
+      // Wait up to 10s for this Anvil instance to become healthy
+      for (let i = 0; i < 20; i++) {
+        if (anvilProcess.exitCode !== null) {
+          break;
+        }
+        try {
+          await jsonRpc('http://127.0.0.1:8545', 'eth_blockNumber', [], 1000);
+          isHealthy = true;
+          break;
+        } catch {
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      }
+
+      if (isHealthy) {
+        successfulRpc = rpcUrl;
         break;
-      } catch {
-        await new Promise((r) => setTimeout(r, 500));
+      } else {
+        log.warn(`RPC ${rpcUrl} failed or was rate-limited. Trying next candidate...`);
+        try {
+          anvilProcess.kill('SIGTERM');
+        } catch {
+          // ignore
+        }
+        anvilProcess = null;
       }
     }
 
-    if (!isHealthy) {
-      log.error(`Anvil node failed to start or become responsive on http://127.0.0.1:8545.`);
+    if (!isHealthy || !anvilProcess) {
+      log.error(`Anvil node failed to start with any candidate RPC on chain ${chainId}.`);
       cleanup();
       process.exit(1);
     }
-    log.success(`Anvil node is healthy and listening on http://127.0.0.1:8545`);
+    log.success(
+      `Anvil node is healthy and listening on http://127.0.0.1:8545 (forked: ${colors.dim}${successfulRpc}${colors.reset})`,
+    );
 
     // -------------------------------------------------------------------------
     // 6. Pre-fund Test Wallet (ETH & Default ERC-20 Tokens)
     // -------------------------------------------------------------------------
-    const testWallet =
-      getEnv('TEST_WALLET_ADDRESS') || '0x44E361c3D9dcd703D535f9c2883a4E104AD2F4d5';
     console.log(`\n${colors.bold}3. Seeding Test Wallet Balances${colors.reset}`);
     log.info(`Target Wallet: ${colors.bold}${testWallet}${colors.reset}`);
 
@@ -574,61 +616,65 @@ ${colors.cyan}${colors.bold}====================================================
     await jsonRpc('http://127.0.0.1:8545', 'anvil_setBalance', [testWallet, ethBalanceHex]);
     log.success(`Pre-funded ${colors.bold}1,000 ETH${colors.reset}`);
 
-    // Fund Default ERC-20 Tokens via Whale Impersonation
+    // Pre-seed counterfactual Safe addresses as empty ("0x") so Anvil's revm doesn't fail on undeployed accounts
+    for (const safeAddress of [
+      '0xe6Cc2735F7E97274f9ee8A194DC93f2aC3CAADC9',
+      '0x70c84430c251256b3fba0316c046786e3e6be2bc',
+    ]) {
+      await jsonRpc('http://127.0.0.1:8545', 'anvil_setCode', [safeAddress, '0x']).catch(() => {});
+    }
+
+    // Fund Default ERC-20 Tokens (only if requested via --seed-tokens or SEED_ALL_TOKENS=true)
     const fundedList = ['1,000 ETH'];
-    for (const token of chainConfig.tokens) {
-      try {
-        // Fund whale with ETH for gas
-        await jsonRpc('http://127.0.0.1:8545', 'anvil_setBalance', [
-          token.whale,
-          '0x8AC7230489E80000', // 10 ETH
-        ]);
+    const shouldSeedTokens = cliArgs.seedTokens || getEnv('SEED_ALL_TOKENS') === 'true';
 
-        await jsonRpc('http://127.0.0.1:8545', 'anvil_impersonateAccount', [token.whale]);
+    if (shouldSeedTokens) {
+      log.info(`Seeding default ERC-20 tokens via whale impersonation...`);
+      for (const token of chainConfig.tokens) {
+        try {
+          // Fund whale with ETH for gas
+          await jsonRpc('http://127.0.0.1:8545', 'anvil_setBalance', [
+            token.whale,
+            '0x8AC7230489E80000', // 10 ETH
+          ]);
 
-        // transfer(address,uint256) selector: 0xa9059cbb
-        const rawAmount = (BigInt(token.amount) * 10n ** BigInt(token.decimals)).toString(16);
-        const data =
-          '0xa9059cbb' +
-          testWallet.toLowerCase().replace('0x', '').padStart(64, '0') +
-          rawAmount.padStart(64, '0');
+          await jsonRpc('http://127.0.0.1:8545', 'anvil_impersonateAccount', [token.whale]);
 
-        await jsonRpc('http://127.0.0.1:8545', 'eth_sendTransaction', [
-          {
-            from: token.whale,
-            to: token.address,
-            data,
-            gas: '0x186A0', // 100,000
-          },
-        ]);
+          // transfer(address,uint256) selector: 0xa9059cbb
+          const rawAmount = (BigInt(token.amount) * 10n ** BigInt(token.decimals)).toString(16);
+          const data =
+            '0xa9059cbb' +
+            testWallet.toLowerCase().replace('0x', '').padStart(64, '0') +
+            rawAmount.padStart(64, '0');
 
-        await jsonRpc('http://127.0.0.1:8545', 'anvil_stopImpersonatingAccount', [token.whale]);
-        log.success(
-          `Pre-funded ${colors.bold}${token.amount.toLocaleString()} ${token.symbol}${colors.reset}`,
-        );
-        fundedList.push(`${token.amount.toLocaleString()} ${token.symbol}`);
-      } catch (err) {
-        log.warn(`Could not fund ${token.symbol}: ${err.message}`);
+          await jsonRpc('http://127.0.0.1:8545', 'eth_sendTransaction', [
+            {
+              from: token.whale,
+              to: token.address,
+              data,
+              gas: '0x186A0', // 100,000
+            },
+          ]);
+
+          await jsonRpc('http://127.0.0.1:8545', 'anvil_stopImpersonatingAccount', [token.whale]);
+          log.success(
+            `Pre-funded ${colors.bold}${token.amount.toLocaleString()} ${token.symbol}${colors.reset}`,
+          );
+          fundedList.push(`${token.amount.toLocaleString()} ${token.symbol}`);
+        } catch (err) {
+          log.warn(`Could not fund ${token.symbol}: ${err.message}`);
+        }
       }
-    }
-
-    // -------------------------------------------------------------------------
-    // 7. Prompt for Additional Custom Tokens
-    // -------------------------------------------------------------------------
-    let extraTokenQuery = cliArgs.extraTokens || getEnv('EXTRA_FUNDING_TOKENS');
-
-    if (!extraTokenQuery) {
-      const askTokens = await askQuestion(
-        rl,
-        `\nDo you need funds in other token(s)? (y/N) [Default: N]: `,
+    } else {
+      log.info(
+        `${colors.dim}ERC-20 token seeding skipped (pass --seed-tokens to seed tokens via whale impersonation)${colors.reset}`,
       );
-      if (askTokens.trim().toLowerCase() === 'y') {
-        extraTokenQuery = await askQuestion(
-          rl,
-          `Enter token address (or comma-separated 0xAddr:Amount or 0xAddr:Amount:Whale): `,
-        );
-      }
     }
+
+    // -------------------------------------------------------------------------
+    // 7. Additional Custom Tokens (from ENV or CLI)
+    // -------------------------------------------------------------------------
+    const extraTokenQuery = cliArgs.extraTokens || getEnv('EXTRA_FUNDING_TOKENS');
 
     if (extraTokenQuery && extraTokenQuery.trim()) {
       const entries = extraTokenQuery.split(',');
@@ -707,21 +753,35 @@ ${colors.yellow}================================================================
     // -------------------------------------------------------------------------
     log.info(`Launching aphelion-app from ${colors.dim}${appDir}${colors.reset}...`);
 
+    const localAnvilRpc = 'http://127.0.0.1:8545';
     const appEnv = {
       ...process.env,
+      PORT: '3000',
       NEXT_PUBLIC_LOCAL_FORK: 'true',
       NEXT_PUBLIC_DEFAULT_CHAIN_ID: chainId.toString(),
-      NEXT_PUBLIC_RPC_URL_1: 'http://127.0.0.1:8545',
-      NEXT_PUBLIC_RPC_URL_8453: 'http://127.0.0.1:8545',
-      NEXT_PUBLIC_RPC_URL_42161: 'http://127.0.0.1:8545',
+      // Server-side RPC upstreams (the browser always goes through /api/rpc/<chainId>, which uses these)
+      ETH_RPC_URL: chainId === 1 ? localAnvilRpc : process.env.ETH_RPC_URL,
+      PRODUCT_TABLE_ETH_RPC_URL:
+        chainId === 1 ? localAnvilRpc : process.env.PRODUCT_TABLE_ETH_RPC_URL,
+      BASE_RPC_URL: chainId === 8453 ? localAnvilRpc : process.env.BASE_RPC_URL,
+      PRODUCT_TABLE_BASE_RPC_URL:
+        chainId === 8453 ? localAnvilRpc : process.env.PRODUCT_TABLE_BASE_RPC_URL,
+      ARB_RPC_URL: chainId === 42161 ? localAnvilRpc : process.env.ARB_RPC_URL,
+      PRODUCT_TABLE_ARB_RPC_URL:
+        chainId === 42161 ? localAnvilRpc : process.env.PRODUCT_TABLE_ARB_RPC_URL,
+      FOUNDRY_RPC_URL: localAnvilRpc,
+      ANVIL_RPC_URL: localAnvilRpc,
+      // Ensure local origins pass CSRF and compliance origin assertions
+      NEXT_PUBLIC_SITE_URL: 'http://localhost:3000',
+      FEE_SESSION_ALLOWED_ORIGIN: 'http://localhost:3000,http://127.0.0.1:3000',
     };
 
-    appProcess = spawn('pnpm', ['dev', '--port', '3000'], {
+    appProcess = spawn('pnpm', ['dev-app'], {
       cwd: appDir,
       env: appEnv,
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
-      shell: true,
+      shell: false,
     });
 
     appProcess.stdout.on('data', (d) => {

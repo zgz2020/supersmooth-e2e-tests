@@ -9,11 +9,13 @@ type AppMenuOptions = 'Products' | 'Portfolio' | 'Migrate';
 export class Header {
   readonly page: Page;
   readonly headerLocator: Locator;
+  readonly connectWalletButton: Locator;
   readonly connectedWalletButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.headerLocator = page.getByRole('navigation').first();
+    this.connectWalletButton = this.headerLocator.getByRole('button', { name: 'Connect Wallet' });
     this.connectedWalletButton = this.headerLocator.getByRole('button', {
       name: /^0x[a-fA-F0-9]{4}\.\.\.[a-fA-F0-9]{4}$/,
     });
@@ -61,8 +63,13 @@ export class Header {
   }
 
   @step
+  async shouldShowConnectWallet() {
+    await expect(this.connectWalletButton).toBeVisible();
+  }
+
+  @step
   async connectWallet() {
-    await this.headerLocator.getByRole('button', { name: 'Connect Wallet' }).click();
+    await this.connectWalletButton.click();
   }
 
   @step
@@ -70,6 +77,13 @@ export class Header {
     shortAddress: ShortAddress = /^0x[a-fA-F0-9]{4}\.\.\.[a-fA-F0-9]{4}$/,
   ) {
     await expect(this.connectedWalletButton).toHaveText(shortAddress);
+  }
+
+  /** Asserts the header shows `address` in its truncated `0x1234...abcd` form (case-insensitive) */
+  @step
+  async shouldShowConnectedAccount(address: string) {
+    const [head, tail] = [address.slice(0, 6), address.slice(-4)];
+    await this.shouldHaveShortAddress(new RegExp(`^${head}\\.\\.\\.${tail}$`, 'i'));
   }
 
   @step

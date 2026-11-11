@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { defineConfig, devices } from '@playwright/test';
 import { normalizeBaseUrl } from './utils/constants/urls';
+import { TIMEOUTS } from './utils/constants/timeouts';
 
 dotenv.config();
 
@@ -17,6 +18,10 @@ export default defineConfig({
   globalSetup: './utils/globalSetup',
   testDir: './tests',
   testIgnore: ['**/tests/performance/**'],
+  timeout: TIMEOUTS.staging.test,
+  expect: {
+    timeout: TIMEOUTS.staging.expect,
+  },
   fullyParallel:
     process.env.FULLY_PARALLEL !== undefined ? process.env.FULLY_PARALLEL === 'true' : true,
   retries: process.env.RETRIES !== undefined ? Number(process.env.RETRIES) : process.env.CI ? 2 : 0,
@@ -39,32 +44,76 @@ export default defineConfig({
     headless: process.env.HEADLESS ? true : false,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    actionTimeout: TIMEOUTS.staging.action,
+    navigationTimeout: TIMEOUTS.staging.navigation,
   },
   projects: [
     {
       name: 'no-wallet',
       testDir: './tests/e2e/no-wallet',
-      use: { ...devices['Desktop Chrome'] },
+      timeout: TIMEOUTS.staging.test,
+      expect: {
+        timeout: TIMEOUTS.staging.expect,
+      },
+      use: {
+        ...devices['Desktop Chrome'],
+        actionTimeout: TIMEOUTS.staging.action,
+        navigationTimeout: TIMEOUTS.staging.navigation,
+      },
     },
     {
       name: 'with-wallet',
       testDir: './tests/e2e/with-wallet',
-      use: { ...devices['Desktop Chrome'] },
+      timeout: TIMEOUTS.withWallet.test,
+      expect: {
+        timeout: TIMEOUTS.withWallet.expect,
+      },
+      use: {
+        ...devices['Desktop Chrome'],
+        actionTimeout: TIMEOUTS.withWallet.action,
+        navigationTimeout: TIMEOUTS.withWallet.navigation,
+      },
+    },
+    {
+      name: 'anvil',
+      testDir: './tests/e2e/anvil',
+      timeout: TIMEOUTS.anvil.test,
+      expect: {
+        timeout: TIMEOUTS.anvil.expect,
+      },
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: normalizeBaseUrl(process.env.FORK_BASE_URL || 'http://localhost:3000'),
+        actionTimeout: TIMEOUTS.anvil.action,
+        navigationTimeout: TIMEOUTS.anvil.navigation,
+      },
     },
     {
       name: 'api',
       testDir: './tests/api',
       testIgnore: ['**/complianceGeoFakeLocation.spec.ts'],
+      timeout: TIMEOUTS.api.test,
+      expect: {
+        timeout: TIMEOUTS.api.expect,
+      },
     },
     {
       name: 'api-regression',
       testDir: './tests/api',
       testIgnore: ['**/complianceGeoFakeLocation.spec.ts'],
       grepInvert: /@api_nightly/,
+      timeout: TIMEOUTS.api.test,
+      expect: {
+        timeout: TIMEOUTS.api.expect,
+      },
     },
     {
       name: 'api-fake-geo',
       testMatch: '**/complianceGeoFakeLocation.spec.ts',
+      timeout: TIMEOUTS.api.test,
+      expect: {
+        timeout: TIMEOUTS.api.expect,
+      },
       use: {
         baseURL: 'http://localhost:3000',
       },

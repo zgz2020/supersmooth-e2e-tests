@@ -33,6 +33,15 @@ jobs:
     with:
       script: 'ci:with-wallet'
 
+  anvil-tests:
+    # Off until CI can start aphelion-app (needs APHELION_STATUS_TOKEN + APHELION_APP_ENV secrets).
+    # Enable with repo variable RUN_ANVIL_NIGHTLY=true (Settings → Secrets and variables → Actions → Variables).
+    if: vars.RUN_ANVIL_NIGHTLY == 'true'
+    uses: './.github/workflows/reusable-anvil-tests.yml'
+    secrets: inherit
+    with:
+      script: 'ci:anvil'
+
   performance-tests:
     uses: './.github/workflows/reusable-performance-tests.yml'
     secrets: inherit
