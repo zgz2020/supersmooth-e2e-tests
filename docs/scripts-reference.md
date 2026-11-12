@@ -136,7 +136,7 @@ Located in `scripts/`. Utilities for test maintenance, local blockchain simulati
 | `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                                     |
 | `pnpm agent:crawl`            | Autonomously discovers dynamic pool routes and audits for 404 boundaries (Issue #1649)                  |
 | `pnpm agent:crawl:all`        | Exhaustively crawls all table pages across products without pagination caps until the end               |
-| `pnpm test:agent`             | Runs automated unit test suite for AI QA utilities (crawler, impact analyzer, snapshots)                |
+| `pnpm test:unit`              | Runs helper unit tests in `tests/unit/` (getActiveVault, crawler, impact analyzer, snapshots)           |
 
 ### CLI Usage:
 
@@ -158,8 +158,8 @@ pnpm agent:crawl
 pnpm agent:crawl --chain=8453
 pnpm agent:crawl --scaffold
 
-# Run unit tests for AI agent QA utilities
-pnpm test:agent
+# Run helper unit tests (tests/unit/)
+pnpm test:unit
 
 # Clean up stale or merged ai-heal remote branches (dry run preview)
 pnpm agent:cleanup-branches --dry-run
@@ -232,7 +232,7 @@ pnpm test:repeat cross-browser:webkit 1
 | `agent:impact`                      | `node scripts/qa-agent/pr-impact-analyzer.js`                     | PR impact analyzer & test selector  |
 | `agent:cleanup-branches`            | `node scripts/qa-agent/cleanup-branches.js`                       | Prune stale/merged ai-heal branches |
 | `agent:crawl`                       | `node scripts/qa-agent/crawl-vaults.js`                           | Dynamic route crawler & 404 auditor |
-| `test:agent`                        | `node scripts/qa-agent/...test.js`                                | Run AI agent test suites            |
+| `test:unit`                         | `playwright test --project=unit && node tests/unit/...test.js`    | Run helper unit tests (tests/unit)  |
 | `app:fork`                          | `node scripts/run-app-fork.js`                                    | Run local dApp with Anvil fork      |
 | `rpc:gateway`                       | `node scripts/local-rpc-gateway.js`                               | Run local RPC gateway proxy         |
 | `test:local-node`                   | `docker compose -f docker-compose.test.yml up ...`                | Run containerized Anvil + API tests |
@@ -248,3 +248,19 @@ pnpm test:repeat cross-browser:webkit 1
 | `lint:fix`                          | `eslint . --fix`                                                  | Autofix linting violations          |
 | `format`                            | `prettier --write .`                                              | Format files with Prettier          |
 | `format:check`                      | `prettier --check .`                                              | Verify Prettier formatting          |
+
+## 🧩 Helper Unit Tests (`tests/unit/`)
+
+Unit tests for test-infrastructure helpers live in one folder, `tests/unit/`:
+
+| File                                 | Covers                                                       | Runner                                 |
+| :----------------------------------- | :----------------------------------------------------------- | :------------------------------------- |
+| `getActiveVault.spec.ts`             | `utils/getActiveVault.ts` (fake request context, no network) | Playwright `unit` project (no browser) |
+| `pr-impact-analyzer.test.js`         | `scripts/qa-agent/pr-impact-analyzer.js`                     | Node + `node:assert`                   |
+| `batch-safety-and-retention.test.js` | `scripts/qa-agent/heal-agent.js`, `cleanup-branches.js`      | Node + `node:assert`                   |
+| `crawl-vaults.test.js`               | `scripts/qa-agent/crawl-vaults.js`                           | Node + `node:assert`                   |
+
+- Run them all with `pnpm test:unit`.
+- They are **not** part of regression, nightly or targeted e2e runs (the change-impact analyzer ignores `tests/unit/`).
+- CI runs them through `.github/workflows/unit-tests.yml`, only on PRs that change the covered helpers or the unit tests.
+- When adding a unit test for another helper, put it in `tests/unit/` and add that helper's path to the `paths:` list in `unit-tests.yml`.

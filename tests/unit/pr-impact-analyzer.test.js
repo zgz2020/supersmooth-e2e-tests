@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import console from 'node:console';
-import { analyzeImpact, getChangedFiles } from './pr-impact-analyzer.js';
+import { analyzeImpact, getChangedFiles } from '../../scripts/qa-agent/pr-impact-analyzer.js';
 
 /**
  * Self-verification test suite for AI Change-Impact Analyzer
@@ -87,7 +87,21 @@ function runTests() {
     console.log('  ✓ Test 8 Passed: Manual file overrides with whitespace are trimmed and matched');
   }
 
-  console.log('\n🎉 All 8 AI Change-Impact Analyzer tests passed successfully!\n');
+  // Test 9: Helper unit tests never join e2e/regression runs (they have their own workflow)
+  {
+    const unitOnly = analyzeImpact(['tests/unit/getActiveVault.spec.ts']);
+    assert.strictEqual(unitOnly.hasTargetedTests, false);
+
+    const withHelper = analyzeImpact([
+      'tests/unit/getActiveVault.spec.ts',
+      'utils/getActiveVault.ts',
+    ]);
+    assert.strictEqual(withHelper.runType, 'TARGETED');
+    assert(withHelper.targetSpecs.every((spec) => !spec.startsWith('tests/unit/')));
+    console.log('  ✓ Test 9 Passed: tests/unit/ changes are excluded from targeted e2e runs');
+  }
+
+  console.log('\n🎉 All 9 AI Change-Impact Analyzer tests passed successfully!\n');
 }
 
 runTests();

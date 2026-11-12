@@ -40,6 +40,8 @@ const IGNORED_PATHS = [
   'ai-reports/',
   'performance-reports/',
   'docs/',
+  // Helper unit tests run in their own workflow (unit-tests.yml), never in e2e/regression runs
+  'tests/unit/',
   '.vscode/',
   '.gitignore',
   '.prettierrc',

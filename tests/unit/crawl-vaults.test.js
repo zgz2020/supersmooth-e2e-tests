@@ -10,7 +10,7 @@ import {
   auditAllRoutes,
   generateAuditReport,
   scaffoldSpec,
-} from './crawl-vaults.js';
+} from '../../scripts/qa-agent/crawl-vaults.js';
 
 async function runTests() {
   console.log('🧪 Running Autonomous Route Crawler Unit Tests...\n');
