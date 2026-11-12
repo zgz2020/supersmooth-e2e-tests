@@ -188,13 +188,14 @@ pnpm test:repeat cross-browser:webkit 1
 
 ## 🛠️ Code Quality & Build
 
-| Script              | Description                                                            |
-| :------------------ | :--------------------------------------------------------------------- |
-| `pnpm typecheck`    | Validates TypeScript types across the entire codebase (`tsc --noEmit`) |
-| `pnpm lint`         | Runs ESLint analysis across TypeScript and JavaScript files            |
-| `pnpm lint:fix`     | Automatically fixes ESLint rule violations                             |
-| `pnpm format`       | Formats all code and documentation files using Prettier                |
-| `pnpm format:check` | Validates code formatting compliance without modifying files           |
+| Script              | Description                                                                                       |
+| :------------------ | :------------------------------------------------------------------------------------------------ |
+| `pnpm typecheck`    | Validates TypeScript types across the entire codebase (`tsc --noEmit`)                            |
+| `pnpm lint`         | Runs ESLint analysis across TypeScript and JavaScript files                                       |
+| `pnpm lint:fix`     | Automatically fixes ESLint rule violations                                                        |
+| `pnpm format`       | Formats all code and documentation files using Prettier                                           |
+| `pnpm format:check` | Validates code formatting compliance without modifying files                                      |
+| `pnpm tc:check`     | Validates test ↔ test case links and prints catalogue coverage ([guide](test-case-management.md)) |
 
 ---
 
@@ -259,6 +260,7 @@ Unit tests for test-infrastructure helpers live in one folder, `tests/unit/`:
 | `pr-impact-analyzer.test.js`         | `scripts/qa-agent/pr-impact-analyzer.js`                     | Node + `node:assert`                   |
 | `batch-safety-and-retention.test.js` | `scripts/qa-agent/heal-agent.js`, `cleanup-branches.js`      | Node + `node:assert`                   |
 | `crawl-vaults.test.js`               | `scripts/qa-agent/crawl-vaults.js`                           | Node + `node:assert`                   |
+| `tc-traceability.test.js`            | `scripts/tc/check-traceability.js`                           | Node + `node:assert`                   |
 
 - Run them all with `pnpm test:unit`.
 - They are **not** part of regression, nightly or targeted e2e runs (the change-impact analyzer ignores `tests/unit/`).

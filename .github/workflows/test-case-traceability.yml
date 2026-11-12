@@ -1,0 +1,54 @@
+name: '🧾 Test Case Traceability'
+
+# Keeps the test case catalogue (test-cases/) and the Playwright tests in sync.
+# Fails when a test is not linked to a case with tc('<ID>'), links an unknown ID, or when a case
+# marked `automated` has no linked test. Posts a coverage table to the job summary.
+# Only lists tests (`playwright test --list`): no browsers, wallets or network calls are needed.
+on:
+  pull_request:
+    paths:
+      - 'tests/**'
+      - 'test-cases/**'
+      - 'utils/testCase.ts'
+      - 'scripts/tc/**'
+      - 'playwright.config.ts'
+      - '.github/workflows/test-case-traceability.yml'
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  traceability:
+    name: 'Check Test Case Traceability'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 10
+
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Check test case traceability'
+        run: 'pnpm tc:check --report tc-coverage.md'
+
+      - name: 'Upload coverage summary'
+        if: always()
+        uses: 'actions/upload-artifact@v4'
+        with:
+          name: 'tc-coverage'
+          path: 'tc-coverage.md'
+          if-no-files-found: 'ignore'

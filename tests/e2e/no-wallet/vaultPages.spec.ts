@@ -1,6 +1,7 @@
 import { test } from '../../../src/fixtures';
 import { getActiveVault } from '../../../utils/getActiveVault';
 import type { TopCardsProductType } from '../../../utils/types/api/productTableTopCards';
+import { tc } from '../../../utils/testCase';
 
 interface VaultTestCase {
   positionType: string;
@@ -41,19 +42,20 @@ const testCases: VaultTestCase[] = [
 
 test.describe('Vault pages', () => {
   for (const { positionType, productType, filterId, protocols } of testCases) {
-    test(`it should request to connect wallet when trying to open a ${positionType} position`, async ({
-      app,
-      request,
-    }) => {
-      const { url, collateral } = await getActiveVault(request, productType, {
-        filterId,
-        protocols,
-      });
+    test(
+      `it should request to connect wallet when trying to open a ${positionType} position`,
+      tc('E2E-VAULT-001'),
+      async ({ app, request }) => {
+        const { url, collateral } = await getActiveVault(request, productType, {
+          filterId,
+          protocols,
+        });
 
-      await app.vaultPage.openPage(url, { collateral });
+        await app.vaultPage.openPage(url, { collateral });
 
-      await app.vaultPage.rightSidePanel.configurePosition.connectWallet();
-      await app.modals.connectWallet.shouldBeVisible();
-    });
+        await app.vaultPage.rightSidePanel.configurePosition.connectWallet();
+        await app.modals.connectWallet.shouldBeVisible();
+      },
+    );
   }
 });
