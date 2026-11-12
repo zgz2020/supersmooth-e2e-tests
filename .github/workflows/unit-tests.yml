@@ -1,0 +1,43 @@
+name: '🧩 Helper Unit Tests'
+
+# Unit tests for test-infrastructure helpers (tests/unit). They run ONLY when the covered
+# helpers or the unit tests themselves change; never in regression, nightly or targeted e2e runs.
+on:
+  pull_request:
+    paths:
+      - 'utils/getActiveVault.ts'
+      - 'utils/constants/urls.ts'
+      - 'utils/types/api/productTableTopCards.ts'
+      - 'scripts/qa-agent/**'
+      - 'tests/unit/**'
+      - '.github/workflows/unit-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: 'Run Helper Unit Tests'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 10
+
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      # No browser needed: the unit project uses fake request contexts only
+      - name: 'Run unit tests'
+        run: 'pnpm test:unit'

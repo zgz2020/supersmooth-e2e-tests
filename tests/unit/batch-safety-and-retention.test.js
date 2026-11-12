@@ -3,8 +3,8 @@ import console from 'node:console';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { SnapshotRegistry } from './heal-agent.js';
-import { evaluateRetention } from './cleanup-branches.js';
+import { SnapshotRegistry } from '../../scripts/qa-agent/heal-agent.js';
+import { evaluateRetention } from '../../scripts/qa-agent/cleanup-branches.js';
 
 function runTests() {
   console.log('🧪 Running Batch Safety & Branch Retention Unit Tests...\n');

@@ -129,8 +129,8 @@ pnpm agent:impact --files="src/pages/vaultPage.ts"
 # Output structured JSON:
 pnpm agent:impact --files="src/pages/vaultPage.ts" --json
 
-# Run unit verification tests for the impact engine:
-pnpm test:agent
+# Run unit verification tests for the impact engine (tests/unit/):
+pnpm test:unit
 ```
 
 ### 🗺️ Component-to-Test Dependency Mapping:
@@ -187,8 +187,8 @@ pnpm agent:crawl --top-cards-only
 # Auto-scaffold new Playwright specs for discovered routes:
 pnpm agent:crawl --scaffold
 
-# Run unit tests:
-pnpm test:agent
+# Run unit tests (tests/unit/):
+pnpm test:unit
 ```
 
 ---

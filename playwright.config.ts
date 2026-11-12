@@ -119,6 +119,14 @@ export default defineConfig({
       },
     },
     {
+      // Helper unit tests (no browser, no network). Run only via `pnpm test:unit` /
+      // unit-tests.yml when the covered helpers change, never in e2e or regression runs.
+      name: 'unit',
+      testDir: './tests/unit',
+      testMatch: '**/*.spec.ts',
+      timeout: 10_000,
+    },
+    {
       name: 'firefox',
       testDir: './tests/e2e/no-wallet-cross-browser',
       use: { ...devices['Desktop Firefox'] },

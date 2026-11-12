@@ -68,7 +68,8 @@ export default tseslint.config(
     },
   },
   {
-    files: ['tests/performance/**/*.ts', 'scripts/**/*.js'],
+    // Plain Node ES modules need explicit .js extensions in relative imports
+    files: ['tests/performance/**/*.ts', 'scripts/**/*.js', 'tests/unit/**/*.js'],
     rules: {
       'no-restricted-syntax': 'off',
     },
