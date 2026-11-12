@@ -9,6 +9,8 @@ on:
       - 'utils/constants/urls.ts'
       - 'utils/types/api/productTableTopCards.ts'
       - 'scripts/qa-agent/**'
+      - 'scripts/tc/**'
+      - 'utils/testCase.ts'
       - 'tests/unit/**'
       - '.github/workflows/unit-tests.yml'
   workflow_dispatch:

@@ -3,9 +3,10 @@ import { portfolioRecommendedStrategiesSchema } from '../../utils/schema/api/por
 import { validateSchema } from '../../utils/schema/validator';
 import type { PortfolioRecommendedStrategies } from '../../utils/types/api/portfolioRecommendedStrategies';
 import '../../utils/assertions/matchers';
+import { tc } from '../../utils/testCase';
 
 test.describe('Portfolio Recommended Strategies API', () => {
-  test('should fetch recommended strategies', async ({ request }) => {
+  test('should fetch recommended strategies', tc('API-PORT-001'), async ({ request }) => {
     const response = await request.get('/api/portfolio/recommended-strategies');
 
     await expect(response).toHaveStatusCode(200);
@@ -25,9 +26,13 @@ test.describe('Portfolio Recommended Strategies API', () => {
     }
   });
 
-  test('should return 405 method not allowed for POST request', async ({ request }) => {
-    const response = await request.post('/api/portfolio/recommended-strategies');
+  test(
+    'should return 405 method not allowed for POST request',
+    tc('API-PORT-002'),
+    async ({ request }) => {
+      const response = await request.post('/api/portfolio/recommended-strategies');
 
-    await expect(response).toHaveStatusCode(405);
-  });
+      await expect(response).toHaveStatusCode(405);
+    },
+  );
 });

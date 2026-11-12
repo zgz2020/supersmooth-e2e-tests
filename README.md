@@ -64,6 +64,7 @@ pnpm synpress-build-cache:base
 | **AI Route Crawler** | Dynamically discovers liquidity pools and audits routes for 404s (Issue #1649) | `pnpm agent:crawl` (or `pnpm agent:crawl:all`) |
 | **Predictive CI**    | Analyzes PR git diffs and dynamically resolves targeted test sub-suites        | `pnpm agent:impact`                            |
 | **Test Repeater**    | Interactive flakiness detection runner                                         | `pnpm test:repeat`                             |
+| **Test Case Check**  | Validates test ↔ test case links (`test-cases/`) and prints coverage           | `pnpm tc:check`                                |
 | **Code Quality**     | TypeScript type check and ESLint verification                                  | `pnpm typecheck && pnpm lint`                  |
 
 > 📖 **Full Command List:** For the exhaustive list of all 36+ scripts, CI flags, and targeted browser commands, see the **[Scripts & Test Suites Reference](docs/scripts-reference.md)**.
@@ -153,17 +154,18 @@ pnpm agent:crawl
 
 Detailed architectural documentation, setup guides, and references are organized under [`docs/`](docs/):
 
-| Guide                                                                           | Description                                                                    |
-| :------------------------------------------------------------------------------ | :----------------------------------------------------------------------------- |
-| **[📜 Scripts Reference](docs/scripts-reference.md)**                           | Complete breakdown of all scripts in `package.json` with execution flags       |
-| **[🤖 Applied AI & Agentic QA](docs/applied-ai-agent-qa.md)**                   | Autonomous failure diagnosis, self-healing code repair, and predictive CI      |
-| **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)**               | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s     |
-| **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**                | Run `aphelion-app` locally against Anvil state fork with pre-funded balances   |
-| **[🏛️ Anvil Fork Testing (CI & Local)](docs/anvil-fork-playwright-testing.md)** | Deterministic Playwright Anvil fixture, worker isolation, and CI workflows     |
-| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                                | Synpress v4 cache configuration, MetaMask automation, and wallet helpers       |
-| **[⚡ Performance Testing](docs/performance-testing-k6.md)**                    | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide              |
-| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)**                 | Architecture, status reporting, and dispatch from `aphelion-app` to CI         |
-| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**                     | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting |
+| Guide                                                                           | Description                                                                      |
+| :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------- |
+| **[📜 Scripts Reference](docs/scripts-reference.md)**                           | Complete breakdown of all scripts in `package.json` with execution flags         |
+| **[🧾 Test Case Management](docs/test-case-management.md)**                     | Test case catalogue, `tc()` links to automated tests, and the traceability check |
+| **[🤖 Applied AI & Agentic QA](docs/applied-ai-agent-qa.md)**                   | Autonomous failure diagnosis, self-healing code repair, and predictive CI        |
+| **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)**               | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s       |
+| **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**                | Run `aphelion-app` locally against Anvil state fork with pre-funded balances     |
+| **[🏛️ Anvil Fork Testing (CI & Local)](docs/anvil-fork-playwright-testing.md)** | Deterministic Playwright Anvil fixture, worker isolation, and CI workflows       |
+| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                                | Synpress v4 cache configuration, MetaMask automation, and wallet helpers         |
+| **[⚡ Performance Testing](docs/performance-testing-k6.md)**                    | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide                |
+| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)**                 | Architecture, status reporting, and dispatch from `aphelion-app` to CI           |
+| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**                     | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting   |
 
 ---
 
@@ -175,8 +177,10 @@ Detailed architectural documentation, setup guides, and references are organized
 ├── ai-reports/                 # AI triage markdown diagnoses & PR comment markups
 ├── docs/                       # Architectural documentation & technical guides
 ├── scripts/                    # CLI test runners, repeater, and mock servers
-│   └── qa-agent/               # Applied AI failure harvester & triage engine
+│   ├── qa-agent/               # Applied AI failure harvester & triage engine
+│   └── tc/                     # Test case traceability check (pnpm tc:check)
 ├── src/                        # Page objects, modals, and test fixtures
+├── test-cases/                 # Test case catalogue (Markdown), linked to tests via tc('<ID>')
 ├── tests/
 │   ├── api/                    # API test suites and schemas
 │   ├── e2e/                    # E2E test specs (no-wallet, with-wallet, cross-browser)

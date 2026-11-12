@@ -4,6 +4,7 @@ import { validateSchema } from '../../utils/schema/validator';
 import type { ComplianceScreenResponse } from '../../utils/types/api/complianceScreen';
 import { validAddress, sanctionedAddress } from '../../utils/constants/addresses';
 import '../../utils/assertions/matchers';
+import { tc } from '../../utils/testCase';
 
 const getOriginHeader = (baseURL?: string) => ({
   origin: baseURL ? new URL(baseURL).origin : 'https://aphelion-app.onrender.com',
@@ -16,111 +17,126 @@ interface InvalidPayloadCase {
 }
 
 test.describe('Compliance Screen API', () => {
-  test('should screen wallet regardless of address casing @api_nightly', async ({
-    request,
-    baseURL,
-  }) => {
-    const checksummedBody = await test.step('Fetch and validate checksummed address', async () => {
+  test(
+    'should screen wallet regardless of address casing @api_nightly',
+    tc('API-COMP-007'),
+    async ({ request, baseURL }) => {
+      const checksummedBody =
+        await test.step('Fetch and validate checksummed address', async () => {
+          const response = await request.post('/api/compliance/screen', {
+            headers: getOriginHeader(baseURL),
+            data: { wallet: validAddress, context: 'connect' },
+          });
+
+          await expect(response).toHaveStatusCode(200);
+
+          const headers = response.headers();
+          expect(
+            headers['content-type'],
+            'Response content-type header should contain application/json',
+          ).toContain('application/json');
+          expect(headers['cache-control'], 'Response cache-control header should be no-store').toBe(
+            'no-store',
+          );
+
+          const body: ComplianceScreenResponse = await response.json();
+          await validateSchema({ schema: complianceScreenSchema, json: body });
+          expect(body.sanctioned, 'Valid checksummed wallet should return sanctioned: false').toBe(
+            false,
+          );
+
+          return body;
+        });
+
+      await test.step('Fetch lowercase address and verify parity with checksummed response', async () => {
+        const response = await request.post('/api/compliance/screen', {
+          headers: getOriginHeader(baseURL),
+          data: { wallet: validAddress.toLowerCase(), context: 'connect' },
+        });
+
+        await expect(response).toHaveStatusCode(200);
+
+        const lowercaseBody: ComplianceScreenResponse = await response.json();
+        await validateSchema({ schema: complianceScreenSchema, json: lowercaseBody });
+        expect(
+          lowercaseBody,
+          'Lowercase address response should match checksummed address response',
+        ).toEqual(checksummedBody);
+      });
+    },
+  );
+
+  test(
+    'should screen wallet successfully for perps-submit context',
+    tc('API-COMP-008'),
+    async ({ request, baseURL }) => {
+      const payload = { wallet: validAddress, context: 'perps-submit' };
+
       const response = await request.post('/api/compliance/screen', {
         headers: getOriginHeader(baseURL),
-        data: { wallet: validAddress, context: 'connect' },
+        data: payload,
       });
 
       await expect(response).toHaveStatusCode(200);
-
-      const headers = response.headers();
-      expect(
-        headers['content-type'],
-        'Response content-type header should contain application/json',
-      ).toContain('application/json');
-      expect(headers['cache-control'], 'Response cache-control header should be no-store').toBe(
-        'no-store',
-      );
 
       const body: ComplianceScreenResponse = await response.json();
       await validateSchema({ schema: complianceScreenSchema, json: body });
-      expect(body.sanctioned, 'Valid checksummed wallet should return sanctioned: false').toBe(
-        false,
-      );
+    },
+  );
 
-      return body;
-    });
+  test(
+    'should flag sanctioned wallet address',
+    tc('API-COMP-009'),
+    async ({ request, baseURL }) => {
+      const payload = { wallet: sanctionedAddress, context: 'connect' };
 
-    await test.step('Fetch lowercase address and verify parity with checksummed response', async () => {
       const response = await request.post('/api/compliance/screen', {
         headers: getOriginHeader(baseURL),
-        data: { wallet: validAddress.toLowerCase(), context: 'connect' },
+        data: payload,
       });
 
       await expect(response).toHaveStatusCode(200);
 
-      const lowercaseBody: ComplianceScreenResponse = await response.json();
-      await validateSchema({ schema: complianceScreenSchema, json: lowercaseBody });
-      expect(
-        lowercaseBody,
-        'Lowercase address response should match checksummed address response',
-      ).toEqual(checksummedBody);
-    });
-  });
+      const body: ComplianceScreenResponse = await response.json();
+      await validateSchema({ schema: complianceScreenSchema, json: body });
+      expect(body.sanctioned, 'Sanctioned wallet should return sanctioned: true').toBe(true);
+    },
+  );
 
-  test('should screen wallet successfully for perps-submit context', async ({
-    request,
-    baseURL,
-  }) => {
-    const payload = { wallet: validAddress, context: 'perps-submit' };
+  test(
+    'should return 401 unauthorized when origin header is missing',
+    tc('API-COMP-010'),
+    async ({ request }) => {
+      const payload = { wallet: validAddress, context: 'connect' };
 
-    const response = await request.post('/api/compliance/screen', {
-      headers: getOriginHeader(baseURL),
-      data: payload,
-    });
+      const response = await request.post('/api/compliance/screen', {
+        data: payload,
+      });
 
-    await expect(response).toHaveStatusCode(200);
+      await expect(response).toHaveStatusCode(401);
 
-    const body: ComplianceScreenResponse = await response.json();
-    await validateSchema({ schema: complianceScreenSchema, json: body });
-  });
+      const body = await response.json();
+      expect(body).toEqual({ error: 'Unauthorized' });
+    },
+  );
 
-  test('should flag sanctioned wallet address', async ({ request, baseURL }) => {
-    const payload = { wallet: sanctionedAddress, context: 'connect' };
+  test(
+    'should return 401 unauthorized when origin header is untrusted',
+    tc('API-COMP-011'),
+    async ({ request }) => {
+      const payload = { wallet: validAddress, context: 'connect' };
 
-    const response = await request.post('/api/compliance/screen', {
-      headers: getOriginHeader(baseURL),
-      data: payload,
-    });
+      const response = await request.post('/api/compliance/screen', {
+        headers: { origin: 'https://unauthorized-domain.com' },
+        data: payload,
+      });
 
-    await expect(response).toHaveStatusCode(200);
+      await expect(response).toHaveStatusCode(401);
 
-    const body: ComplianceScreenResponse = await response.json();
-    await validateSchema({ schema: complianceScreenSchema, json: body });
-    expect(body.sanctioned, 'Sanctioned wallet should return sanctioned: true').toBe(true);
-  });
-
-  test('should return 401 unauthorized when origin header is missing', async ({ request }) => {
-    const payload = { wallet: validAddress, context: 'connect' };
-
-    const response = await request.post('/api/compliance/screen', {
-      data: payload,
-    });
-
-    await expect(response).toHaveStatusCode(401);
-
-    const body = await response.json();
-    expect(body).toEqual({ error: 'Unauthorized' });
-  });
-
-  test('should return 401 unauthorized when origin header is untrusted', async ({ request }) => {
-    const payload = { wallet: validAddress, context: 'connect' };
-
-    const response = await request.post('/api/compliance/screen', {
-      headers: { origin: 'https://unauthorized-domain.com' },
-      data: payload,
-    });
-
-    await expect(response).toHaveStatusCode(401);
-
-    const body = await response.json();
-    expect(body).toEqual({ error: 'Unauthorized' });
-  });
+      const body = await response.json();
+      expect(body).toEqual({ error: 'Unauthorized' });
+    },
+  );
 
   const invalidWalletCases: InvalidPayloadCase[] = [
     {
@@ -151,20 +167,21 @@ test.describe('Compliance Screen API', () => {
   ];
 
   for (const { description, payload, expectedError } of invalidWalletCases) {
-    test(`should return 400 bad request when wallet is ${description}`, async ({
-      request,
-      baseURL,
-    }) => {
-      const response = await request.post('/api/compliance/screen', {
-        headers: getOriginHeader(baseURL),
-        data: payload,
-      });
+    test(
+      `should return 400 bad request when wallet is ${description}`,
+      tc('API-COMP-012'),
+      async ({ request, baseURL }) => {
+        const response = await request.post('/api/compliance/screen', {
+          headers: getOriginHeader(baseURL),
+          data: payload,
+        });
 
-      await expect(response).toHaveStatusCode(400);
+        await expect(response).toHaveStatusCode(400);
 
-      const body = await response.json();
-      expect(body).toEqual({ error: expectedError });
-    });
+        const body = await response.json();
+        expect(body).toEqual({ error: expectedError });
+      },
+    );
   }
 
   const invalidContextCases: Omit<InvalidPayloadCase, 'expectedError'>[] = [
@@ -174,48 +191,55 @@ test.describe('Compliance Screen API', () => {
   ];
 
   for (const { description, payload } of invalidContextCases) {
-    test(`should return 400 bad request when context is ${description}`, async ({
-      request,
-      baseURL,
-    }) => {
+    test(
+      `should return 400 bad request when context is ${description}`,
+      tc('API-COMP-013'),
+      async ({ request, baseURL }) => {
+        const response = await request.post('/api/compliance/screen', {
+          headers: getOriginHeader(baseURL),
+          data: payload,
+        });
+
+        await expect(response).toHaveStatusCode(400);
+
+        const body = await response.json();
+        expect(body).toEqual({
+          error: 'Invalid option: expected one of "connect"|"perps-submit"',
+        });
+      },
+    );
+  }
+
+  test(
+    'should return 400 bad request for malformed JSON payload',
+    tc('API-COMP-014'),
+    async ({ request, baseURL }) => {
       const response = await request.post('/api/compliance/screen', {
-        headers: getOriginHeader(baseURL),
-        data: payload,
+        headers: {
+          ...getOriginHeader(baseURL),
+          'content-type': 'application/json',
+        },
+        data: '{invalid json',
       });
 
       await expect(response).toHaveStatusCode(400);
 
       const body = await response.json();
-      expect(body).toEqual({
-        error: 'Invalid option: expected one of "connect"|"perps-submit"',
-      });
-    });
-  }
-
-  test('should return 400 bad request for malformed JSON payload', async ({ request, baseURL }) => {
-    const response = await request.post('/api/compliance/screen', {
-      headers: {
-        ...getOriginHeader(baseURL),
-        'content-type': 'application/json',
-      },
-      data: '{invalid json',
-    });
-
-    await expect(response).toHaveStatusCode(400);
-
-    const body = await response.json();
-    expect(body).toEqual({ error: 'Invalid input: expected object, received string' });
-  });
+      expect(body).toEqual({ error: 'Invalid input: expected object, received string' });
+    },
+  );
 
   const unsupportedMethods = ['get', 'put', 'delete', 'patch'] as const;
 
   for (const method of unsupportedMethods) {
-    test(`should return 405 method not allowed for ${method.toUpperCase()} request`, async ({
-      request,
-    }) => {
-      const response = await request[method]('/api/compliance/screen');
+    test(
+      `should return 405 method not allowed for ${method.toUpperCase()} request`,
+      tc('API-COMP-015'),
+      async ({ request }) => {
+        const response = await request[method]('/api/compliance/screen');
 
-      await expect(response).toHaveStatusCode(405);
-    });
+        await expect(response).toHaveStatusCode(405);
+      },
+    );
   }
 });

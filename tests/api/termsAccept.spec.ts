@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { invalidAddressCases, validAddress } from '../../utils/constants/addresses';
 import type { TermsAcceptPayload } from '../../utils/types/api/termsAccept';
 import '../../utils/assertions/matchers';
+import { tc } from '../../utils/testCase';
 
 const sampleSignature =
   '0x404ff65eeea36fa6d4a97a86b2dc588b830c287a383a6032baa2580dc478fdd124b14abf82d5aa92804c3ed4e7c0e15d0f15407bd1bec59a996afaa8fedd5aad1b';
@@ -67,35 +68,41 @@ const invalidPayloadCases: InvalidPayloadCase[] = [
 
 test.describe('Terms Accept API', () => {
   for (const { description, data } of invalidPayloadCases) {
-    test(`should return 401 unauthorized ${description}`, async ({ request }) => {
-      const response = await request.post('/api/terms/accept', {
-        data,
-      });
+    test(
+      `should return 401 unauthorized ${description}`,
+      tc('API-TERMS-001'),
+      async ({ request }) => {
+        const response = await request.post('/api/terms/accept', {
+          data,
+        });
 
-      await expect(response).toHaveStatusCode(401);
+        await expect(response).toHaveStatusCode(401);
 
-      const headers = response.headers();
-      expect(
-        headers['content-type'],
-        'Response content-type header should contain application/json',
-      ).toContain('application/json');
+        const headers = response.headers();
+        expect(
+          headers['content-type'],
+          'Response content-type header should contain application/json',
+        ).toContain('application/json');
 
-      const body = await response.json();
-      expect(body).toEqual({
-        error: 'Unauthorized',
-      });
-    });
+        const body = await response.json();
+        expect(body).toEqual({
+          error: 'Unauthorized',
+        });
+      },
+    );
   }
 
   const unsupportedMethods = ['get', 'put', 'delete', 'patch'] as const;
 
   for (const method of unsupportedMethods) {
-    test(`should return 405 method not allowed for ${method.toUpperCase()} request`, async ({
-      request,
-    }) => {
-      const response = await request[method]('/api/terms/accept');
+    test(
+      `should return 405 method not allowed for ${method.toUpperCase()} request`,
+      tc('API-TERMS-002'),
+      async ({ request }) => {
+        const response = await request[method]('/api/terms/accept');
 
-      await expect(response).toHaveStatusCode(405);
-    });
+        await expect(response).toHaveStatusCode(405);
+      },
+    );
   }
 });

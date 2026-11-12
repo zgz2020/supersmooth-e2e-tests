@@ -60,6 +60,8 @@
     "test:local-node": "docker compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from e2e-runner",
     "test:repeat": "node scripts/repeat-tests.js",
     "app:fork": "node scripts/run-app-fork.js",
+    "// --- TEST CASE MANAGEMENT ---": "",
+    "tc:check": "node scripts/tc/check-traceability.js",
     "// --- APPLIED AI & AGENT QA ---": "",
     "agent:triage": "node scripts/qa-agent/triage-agent.js",
     "agent:heal": "node scripts/qa-agent/heal-agent.js",
@@ -68,7 +70,7 @@
     "agent:cleanup-branches": "node scripts/qa-agent/cleanup-branches.js",
     "agent:crawl": "node scripts/qa-agent/crawl-vaults.js",
     "agent:crawl:all": "node scripts/qa-agent/crawl-vaults.js --all-pages",
-    "test:unit": "REPORT_FOLDER=unit playwright test --project=unit && node tests/unit/pr-impact-analyzer.test.js && node tests/unit/batch-safety-and-retention.test.js && node tests/unit/crawl-vaults.test.js"
+    "test:unit": "REPORT_FOLDER=unit playwright test --project=unit && node tests/unit/pr-impact-analyzer.test.js && node tests/unit/batch-safety-and-retention.test.js && node tests/unit/crawl-vaults.test.js && node tests/unit/tc-traceability.test.js"
   },
   "keywords": [
     "e2e",

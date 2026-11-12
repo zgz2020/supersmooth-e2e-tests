@@ -7,6 +7,7 @@ import type {
   EffectiveSpreadResponse,
 } from '../../utils/types/api/effectiveSpread';
 import '../../utils/assertions/matchers';
+import { tc } from '../../utils/testCase';
 
 function assertSpreadSanity(spreadBps: number | null, network: string, product: string): void {
   if (spreadBps !== null) {
@@ -26,22 +27,24 @@ const products: EffectiveSpreadProduct[] = ['borrow', 'multiply', 'yieldLoop'];
 test.describe('Effective Spread API', () => {
   for (const [network, chainId] of Object.entries(NETWORK_CHAIN_IDS)) {
     for (const product of products) {
-      test(`should fetch effective spread for network ${network} (chainId=${chainId}) and product ${product}`, async ({
-        request,
-      }) => {
-        const response = await request.get('/api/effective-spread', {
-          params: {
-            chainId,
-            product,
-          },
-        });
+      test(
+        `should fetch effective spread for network ${network} (chainId=${chainId}) and product ${product}`,
+        tc('API-SPRD-001'),
+        async ({ request }) => {
+          const response = await request.get('/api/effective-spread', {
+            params: {
+              chainId,
+              product,
+            },
+          });
 
-        await expect(response).toHaveStatusCode(200);
+          await expect(response).toHaveStatusCode(200);
 
-        const body: EffectiveSpreadResponse = await response.json();
-        await validateSchema({ schema: effectiveSpreadSchema, json: body });
-        assertSpreadSanity(body.spreadBps, network, product);
-      });
+          const body: EffectiveSpreadResponse = await response.json();
+          await validateSchema({ schema: effectiveSpreadSchema, json: body });
+          assertSpreadSanity(body.spreadBps, network, product);
+        },
+      );
     }
   }
 
@@ -54,16 +57,20 @@ test.describe('Effective Spread API', () => {
   ];
 
   for (const { description, params } of invalidChainIdCases) {
-    test(`should return 400 bad request when chainId is ${description}`, async ({ request }) => {
-      const response = await request.get('/api/effective-spread', { params });
+    test(
+      `should return 400 bad request when chainId is ${description}`,
+      tc('API-SPRD-002'),
+      async ({ request }) => {
+        const response = await request.get('/api/effective-spread', { params });
 
-      await expect(response).toHaveStatusCode(400);
+        await expect(response).toHaveStatusCode(400);
 
-      const body = await response.json();
-      expect(body).toEqual({
-        error: 'A valid, supported chainId query param is required',
-      });
-    });
+        const body = await response.json();
+        expect(body).toEqual({
+          error: 'A valid, supported chainId query param is required',
+        });
+      },
+    );
   }
 
   const invalidProductCases: Array<{ description: string; params: Record<string, string> }> = [
@@ -74,36 +81,48 @@ test.describe('Effective Spread API', () => {
   ];
 
   for (const { description, params } of invalidProductCases) {
-    test(`should return 400 bad request when product is ${description}`, async ({ request }) => {
-      const response = await request.get('/api/effective-spread', { params });
+    test(
+      `should return 400 bad request when product is ${description}`,
+      tc('API-SPRD-003'),
+      async ({ request }) => {
+        const response = await request.get('/api/effective-spread', { params });
 
-      await expect(response).toHaveStatusCode(400);
+        await expect(response).toHaveStatusCode(400);
 
-      const body = await response.json();
-      expect(body).toEqual({
-        error: 'product must be one of borrow, multiply, yieldLoop',
-      });
-    });
+        const body = await response.json();
+        expect(body).toEqual({
+          error: 'product must be one of borrow, multiply, yieldLoop',
+        });
+      },
+    );
   }
 
-  test('should ignore extra unexpected query parameter and return 200', async ({ request }) => {
-    const response = await request.get('/api/effective-spread', {
-      params: {
-        chainId: '8453',
-        product: 'borrow',
-        extraParam: 'foo',
-      },
-    });
+  test(
+    'should ignore extra unexpected query parameter and return 200',
+    tc('API-SPRD-004'),
+    async ({ request }) => {
+      const response = await request.get('/api/effective-spread', {
+        params: {
+          chainId: '8453',
+          product: 'borrow',
+          extraParam: 'foo',
+        },
+      });
 
-    await expect(response).toHaveStatusCode(200);
+      await expect(response).toHaveStatusCode(200);
 
-    const body: EffectiveSpreadResponse = await response.json();
-    await validateSchema({ schema: effectiveSpreadSchema, json: body });
-  });
+      const body: EffectiveSpreadResponse = await response.json();
+      await validateSchema({ schema: effectiveSpreadSchema, json: body });
+    },
+  );
 
-  test('should return 405 method not allowed for POST request', async ({ request }) => {
-    const response = await request.post('/api/effective-spread');
+  test(
+    'should return 405 method not allowed for POST request',
+    tc('API-SPRD-005'),
+    async ({ request }) => {
+      const response = await request.post('/api/effective-spread');
 
-    await expect(response).toHaveStatusCode(405);
-  });
+      await expect(response).toHaveStatusCode(405);
+    },
+  );
 });

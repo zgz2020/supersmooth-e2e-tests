@@ -1,9 +1,10 @@
 import { test } from '../../../src/fixtures/anvilFork';
+import { tc } from '../../../utils/testCase';
 
 test.describe('Wallet connection @regression @fork', () => {
   test.use({ autoConnectWallet: false });
 
-  test('should connect wallet', async ({ app }) => {
+  test('should connect wallet', tc('E2E-WALLET-003'), async ({ app }) => {
     // 1. Verify initial unauthenticated state shows Connect Wallet button in header
     await app.header.shouldShowConnectWallet();
 

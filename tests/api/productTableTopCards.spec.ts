@@ -6,6 +6,7 @@ import type {
   TopCardsProductType,
 } from '../../utils/types/api/productTableTopCards';
 import '../../utils/assertions/matchers';
+import { tc } from '../../utils/testCase';
 
 interface ValidTopCardsCase {
   description: string;
@@ -142,7 +143,7 @@ const invalidTopCardsCases: InvalidTopCardsCase[] = [
 
 test.describe('Product Table Top Cards API', () => {
   for (const { description, params } of validTopCardsCases) {
-    test(`should fetch top cards for ${description}`, async ({ request }) => {
+    test(`should fetch top cards for ${description}`, tc('API-TOPC-001'), async ({ request }) => {
       const response = await request.get('/api/product-table/top-cards', { params });
 
       await expect(response).toHaveStatusCode(200);
@@ -182,47 +183,58 @@ test.describe('Product Table Top Cards API', () => {
     });
   }
 
-  test('should ignore extra unexpected query parameter and return 200', async ({ request }) => {
-    const response = await request.get('/api/product-table/top-cards', {
-      params: {
-        productType: 'multiply',
-        filterId: 'lowest-cost',
-        extraParam: 'foo',
-      },
-    });
+  test(
+    'should ignore extra unexpected query parameter and return 200',
+    tc('API-TOPC-002'),
+    async ({ request }) => {
+      const response = await request.get('/api/product-table/top-cards', {
+        params: {
+          productType: 'multiply',
+          filterId: 'lowest-cost',
+          extraParam: 'foo',
+        },
+      });
 
-    await expect(response).toHaveStatusCode(200);
+      await expect(response).toHaveStatusCode(200);
 
-    const body: ProductTableTopCardsResponse = await response.json();
-    await validateSchema({ schema: productTableTopCardsSchema, json: body });
-    expect(body.cards.length, 'Should return top cards even with extra parameter').toBeGreaterThan(
-      0,
-    );
-  });
+      const body: ProductTableTopCardsResponse = await response.json();
+      await validateSchema({ schema: productTableTopCardsSchema, json: body });
+      expect(
+        body.cards.length,
+        'Should return top cards even with extra parameter',
+      ).toBeGreaterThan(0);
+    },
+  );
 
   for (const { description, params, expectedError } of invalidTopCardsCases) {
-    test(`should return 400 bad request when ${description}`, async ({ request }) => {
-      const response = await request.get(
-        '/api/product-table/top-cards',
-        params ? { params } : undefined,
-      );
+    test(
+      `should return 400 bad request when ${description}`,
+      tc('API-TOPC-003'),
+      async ({ request }) => {
+        const response = await request.get(
+          '/api/product-table/top-cards',
+          params ? { params } : undefined,
+        );
 
-      await expect(response).toHaveStatusCode(400);
+        await expect(response).toHaveStatusCode(400);
 
-      const body = await response.json();
-      expect(body).toEqual({ error: expectedError });
-    });
+        const body = await response.json();
+        expect(body).toEqual({ error: expectedError });
+      },
+    );
   }
 
   const unsupportedMethods = ['post', 'put', 'delete', 'patch'] as const;
 
   for (const method of unsupportedMethods) {
-    test(`should return 405 method not allowed for ${method.toUpperCase()} request`, async ({
-      request,
-    }) => {
-      const response = await request[method]('/api/product-table/top-cards');
+    test(
+      `should return 405 method not allowed for ${method.toUpperCase()} request`,
+      tc('API-TOPC-004'),
+      async ({ request }) => {
+        const response = await request[method]('/api/product-table/top-cards');
 
-      await expect(response).toHaveStatusCode(405);
-    });
+        await expect(response).toHaveStatusCode(405);
+      },
+    );
   }
 });
