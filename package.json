@@ -2,7 +2,7 @@
   "name": "sov-e2e-tests",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@8.15.4",
+  "packageManager": "pnpm@9.15.9",
   "type": "module",
   "description": "API, mock and UI testing suite for Supersmooth",
   "main": "index.js",
@@ -26,6 +26,12 @@
     "ci:with-wallet": "WORKERS='1' FULLY_PARALLEL='true' xvfb-run pnpm test:with-wallet",
     "test:with-wallet-regression": "REPORT_FOLDER=with-wallet playwright test --grep @regression --project=with-wallet",
     "ci:with-wallet-regression": "WORKERS='1' FULLY_PARALLEL='true' xvfb-run pnpm test:with-wallet-regression",
+    "// --- E2E PLAYWRIGHT (ANVIL FORK) ---": "",
+    "test:anvil": "REPORT_FOLDER=anvil playwright test --project=anvil",
+    "test:anvil:headed": "REPORT_FOLDER=anvil playwright test --project=anvil --headed",
+    "test:anvil:regression": "REPORT_FOLDER=anvil playwright test --grep @regression --project=anvil",
+    "ci:anvil": "WORKERS='2' FULLY_PARALLEL='true' pnpm test:anvil",
+    "ci:anvil:regression": "WORKERS='2' FULLY_PARALLEL='true' pnpm test:anvil:regression",
     "// --- E2E CROSS-BROWSER SUITES ---": "",
     "test:cross-browser": "REPORT_FOLDER=cross-browser playwright test --project=firefox --project=webkit --project=mobile-safari --project=mobile-android --project=tablet-ipad --project=desktop-large",
     "test:cross-browser:firefox": "REPORT_FOLDER=cross-browser-firefox playwright test --project=firefox",
@@ -86,7 +92,8 @@
     "eslint-plugin-prettier": "^5.5.6",
     "prettier": "^3.9.6",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.70.0"
+    "typescript-eslint": "^8.70.0",
+    "viem": "^2.57.18"
   },
   "pnpm": {
     "overrides": {

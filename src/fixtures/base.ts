@@ -5,6 +5,7 @@ import { App } from '../app';
 import { connectWallet } from '../../utils/connectWallet';
 import type { FixturesNetwork } from '../../utils/types/e2e/common';
 import { verifyTermsAndAcceptIfNeeded } from '../../utils/verifyTermsAndAcceptIfNeeded';
+import { TIMEOUTS } from '../../utils/constants/timeouts';
 
 type TestOptions = {
   network: FixturesNetwork;
@@ -30,13 +31,14 @@ export const test = testWithSynpress(
         await verifyTermsAndAcceptIfNeeded({
           app,
           metamask,
+          network,
         });
 
         await use(app);
 
         await app.page.close();
       },
-      { timeout: 70000 },
+      { timeout: TIMEOUTS.withWallet.fixture },
     ],
   }),
 );

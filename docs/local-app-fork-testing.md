@@ -13,6 +13,7 @@ This guide explains how to run the **`aphelion-app`** frontend locally against a
 - [Automated Token Pre-Funding](#automated-token-pre-funding)
 - [Custom Token Funding](#custom-token-funding)
 - [MetaMask & Wallet Configuration](#metamask--wallet-configuration)
+- [Product Differences: Multiply vs. Borrow vs. Earn](#product-differences-multiply-vs-borrow-vs-earn)
 - [Interactive Console Controls (Warp & Reset)](#interactive-console-controls-warp--reset)
 - [Future Integration: Playwright E2E Automation](#future-integration-playwright-e2e-automation)
 
@@ -148,6 +149,26 @@ To interact with the local fork in your browser, add a custom RPC network in Met
 | **Currency Symbol** | `ETH`                                                 |
 
 Import the private key corresponding to `TEST_WALLET_ADDRESS` from `.env` to access the pre-funded balances.
+
+---
+
+## ⚖️ Product Differences: Multiply vs. Borrow vs. Earn
+
+When testing different product types against the local Anvil fork:
+
+### 1. Borrow & Earn (Recommended for Native On-Chain Testing)
+
+- **Zero Third-Party API Dependencies:** Borrow (`/products/borrow/...`) and Earn (`/products/earn/...`) do not require DEX aggregator quotes.
+- **Full On-Chain Execution:** Deposits and borrows interact directly with lending markets (Aave V3, Morpho, Fluid). Transactions confirm and update ledger balances immediately on Anvil.
+
+### 2. Multiply (DEX Aggregator Requirement)
+
+- **Swap Quotes (`POST /api/swap-quote`):** Multiply creates leveraged positions by borrowing debt and swapping it into collateral via **1inch** or **0x**.
+- **Missing API Keys in Local Dev:** If `ZEROX_API_KEY` or `ONEINCH_API_KEY` are not configured in `aphelion-app/.env`, `/api/swap-quote` answers with `503 Service Unavailable`, and the UI displays:
+  > _"We couldn't fetch a swap quote for this transaction. Nothing was submitted; we'll keep retrying automatically."_
+- **How to Test Multiply:**
+  - In automated Playwright suites (`pnpm test:anvil`), swap quotes are deterministically mocked by the test fixture (`src/fixtures/anvilFork.ts`).
+  - For manual testing with real on-chain swaps in the browser, provide a valid 1inch or 0x API key in `aphelion-app/.env`.
 
 ---
 

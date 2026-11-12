@@ -2,36 +2,51 @@ import { expect, Locator, Page } from '@playwright/test';
 import { step } from '../../fixtures';
 import type { WaitToBeStableProps } from '../../../utils/types/e2e/common';
 
+// Formatted positive amount (e.g. 0.00025, 5.6, 1,250.00) with at least one non-zero digit
+const POSITIVE_AMOUNT = /^(?=.*[1-9])[\d,.]+$/;
+
 export class ConfigurePosition {
   readonly page: Page;
+  readonly balanceLocator: Locator;
+  readonly depositInputLocator: Locator;
   readonly panelLocator: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.panelLocator = this.page.getByTestId('right-side-panel');
+    this.balanceLocator = this.panelLocator.getByTestId(/^input-box-deposit-[\w-]*balance$/);
+    this.depositInputLocator = this.panelLocator.getByTestId(/^input-box-deposit-[\w-]*input$/);
   }
 
   @step
-  async waitToBeStable({ collateral, trade, withBalance }: WaitToBeStableProps) {
+  async waitToBeStable({ collateral, trade, withBalance, timeout }: WaitToBeStableProps) {
+    const timeoutOption = timeout !== undefined ? { timeout } : undefined;
     if (withBalance) {
-      // Matches formatted positive amounts (e.g. 0.00025, 5.6, 1,250.00) requiring at least one non-zero digit (balance > 0)
-      await expect(this.panelLocator.getByTestId(/^input-box-deposit-[\w-]*balance$/)).toHaveText(
-        /^(?=.*[1-9])[\d,.]+$/,
-      );
+      await expect(this.balanceLocator).toHaveText(POSITIVE_AMOUNT, timeoutOption);
     } else if (trade) {
       await expect(
         this.panelLocator.getByRole('button', { name: 'Deposit from Base' }),
-      ).toBeVisible();
+      ).toBeVisible(timeoutOption);
     } else {
       await expect(
         this.panelLocator.getByTestId(/^input-box-deposit.*token-selector$/),
-      ).toContainText(collateral);
+      ).toContainText(collateral, timeoutOption);
     }
   }
 
   @step
   async setDeposit(amount: string) {
-    await this.panelLocator.locator('input').first().fill(amount);
+    await this.depositInputLocator.fill(amount);
+  }
+
+  @step
+  async shouldHaveDepositValue(expected: string) {
+    await expect(this.depositInputLocator).toHaveValue(expected);
+  }
+
+  @step
+  async shouldShowPositiveDepositBalance() {
+    await expect(this.balanceLocator).toHaveText(POSITIVE_AMOUNT);
   }
 
   @step

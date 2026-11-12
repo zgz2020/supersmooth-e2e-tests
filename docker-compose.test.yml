@@ -52,6 +52,6 @@ services:
       rpc-gateway:
         condition: service_healthy
     command: >
-      sh -c "npm install -g pnpm@8.15.4 &&
+      sh -c "npm install -g pnpm@9.15.9 &&
              pnpm install --frozen-lockfile &&
              npx playwright test tests/api/rpc.spec.ts --project=api"

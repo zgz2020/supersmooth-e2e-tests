@@ -16,10 +16,11 @@ export type Token =
   | 'wstETH'
   | (string & {});
 
-export type WaitToBeStableProps =
+export type WaitToBeStableProps = (
   | { withBalance: true; collateral?: never; trade?: never }
   | { trade: true; collateral?: never; withBalance?: never }
-  | { collateral: Token; trade?: never; withBalance?: never };
+  | { collateral: Token; trade?: never; withBalance?: never }
+) & { timeout?: number };
 
 export type Wallets =
   | 'WalletConnect'

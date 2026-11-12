@@ -12,6 +12,7 @@ import {
   VaultPage,
 } from './pages';
 import { Modals } from './modals';
+import { expect, step } from './fixtures';
 
 export class App {
   readonly page: Page;
@@ -44,6 +45,19 @@ export class App {
 
   async open(url: string = '/products/multiply') {
     await this.page.goto(url);
+  }
+
+  /** Asserts the app did not crash into Next.js / React error screens */
+  @step
+  async shouldNotShowErrorBoundary() {
+    await expect(this.page.locator('body')).not.toContainText(
+      /Application error|Something went wrong|Unhandled Runtime Error/i,
+    );
+  }
+
+  @step
+  async reload() {
+    await this.page.reload();
   }
 
   async close() {

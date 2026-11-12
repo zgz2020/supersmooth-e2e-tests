@@ -60,6 +60,20 @@ Located in `tests/e2e/with-wallet`. Powered by **Synpress v4**, these tests auto
 
 ---
 
+## 🏛️ E2E Playwright Tests (Anvil State Fork)
+
+Located in `tests/e2e/anvil`. Powered by **Foundry Anvil** and **Playwright + Mocked EIP-1193**, these tests run deterministic blockchain workflows with worker isolation, pre-funded balances, Viem cryptographic signing, and zero-pollution snapshot resets (`evm_snapshot` / `evm_revert`).
+
+| Script                       | Purpose                        | Details                                                             |
+| :--------------------------- | :----------------------------- | :------------------------------------------------------------------ |
+| `pnpm test:anvil`            | Run all Anvil fork tests       | Uses project `anvil` (defaults `FORK_BASE_URL` to `localhost:3000`) |
+| `pnpm test:anvil:headed`     | Run Anvil tests in headed mode | Opens visible browser; supports interactive inspection              |
+| `pnpm test:anvil:regression` | Run regression Anvil tests     | Filters Anvil tests tagged with `@regression`                       |
+| `pnpm ci:anvil`              | CI runner for Anvil tests      | Runs native headless Linux in CI workflows (no xvfb needed)         |
+| `pnpm ci:anvil:regression`   | CI regression runner for Anvil | Runs tagged Anvil regression tests in CI                            |
+
+---
+
 ## 🌐 Cross-Browser Suite
 
 Located in `tests/e2e/no-wallet-cross-browser`. Validates responsive layouts, navigation, and rendering across multiple engines and device form-factors.
@@ -111,18 +125,18 @@ Located in `tests/performance`. High-throughput benchmark suites with tiered tag
 
 Located in `scripts/`. Utilities for test maintenance, local blockchain simulation, flakiness verification, and AI failure diagnosis.
 
-| Script                        | Description                                                                               |
-| :---------------------------- | :---------------------------------------------------------------------------------------- |
-| `pnpm app:fork`               | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH & tokens     |
-| `pnpm test:repeat`            | Interactive utility to execute a test suite multiple times in a loop to detect flakiness  |
-| `pnpm agent:triage`           | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs     |
-| `pnpm agent:heal`             | Reads proposed patches, applies selector updates, and validates fixes in Playwright       |
-| `pnpm agent:heal:pr`          | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR   |
-| `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites |
-| `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                       |
-| `pnpm agent:crawl`            | Autonomously discovers dynamic pool routes and audits for 404 boundaries (Issue #1649)    |
-| `pnpm agent:crawl:all`        | Exhaustively crawls all table pages across products without pagination caps until the end |
-| `pnpm test:agent`             | Runs automated unit test suite for AI QA utilities (crawler, impact analyzer, snapshots)  |
+| Script                        | Description                                                                                             |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------ |
+| `pnpm app:fork`               | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH (optional `--seed-tokens`) |
+| `pnpm test:repeat`            | Interactive utility to execute a test suite multiple times in a loop to detect flakiness                |
+| `pnpm agent:triage`           | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs                   |
+| `pnpm agent:heal`             | Reads proposed patches, applies selector updates, and validates fixes in Playwright                     |
+| `pnpm agent:heal:pr`          | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR                 |
+| `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites               |
+| `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                                     |
+| `pnpm agent:crawl`            | Autonomously discovers dynamic pool routes and audits for 404 boundaries (Issue #1649)                  |
+| `pnpm agent:crawl:all`        | Exhaustively crawls all table pages across products without pagination caps until the end               |
+| `pnpm test:agent`             | Runs automated unit test suite for AI QA utilities (crawler, impact analyzer, snapshots)                |
 
 ### CLI Usage:
 

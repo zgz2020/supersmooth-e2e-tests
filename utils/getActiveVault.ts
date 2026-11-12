@@ -4,6 +4,7 @@ import type {
   TopCardsProductType,
 } from './types/api/productTableTopCards';
 import type { Token } from './types/e2e/common';
+import { FALLBACK_MARKETS, vaultPath } from './constants/urls';
 
 export interface ActiveVaultResult {
   url: string;
@@ -165,11 +166,32 @@ export async function getActiveVault(
     // Continue to canonical fallback
   }
 
-  // 3. Known canonical fallback vaults on Base (chain 8453)
+  // 3. Known canonical fallback vaults on Ethereum Mainnet (chain 1) and Base (chain 8453)
+  if (targetChainId === '1') {
+    if (productType === 'multiply') {
+      return {
+        url: vaultPath('multiply', 'spark', 1, FALLBACK_MARKETS.sparkWethUsdsEthereum),
+        collateral: (options?.collateral ?? 'ETH') as Token,
+        title: 'Spark WETH Multiply on Ethereum',
+        protocol: 'spark',
+        network: 'ethereum',
+      };
+    }
+    if (productType === 'borrow') {
+      return {
+        url: vaultPath('borrow', 'spark', 1, FALLBACK_MARKETS.sparkWethUsdsEthereum),
+        collateral: (options?.collateral ?? 'ETH') as Token,
+        title: 'Spark WETH Borrow on Ethereum',
+        protocol: 'spark',
+        network: 'ethereum',
+      };
+    }
+  }
+
   if (targetChainId === '8453') {
     if (productType === 'multiply') {
       return {
-        url: '/products/multiply/morpho/8453/0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda',
+        url: vaultPath('multiply', 'morpho', 8453, FALLBACK_MARKETS.morphoEthBase),
         collateral: (options?.collateral ?? 'ETH') as Token,
         title: 'Morpho ETH Multiply on Base',
         protocol: 'morpho',
@@ -178,7 +200,7 @@ export async function getActiveVault(
     }
     if (productType === 'borrow') {
       return {
-        url: '/products/borrow/morpho/8453/0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda',
+        url: vaultPath('borrow', 'morpho', 8453, FALLBACK_MARKETS.morphoEthBase),
         collateral: (options?.collateral ?? 'ETH') as Token,
         title: 'Morpho ETH Borrow on Base',
         protocol: 'morpho',

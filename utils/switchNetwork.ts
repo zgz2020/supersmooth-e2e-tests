@@ -17,9 +17,11 @@ export const switchNetwork = async ({
   await app.modals.walletFeatures.chooseNetwork.shouldBeVisible();
   await app.modals.walletFeatures.chooseNetwork.switchNetwork(network);
 
-  await expect(async () => await metamask.approveNewNetwork()).toPass({
-    timeout: defaultExpectTimeout * 3,
-  });
+  if (network !== 'Ethereum') {
+    await expect(async () => await metamask.approveNewNetwork()).toPass({
+      timeout: defaultExpectTimeout * 3,
+    });
+  }
   await metamask.approveSwitchNetwork();
   await app.modals.walletFeatures.chooseNetwork.closeModal();
 };
