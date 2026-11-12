@@ -196,6 +196,7 @@ pnpm test:repeat cross-browser:webkit 1
 | `pnpm format`       | Formats all code and documentation files using Prettier                                           |
 | `pnpm format:check` | Validates code formatting compliance without modifying files                                      |
 | `pnpm tc:check`     | Validates test ↔ test case links and prints catalogue coverage ([guide](test-case-management.md)) |
+| `pnpm tc:index`     | Regenerates the manual / planned case index at the top of `test-cases/README.md`                  |
 
 ---
 

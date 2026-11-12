@@ -1,0 +1,4 @@
+# Check out and commit text files with LF line endings on every OS.
+# Prettier (format:check) and the generated test-case index (tc:check) expect LF; without this,
+# Windows checkouts with core.autocrlf=true would fail both even when nothing changed.
+* text=auto eol=lf
