@@ -74,5 +74,24 @@ export default tseslint.config(
       'no-restricted-syntax': 'off',
     },
   },
+  {
+    // Type-aware promise checks for all TypeScript (page objects, helpers, specs, config) to stop
+    // silent false passes, where an assertion or action never runs and the test passes anyway:
+    // - no-floating-promises: `expect(locator).toHaveText(...)`, `locator.click()` or an async
+    //   page-object method called without `await`
+    // - no-misused-promises: `items.forEach(async ...)` (never awaited) and promises used as
+    //   conditions, e.g. `if (locator.isVisible())` without `await` (always truthy)
+    // - await-thenable: `await` on a non-promise, which misleads about what actually waits
+    files: ['**/*.ts'],
+    ignores: ['tests/performance/**'],
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+    },
+  },
   eslintPluginPrettierRecommended,
 );
