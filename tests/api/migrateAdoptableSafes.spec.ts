@@ -1,16 +1,32 @@
 import { test, expect } from '@playwright/test';
-import { invalidAddressCases, validAddress, zeroAddress } from '../../utils/constants/addresses';
+import {
+  adoptableSafeFixture,
+  invalidAddressCases,
+  zeroAddress,
+} from '../../utils/constants/addresses';
 import type { MigrateAdoptableSafesResponse } from '../../utils/types/api/migrateAdoptableSafes';
 import { migrateAdoptableSafesSchema } from '../../utils/schema/api/migrateAdoptableSafesSchema';
 import { validateSchema } from '../../utils/schema/validator';
 import '../../utils/assertions/matchers';
+
+/** Fails with an actionable message when the live fixture Safe is missing from the response */
+const expectFixtureSafeListed = (body: MigrateAdoptableSafesResponse) => {
+  const { safe, chainId } = adoptableSafeFixture;
+  expect(
+    body.safes.some(
+      (item) => item.safe.toLowerCase() === safe.toLowerCase() && item.chainId === chainId,
+    ),
+    `Fixture Safe ${safe} (chain ${chainId}) is not adoptable. This is usually test data, not an app bug: ` +
+      'check its Aave v3 collateral on Base is >= $1 and it has no Supersmooth module (see adoptableSafeFixture).',
+  ).toBe(true);
+};
 
 test.describe('Migrate Adoptable Safes API', () => {
   test('should fetch adoptable safes regardless of address casing', async ({ request }) => {
     const checksummedBody = await test.step('Fetch and validate checksummed address', async () => {
       const response = await request.get('/api/migrate/adoptable-safes', {
         params: {
-          address: validAddress,
+          address: adoptableSafeFixture.owner,
         },
       });
 
@@ -24,10 +40,7 @@ test.describe('Migrate Adoptable Safes API', () => {
 
       const body: MigrateAdoptableSafesResponse = await response.json();
       await validateSchema({ schema: migrateAdoptableSafesSchema, json: body });
-      expect(
-        body.safes.length,
-        'Valid wallet address should return at least one adoptable safe item',
-      ).toBeGreaterThan(0);
+      expectFixtureSafeListed(body);
 
       return body;
     });
@@ -35,7 +48,7 @@ test.describe('Migrate Adoptable Safes API', () => {
     await test.step('Fetch lowercase address and verify parity with checksummed response', async () => {
       const response = await request.get('/api/migrate/adoptable-safes', {
         params: {
-          address: validAddress.toLowerCase(),
+          address: adoptableSafeFixture.owner.toLowerCase(),
         },
       });
 
@@ -98,7 +111,7 @@ test.describe('Migrate Adoptable Safes API', () => {
   test('should ignore extra unexpected query parameter and return 200', async ({ request }) => {
     const response = await request.get('/api/migrate/adoptable-safes', {
       params: {
-        address: validAddress,
+        address: adoptableSafeFixture.owner,
         extraParam: 'foo',
       },
     });
@@ -107,10 +120,7 @@ test.describe('Migrate Adoptable Safes API', () => {
 
     const body: MigrateAdoptableSafesResponse = await response.json();
     await validateSchema({ schema: migrateAdoptableSafesSchema, json: body });
-    expect(
-      body.safes.length,
-      'Valid wallet address should return adoptable safes even with extra params',
-    ).toBeGreaterThan(0);
+    expectFixtureSafeListed(body);
   });
 
   for (const { description, params } of invalidAddressCases) {
