@@ -6,6 +6,13 @@ import {
   validate,
   renderSummary,
 } from '../../scripts/tc/check-traceability.js';
+import {
+  INDEX_END,
+  INDEX_START,
+  buildReadme,
+  headingAnchor,
+  renderCaseIndex,
+} from '../../scripts/tc/case-index.js';
 
 const catalogueFixture = `# Fixture area
 
@@ -47,7 +54,7 @@ const spec = (file, line, title, ids, projectName = 'api') => ({
 
 const report = (...specs) => ({ suites: [{ title: 'fixture.spec.ts', specs, suites: [] }] });
 
-function runTests() {
+async function runTests() {
   console.log('🧪 Running Test Case Traceability Unit Tests...\n');
 
   const catalogue = parseCatalogueFile(catalogueFixture, 'test-cases/api/fixture.md');
@@ -142,7 +149,74 @@ function runTests() {
     console.log('  ✓ Test 6 Passed: duplicate IDs rejected');
   }
 
-  console.log('\n🎉 All 6 Test Case Traceability tests passed successfully!\n');
+  // Test 7: README anchors match GitHub heading slugs
+  {
+    assert.strictEqual(
+      headingAnchor('E2E-AUTO-004: Stop-Loss executes on Ethereum: Aave V3, close to debt'),
+      'e2e-auto-004-stop-loss-executes-on-ethereum-aave-v3-close-to-debt',
+    );
+    console.log('  ✓ Test 7 Passed: heading anchors match GitHub slugs');
+  }
+
+  // Test 8: The manual table lists only hand-run cases, highest priority first, with links
+  {
+    const at = (id, title, priority, automation) => ({
+      id,
+      title,
+      priority,
+      automation,
+      file: 'test-cases/e2e/fixture.md',
+    });
+    const index = renderCaseIndex([
+      at('E2E-FIX-001', 'Automated case', 'P1', 'automated'),
+      at('E2E-FIX-002', 'Low priority manual', 'P3', 'manual'),
+      at('E2E-FIX-003', 'Critical manual', 'P1', 'manual'),
+      at('E2E-FIX-004', 'Cannot automate', 'P2', 'not-automatable'),
+      at('E2E-FIX-005', 'Backlog item', 'P2', 'planned'),
+    ]);
+    const manual = index.slice(index.indexOf('Manual test cases'), index.indexOf('Planned cases'));
+    assert(manual.includes('Manual test cases (3)'));
+    assert(!manual.includes('E2E-FIX-001') && !manual.includes('E2E-FIX-005'));
+    const order = ['E2E-FIX-003', 'E2E-FIX-004', 'E2E-FIX-002'].map((id) => manual.indexOf(id));
+    assert.deepStrictEqual(
+      [...order].sort((a, b) => a - b),
+      order,
+    );
+    assert(manual.includes('[E2E-FIX-003](e2e/fixture.md#e2e-fix-003-critical-manual)'));
+    assert(index.includes('Planned cases (1)') && index.includes('| **Total** | **5** |'));
+    console.log('  ✓ Test 8 Passed: manual index lists hand-run cases by priority with links');
+  }
+
+  // Test 9: Pipes in case titles are escaped so they cannot break the Markdown tables
+  {
+    const index = renderCaseIndex([
+      {
+        id: 'E2E-FIX-001',
+        title: 'Header | Navigation links',
+        priority: 'P1',
+        automation: 'manual',
+        file: 'test-cases/e2e/fixture.md',
+      },
+    ]);
+    assert(index.includes('| Header \\| Navigation links |'));
+    console.log('  ✓ Test 9 Passed: pipes in titles are escaped');
+  }
+
+  // Test 10: buildReadme fails clearly without markers and is stable when run twice
+  {
+    const cases = [
+      { id: 'E2E-FIX-001', title: 'Manual', priority: 'P1', automation: 'manual', file: 'x.md' },
+    ];
+    await assert.rejects(buildReadme('# README without markers\n', cases), /must contain/);
+
+    const readme = `# Catalogue\n\nIntro.\n\n${INDEX_START}\n${INDEX_END}\n\n## Layout\n`;
+    const once = await buildReadme(readme, cases);
+    assert.strictEqual(await buildReadme(once, cases), once);
+    assert(once.startsWith('# Catalogue') && once.includes('## Layout'));
+    console.log('  ✓ Test 10 Passed: buildReadme requires markers and is idempotent');
+  }
+
+  console.log('\n🎉 All 10 Test Case Traceability tests passed successfully!\n');
 }
 
-runTests();
+await runTests();

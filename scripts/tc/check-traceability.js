@@ -39,6 +39,7 @@ import {
   loadCatalogue,
   parseCatalogueFile,
 } from './catalogue.js';
+import { isIndexUpToDate } from './case-index.js';
 
 /** Playwright projects that are not product test cases (helper unit tests). */
 export const EXCLUDED_PROJECTS = ['unit'];
@@ -227,7 +228,7 @@ function parseArgs(argv) {
   return args;
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   let report;
   try {
@@ -239,7 +240,13 @@ function main() {
     process.exit(2);
   }
 
-  const result = validate(loadCatalogue(), collectTests(report));
+  const catalogue = loadCatalogue();
+  const result = validate(catalogue, collectTests(report));
+  if (!catalogue.errors.length && !(await isIndexUpToDate(catalogue.cases))) {
+    result.errors.push(
+      'test-cases/README.md case index is out of date: run `pnpm tc:index` and commit the result',
+    );
+  }
   const summary = renderSummary(result);
 
   console.log(summary);
@@ -250,5 +257,8 @@ function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  main();
+  main().catch((error) => {
+    console.error(`❌ tc:check failed: ${error.message}`);
+    process.exit(1);
+  });
 }

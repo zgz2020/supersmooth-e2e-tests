@@ -62,6 +62,7 @@
     "app:fork": "node scripts/run-app-fork.js",
     "// --- TEST CASE MANAGEMENT ---": "",
     "tc:check": "node scripts/tc/check-traceability.js",
+    "tc:index": "node scripts/tc/case-index.js",
     "// --- APPLIED AI & AGENT QA ---": "",
     "agent:triage": "node scripts/qa-agent/triage-agent.js",
     "agent:heal": "node scripts/qa-agent/heal-agent.js",
