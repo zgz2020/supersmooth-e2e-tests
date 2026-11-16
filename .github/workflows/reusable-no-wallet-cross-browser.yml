@@ -8,6 +8,11 @@ on:
         type: 'string'
         required: false
         default: ''
+      grepInvert:
+        description: 'Tests to exclude, e.g. @quarantine in PR-gating regression runs (empty = run all)'
+        type: 'string'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -67,7 +72,8 @@ jobs:
           REPORT_FOLDER: 'cross-browser-${{ matrix.browser.project }}'
           # Firefox refuses to run as root when $HOME is owned by another user (/github/home -> pwuser)
           HOME: '/root'
-        run: 'xvfb-run pnpm playwright test --project=${{ matrix.browser.project }}'
+          GREP_INVERT: '${{ inputs.grepInvert }}'
+        run: 'xvfb-run pnpm playwright test --project=${{ matrix.browser.project }} ${GREP_INVERT:+--grep-invert "$GREP_INVERT"}'
 
       - name: '🤖 AI Agent Test Triage'
         if: failure()
@@ -142,3 +148,14 @@ jobs:
           name: 'cross-browser-${{ matrix.browser.project }}'
           path: 'playwright-reports/cross-browser-${{ matrix.browser.project }}'
           retention-days: 30
+
+      - name: 'Upload JSON results (metrics)'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'results-json-cross-browser-${{ matrix.browser.project }}'
+          path: |
+            test-results/results.json
+            ai-reports/latest-triage-data.json
+          retention-days: 90
+          if-no-files-found: 'ignore'

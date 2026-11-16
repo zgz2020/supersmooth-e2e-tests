@@ -47,6 +47,7 @@ jobs:
     secrets: inherit
     with:
       baseUrl: '${{ inputs.baseUrl }}'
+      grepInvert: '@quarantine'
 
   with-wallet-tests:
     uses: './.github/workflows/reusable-with-wallet.yml'
@@ -54,6 +55,14 @@ jobs:
     with:
       baseUrl: '${{ inputs.baseUrl }}'
       script: 'ci:with-wallet-regression'
+
+  quality-metrics:
+    # Appends this run to the metrics history (metrics-data branch) and publishes the dashboard
+    needs: [api-tests, no-wallet-tests, cross-browser-tests, with-wallet-tests]
+    if: always()
+    uses: './.github/workflows/reusable-quality-metrics.yml'
+    with:
+      scope: 'regression'
 
   report-status:
     name: 'Report Status to Calling Repository'

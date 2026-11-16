@@ -10,6 +10,8 @@ on:
       - 'utils/types/api/productTableTopCards.ts'
       - 'scripts/qa-agent/**'
       - 'scripts/tc/**'
+      - 'scripts/metrics/**'
+      - 'docs/known-app-bugs.md'
       - 'utils/testCase.ts'
       - 'tests/unit/**'
       - '.github/workflows/unit-tests.yml'

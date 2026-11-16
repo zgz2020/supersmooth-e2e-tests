@@ -122,3 +122,14 @@ jobs:
           name: 'anvil-fork-report'
           path: 'sov-e2e-tests/playwright-reports/anvil'
           retention-days: 14
+
+      - name: 'Upload JSON results (metrics)'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'results-json-anvil'
+          path: |
+            sov-e2e-tests/test-results/results.json
+            sov-e2e-tests/ai-reports/latest-triage-data.json
+          retention-days: 90
+          if-no-files-found: 'ignore'

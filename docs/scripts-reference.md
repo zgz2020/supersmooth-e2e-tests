@@ -14,6 +14,7 @@ A comprehensive guide to all `pnpm` scripts configured in [`package.json`](../pa
 - [Grafana k6 Performance Testing](#grafana-k6-performance-testing)
 - [Test Utilities & AI Diagnostics](#test-utilities--ai-diagnostics)
 - [Code Quality & Build](#code-quality--build)
+- [Quality Metrics](#quality-metrics)
 - [Complete Reference Table](#complete-reference-table)
 
 ---
@@ -200,68 +201,84 @@ pnpm test:repeat cross-browser:webkit 1
 
 ---
 
+## 📈 Quality Metrics
+
+| Script                   | Description                                                                                                           |
+| :----------------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| `pnpm metrics:collect`   | Adds the last run (`test-results/results.json` + AI triage) to `.metrics/history.jsonl` ([guide](quality-metrics.md)) |
+| `pnpm metrics:dashboard` | Builds the offline dashboard `.metrics/quality-dashboard.html` (`--sample` for labelled sample data)                  |
+| `pnpm metrics:summary`   | Prints the markdown summary (metric · value · status · trend + insights) used in the CI job summary                   |
+
+Regression scripts (`test:*-regression`, `test:api:regression`) exclude `@quarantine` tests; the full nightly scripts still run them. See the [quarantine policy](quality-metrics.md#-flaky-test-quarantine-policy).
+
+---
+
 ## 📊 Complete Reference Table
 
-| Script                              | Command                                                           | Purpose                             |
-| :---------------------------------- | :---------------------------------------------------------------- | :---------------------------------- |
-| `test:no-wallet`                    | `REPORT_FOLDER=no-wallet playwright test --project=no-wallet`     | Run no-wallet E2E suite             |
-| `test:no-wallet-regression`         | `playwright test --grep @regression --project=no-wallet`          | Run no-wallet regression tests      |
-| `test:with-wallet`                  | `REPORT_FOLDER=with-wallet playwright test --project=with-wallet` | Run with-wallet E2E suite           |
-| `test:with-wallet-regression`       | `playwright test --grep @regression --project=with-wallet`        | Run with-wallet regression tests    |
-| `test:cross-browser`                | `playwright test --project=firefox --project=webkit ...`          | Run cross-browser smoke matrix      |
-| `test:cross-browser:firefox`        | `playwright test --project=firefox`                               | Run Firefox smoke test              |
-| `test:cross-browser:webkit`         | `playwright test --project=webkit`                                | Run Safari / WebKit smoke test      |
-| `test:cross-browser:mobile-safari`  | `playwright test --project=mobile-safari`                         | Run iPhone 14 emulation             |
-| `test:cross-browser:mobile-android` | `playwright test --project=mobile-android`                        | Run Pixel 7 emulation               |
-| `test:cross-browser:tablet-ipad`    | `playwright test --project=tablet-ipad`                           | Run iPad Pro emulation              |
-| `test:cross-browser:desktop-large`  | `playwright test --project=desktop-large`                         | Run 1080p desktop layout test       |
-| `test:api`                          | `REPORT_FOLDER=api-tests playwright test --project=api`           | Run full API test suite             |
-| `test:api:regression`               | `playwright test --project=api-regression`                        | Run API regression tests            |
-| `test:api:fake-geo`                 | `playwright test --project=api-fake-geo`                          | Run API tests with mock geo server  |
-| `test:performance`                  | `k6 run -c k6.config.json ... tests/performance/main.perf.ts`     | Run k6 performance suite            |
-| `test:performance:menu`             | `node scripts/run-performance.js`                                 | Interactive performance test runner |
-| `test:performance:smoke`            | `K6_PROFILE=smoke pnpm test:performance`                          | Run k6 smoke profile                |
-| `test:performance:load`             | `K6_PROFILE=load pnpm test:performance`                           | Run k6 load profile                 |
-| `test:performance:stress`           | `K6_PROFILE=stress pnpm test:performance`                         | Run k6 stress profile               |
-| `test:performance:spike`            | `K6_PROFILE=spike pnpm test:performance`                          | Run k6 spike profile                |
-| `test:performance:soak`             | `K6_PROFILE=soak pnpm test:performance`                           | Run k6 soak profile                 |
-| `test:performance:api`              | `K6_SCENARIO=api pnpm test:performance`                           | Run k6 API target scenario          |
-| `test:performance:web`              | `K6_SCENARIO=web pnpm test:performance`                           | Run k6 Web target scenario          |
-| `test:repeat`                       | `node scripts/repeat-tests.js`                                    | Interactive test repeater utility   |
-| `agent:triage`                      | `node scripts/qa-agent/triage-agent.js`                           | AI failure diagnosis & diff reports |
-| `agent:heal`                        | `node scripts/qa-agent/heal-agent.js`                             | Apply self-healing patches & verify |
-| `agent:heal:pr`                     | `node scripts/qa-agent/heal-agent.js --create-pr`                 | Apply fix, verify, & open GitHub PR |
-| `agent:impact`                      | `node scripts/qa-agent/pr-impact-analyzer.js`                     | PR impact analyzer & test selector  |
-| `agent:cleanup-branches`            | `node scripts/qa-agent/cleanup-branches.js`                       | Prune stale/merged ai-heal branches |
-| `agent:crawl`                       | `node scripts/qa-agent/crawl-vaults.js`                           | Dynamic route crawler & 404 auditor |
-| `test:unit`                         | `playwright test --project=unit && node tests/unit/...test.js`    | Run helper unit tests (tests/unit)  |
-| `app:fork`                          | `node scripts/run-app-fork.js`                                    | Run local dApp with Anvil fork      |
-| `rpc:gateway`                       | `node scripts/local-rpc-gateway.js`                               | Run local RPC gateway proxy         |
-| `test:local-node`                   | `docker compose -f docker-compose.test.yml up ...`                | Run containerized Anvil + API tests |
-| `synpress-build-cache:base`         | `pnpm synpress ./utils/synpress/wallet-setup`                     | Build local Synpress wallet cache   |
-| `ci:synpress-build-cache:base`      | `xvfb-run pnpm synpress-build-cache:base`                         | Build Synpress cache in CI          |
-| `ci:no-wallet`                      | `WORKERS='2' xvfb-run pnpm test:no-wallet`                        | Run no-wallet suite in CI           |
-| `ci:no-wallet-regression`           | `WORKERS='2' xvfb-run pnpm test:no-wallet-regression`             | Run no-wallet regression in CI      |
-| `ci:cross-browser`                  | `xvfb-run pnpm test:cross-browser`                                | Run cross-browser suite in CI       |
-| `ci:with-wallet`                    | `WORKERS='1' xvfb-run pnpm test:with-wallet`                      | Run with-wallet suite in CI         |
-| `ci:with-wallet-regression`         | `WORKERS='1' xvfb-run pnpm test:with-wallet-regression`           | Run with-wallet regression in CI    |
-| `typecheck`                         | `tsc --noEmit`                                                    | Validate TypeScript types           |
-| `lint`                              | `eslint .`                                                        | Lint codebase with ESLint           |
-| `lint:fix`                          | `eslint . --fix`                                                  | Autofix linting violations          |
-| `format`                            | `prettier --write .`                                              | Format files with Prettier          |
-| `format:check`                      | `prettier --check .`                                              | Verify Prettier formatting          |
+| Script                              | Command                                                              | Purpose                             |
+| :---------------------------------- | :------------------------------------------------------------------- | :---------------------------------- |
+| `test:no-wallet`                    | `REPORT_FOLDER=no-wallet playwright test --project=no-wallet`        | Run no-wallet E2E suite             |
+| `test:no-wallet-regression`         | `playwright test --grep @regression --grep-invert @quarantine ...`   | Run no-wallet regression tests      |
+| `test:with-wallet`                  | `REPORT_FOLDER=with-wallet playwright test --project=with-wallet`    | Run with-wallet E2E suite           |
+| `test:with-wallet-regression`       | `playwright test --grep @regression --grep-invert @quarantine ...`   | Run with-wallet regression tests    |
+| `test:cross-browser`                | `playwright test --project=firefox --project=webkit ...`             | Run cross-browser smoke matrix      |
+| `test:cross-browser:firefox`        | `playwright test --project=firefox`                                  | Run Firefox smoke test              |
+| `test:cross-browser:webkit`         | `playwright test --project=webkit`                                   | Run Safari / WebKit smoke test      |
+| `test:cross-browser:mobile-safari`  | `playwright test --project=mobile-safari`                            | Run iPhone 14 emulation             |
+| `test:cross-browser:mobile-android` | `playwright test --project=mobile-android`                           | Run Pixel 7 emulation               |
+| `test:cross-browser:tablet-ipad`    | `playwright test --project=tablet-ipad`                              | Run iPad Pro emulation              |
+| `test:cross-browser:desktop-large`  | `playwright test --project=desktop-large`                            | Run 1080p desktop layout test       |
+| `test:api`                          | `REPORT_FOLDER=api-tests playwright test --project=api`              | Run full API test suite             |
+| `test:api:regression`               | `playwright test --grep-invert @quarantine --project=api-regression` | Run API regression tests            |
+| `test:api:fake-geo`                 | `playwright test --project=api-fake-geo`                             | Run API tests with mock geo server  |
+| `test:performance`                  | `k6 run -c k6.config.json ... tests/performance/main.perf.ts`        | Run k6 performance suite            |
+| `test:performance:menu`             | `node scripts/run-performance.js`                                    | Interactive performance test runner |
+| `test:performance:smoke`            | `K6_PROFILE=smoke pnpm test:performance`                             | Run k6 smoke profile                |
+| `test:performance:load`             | `K6_PROFILE=load pnpm test:performance`                              | Run k6 load profile                 |
+| `test:performance:stress`           | `K6_PROFILE=stress pnpm test:performance`                            | Run k6 stress profile               |
+| `test:performance:spike`            | `K6_PROFILE=spike pnpm test:performance`                             | Run k6 spike profile                |
+| `test:performance:soak`             | `K6_PROFILE=soak pnpm test:performance`                              | Run k6 soak profile                 |
+| `test:performance:api`              | `K6_SCENARIO=api pnpm test:performance`                              | Run k6 API target scenario          |
+| `test:performance:web`              | `K6_SCENARIO=web pnpm test:performance`                              | Run k6 Web target scenario          |
+| `test:repeat`                       | `node scripts/repeat-tests.js`                                       | Interactive test repeater utility   |
+| `agent:triage`                      | `node scripts/qa-agent/triage-agent.js`                              | AI failure diagnosis & diff reports |
+| `agent:heal`                        | `node scripts/qa-agent/heal-agent.js`                                | Apply self-healing patches & verify |
+| `agent:heal:pr`                     | `node scripts/qa-agent/heal-agent.js --create-pr`                    | Apply fix, verify, & open GitHub PR |
+| `agent:impact`                      | `node scripts/qa-agent/pr-impact-analyzer.js`                        | PR impact analyzer & test selector  |
+| `agent:cleanup-branches`            | `node scripts/qa-agent/cleanup-branches.js`                          | Prune stale/merged ai-heal branches |
+| `agent:crawl`                       | `node scripts/qa-agent/crawl-vaults.js`                              | Dynamic route crawler & 404 auditor |
+| `metrics:collect`                   | `node scripts/metrics/collect-run.js`                                | Add a run to the metrics history    |
+| `metrics:dashboard`                 | `node scripts/metrics/build-dashboard.js`                            | Build the quality dashboard         |
+| `metrics:summary`                   | `node scripts/metrics/build-dashboard.js --summary`                  | Print the metrics markdown summary  |
+| `test:unit`                         | `playwright test --project=unit && node tests/unit/...test.js`       | Run helper unit tests (tests/unit)  |
+| `app:fork`                          | `node scripts/run-app-fork.js`                                       | Run local dApp with Anvil fork      |
+| `rpc:gateway`                       | `node scripts/local-rpc-gateway.js`                                  | Run local RPC gateway proxy         |
+| `test:local-node`                   | `docker compose -f docker-compose.test.yml up ...`                   | Run containerized Anvil + API tests |
+| `synpress-build-cache:base`         | `pnpm synpress ./utils/synpress/wallet-setup`                        | Build local Synpress wallet cache   |
+| `ci:synpress-build-cache:base`      | `xvfb-run pnpm synpress-build-cache:base`                            | Build Synpress cache in CI          |
+| `ci:no-wallet`                      | `WORKERS='2' xvfb-run pnpm test:no-wallet`                           | Run no-wallet suite in CI           |
+| `ci:no-wallet-regression`           | `WORKERS='2' xvfb-run pnpm test:no-wallet-regression`                | Run no-wallet regression in CI      |
+| `ci:cross-browser`                  | `xvfb-run pnpm test:cross-browser`                                   | Run cross-browser suite in CI       |
+| `ci:with-wallet`                    | `WORKERS='1' xvfb-run pnpm test:with-wallet`                         | Run with-wallet suite in CI         |
+| `ci:with-wallet-regression`         | `WORKERS='1' xvfb-run pnpm test:with-wallet-regression`              | Run with-wallet regression in CI    |
+| `typecheck`                         | `tsc --noEmit`                                                       | Validate TypeScript types           |
+| `lint`                              | `eslint .`                                                           | Lint codebase with ESLint           |
+| `lint:fix`                          | `eslint . --fix`                                                     | Autofix linting violations          |
+| `format`                            | `prettier --write .`                                                 | Format files with Prettier          |
+| `format:check`                      | `prettier --check .`                                                 | Verify Prettier formatting          |
 
 ## 🧩 Helper Unit Tests (`tests/unit/`)
 
 Unit tests for test-infrastructure helpers live in one folder, `tests/unit/`:
 
-| File                                 | Covers                                                       | Runner                                 |
-| :----------------------------------- | :----------------------------------------------------------- | :------------------------------------- |
-| `getActiveVault.spec.ts`             | `utils/getActiveVault.ts` (fake request context, no network) | Playwright `unit` project (no browser) |
-| `pr-impact-analyzer.test.js`         | `scripts/qa-agent/pr-impact-analyzer.js`                     | Node + `node:assert`                   |
-| `batch-safety-and-retention.test.js` | `scripts/qa-agent/heal-agent.js`, `cleanup-branches.js`      | Node + `node:assert`                   |
-| `crawl-vaults.test.js`               | `scripts/qa-agent/crawl-vaults.js`                           | Node + `node:assert`                   |
-| `tc-traceability.test.js`            | `scripts/tc/check-traceability.js`                           | Node + `node:assert`                   |
+| File                                 | Covers                                                           | Runner                                 |
+| :----------------------------------- | :--------------------------------------------------------------- | :------------------------------------- |
+| `getActiveVault.spec.ts`             | `utils/getActiveVault.ts` (fake request context, no network)     | Playwright `unit` project (no browser) |
+| `pr-impact-analyzer.test.js`         | `scripts/qa-agent/pr-impact-analyzer.js`                         | Node + `node:assert`                   |
+| `batch-safety-and-retention.test.js` | `scripts/qa-agent/heal-agent.js`, `cleanup-branches.js`          | Node + `node:assert`                   |
+| `crawl-vaults.test.js`               | `scripts/qa-agent/crawl-vaults.js`                               | Node + `node:assert`                   |
+| `tc-traceability.test.js`            | `scripts/tc/check-traceability.js`                               | Node + `node:assert`                   |
+| `quality-metrics.test.js`            | `scripts/metrics/*` (fixtures in `tests/unit/fixtures/metrics/`) | Node + `node:assert`                   |
 
 - Run them all with `pnpm test:unit`.
 - They are **not** part of regression, nightly or targeted e2e runs (the change-impact analyzer ignores `tests/unit/`).
