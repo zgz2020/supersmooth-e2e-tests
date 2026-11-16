@@ -1,0 +1,31 @@
+{
+  "id": "TRI-010",
+  "label": "TRANSIENT_RPC",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: the connection was dropped while loading the first page (empty response). Network failure before the app ran; a re-run passes.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should navigate to Borrow page",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/productsNavigation.spec.ts",
+    "specLine": 13,
+    "filePath": "src/app.ts",
+    "line": 47,
+    "column": 21,
+    "status": "failed",
+    "durationMs": 281,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: page.goto: net::ERR_EMPTY_RESPONSE at https://staging.supersmooth.fi/products/multiply\nCall log:\n  - navigating to \"https://staging.supersmooth.fi/products/multiply\", waiting until \"load\"\n\n\n   at ../src/app.ts:47\n\n  45 |\n  46 |   async open(url: string = '/products/multiply') {\n> 47 |     await this.page.goto(url);\n     |                     ^\n  48 |   }\n  49 |\n  50 |   /** Asserts the app did not crash into Next.js / React error screens */\n    at App.open (/__w/sov-e2e-tests/sov-e2e-tests/src/app.ts:47:21)\n    at Object.app (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:16:15)",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     37 |     this.migrate = new Migrate(page);\n     38 |     this.modals = new Modals(page);\n     39 |     this.multiply = new Multiply(page);\n     40 |     this.perpAndSpotPage = new PerpAndSpotPage(page);\n     41 |     this.positionPage = new PositionPage(page);\n     42 |     this.trade = new Trade(page);\n     43 |     this.vaultPage = new VaultPage(page);\n     44 |   }\n     45 | \n     46 |   async open(url: string = '/products/multiply') {\n >   47 |     await this.page.goto(url);\n     48 |   }\n     49 | \n     50 |   /** Asserts the app did not crash into Next.js / React error screens */\n     51 |   @step\n     52 |   async shouldNotShowErrorBoundary() {\n     53 |     await expect(this.page.locator('body')).not.toContainText(\n     54 |       /Application error|Something went wrong|Unhandled Runtime Error/i,\n     55 |     );\n     56 |   }",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit fc10e33851e210e2123b7771725453068743cef4\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Nov 11 16:16:14 2026 +0100\n\n    feat(anvil): deterministic Anvil fork suite with EIP-1193 mock wallet and pnpm 9\n    \n    - Worker-isolated Anvil forks (ANVIL_BASE_PORT, default 8600) with port checks,\n      snapshot/revert for every test, and loud failures on revert errors\n    - In-page EIP-1193/EIP-6963 mock wallet: state persists across reloads, Viem signs\n      with the account named in each request\n    - Route only the forked chain's RPC (app proxy, WalletConnect fallback, public RPCs)\n      to Anvil; 502 instead of silently falling back to live chain data\n    - Fork helpers: exact setBalance, mine(n), fundToken with receipt/balance checks,\n      simulateRpcRateLimit\n    - Anvil tests: connect, terms acceptance verified server-side, rejection, network\n      changes, account switch across reload, RPC rate-limit recovery (known app bug\n      aphelion-app#1667, marked with knownAppBug)\n "
+  }
+}

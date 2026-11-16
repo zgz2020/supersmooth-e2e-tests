@@ -1,0 +1,31 @@
+{
+  "id": "TRI-018",
+  "label": "TRANSIENT_RPC",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: every /api/rpc call took 45s, so the vault page had no on-chain data before the assertion timeout. A slow RPC node during this run; a re-run passes. Hard: from the test side it is a locator timeout, which looks like selector drift.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should request to connect wallet when trying to open a Multiply position",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/vaultPages.spec.ts",
+    "specLine": 45,
+    "filePath": "src/pages/rightSidePanel/configurePosition.ts",
+    "line": 39,
+    "column": 9,
+    "status": "failed",
+    "durationMs": 13216,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Timed out 10000ms waiting for expect(locator).toContainText(expected)\n\nLocator: getByTestId('right-side-panel').getByTestId(/^input-box-deposit.*token-selector$/)\nExpected string: \"cbBTC\"\nReceived: <element(s) not found>\nCall log:\n  - expect.toContainText with timeout 10000ms\n  - waiting for getByTestId('right-side-panel').getByTestId(/^input-box-deposit.*token-selector$/)\n\n\n   at ../src/pages/rightSidePanel/configurePosition.ts:39\n\n  37 |       await expect(\n  38 |         this.panelLocator.getByTestId(/^input-box-deposit.*token-selector$/),\n> 39 |       ).toContainText(collateral, timeoutOption);\n     |         ^\n  40 |     }\n  41 |   }\n  42 |\n    at ConfigurePosition.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/rightSidePanel/configurePosition.ts:39:9)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at ConfigurePosition.waitToBeStable (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at VaultPage.openPage (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/vaultPage.ts:28:51)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:14\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/vaultPages.spec.ts:54:9",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     29 |     const timeoutOption = timeout !== undefined ? { timeout } : undefined;\n     30 |     if (withBalance) {\n     31 |       await expect(this.balanceLocator).toHaveText(POSITIVE_AMOUNT, timeoutOption);\n     32 |     } else if (trade) {\n     33 |       await expect(\n     34 |         this.panelLocator.getByRole('button', { name: 'Deposit from Base' }),\n     35 |       ).toBeVisible(timeoutOption);\n     36 |     } else {\n     37 |       await expect(\n     38 |         this.panelLocator.getByTestId(/^input-box-deposit.*token-selector$/),\n >   39 |       ).toContainText(collateral, timeoutOption);\n     40 |     }\n     41 |   }\n     42 | \n     43 |   @step\n     44 |   async setDeposit(amount: string, { trade = false }: { trade?: boolean } = {}) {\n     45 |     await (trade ? this.tradeDepositInputLocator : this.depositInputLocator).fill(amount);\n     46 |   }\n     47 | \n     48 |   @step",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit 36992d2488eed40490fdd9ba429b3833d0fa5b89\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Mon Nov 16 13:07:12 2026 +0100\n\n    fix(e2e): target the Add Funds input when depositing on Trade pages\n    \n    Perp and spot pages have no input-box-deposit-* test id: the deposit amount sits in the\n    \"Add Funds\" card (data-testid=\"hyperliquid-add-funds\"), next to the order-size input.\n    setDeposit now takes { trade } and scopes to that card's textbox instead of relying on DOM\n    order, and openPosition passes trade: positionType === 'Trade'.\n    \n    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\ndiff --git a/src/pages/rightSidePanel/configurePosition.ts b/src/pages/rightSidePanel/configurePosition.ts\nindex f5f4695..0baebf4 100644\n--- a/src/pages/rightSidePanel/configurePosition.ts\n+++ b/src/pages/rightSidePanel/configurePosition.ts\n@@ -9,6 +9,7 @@ export class ConfigurePosition {\n   readonly page: Page;\n   readonly balanceLocator: Locator;\n   readonly depositInputLocator: Lo"
+  }
+}

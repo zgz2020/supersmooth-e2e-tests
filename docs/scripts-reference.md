@@ -133,6 +133,8 @@ Located in `scripts/`. Utilities for test maintenance, local blockchain simulati
 | `pnpm agent:triage`           | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs                   |
 | `pnpm agent:heal`             | Reads proposed patches, applies selector updates, and validates fixes in Playwright                     |
 | `pnpm agent:heal:pr`          | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR                 |
+| `pnpm eval:triage`            | Scores the triage classifier on the labelled dataset ([guide](ai-triage-evaluation.md))                 |
+| `pnpm eval:capture`           | Turns the last run's failures into labelled, scrubbed dataset cases                                     |
 | `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites               |
 | `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                                     |
 | `pnpm agent:crawl`            | Autonomously discovers dynamic pool routes and audits for 404 boundaries (Issue #1649)                  |
@@ -244,6 +246,8 @@ Regression scripts (`test:*-regression`, `test:api:regression`) exclude `@quaran
 | `agent:triage`                      | `node scripts/qa-agent/triage-agent.js`                              | AI failure diagnosis & diff reports |
 | `agent:heal`                        | `node scripts/qa-agent/heal-agent.js`                                | Apply self-healing patches & verify |
 | `agent:heal:pr`                     | `node scripts/qa-agent/heal-agent.js --create-pr`                    | Apply fix, verify, & open GitHub PR |
+| `eval:triage`                       | `node scripts/eval/triage-eval.js`                                   | Evaluate the triage classifier      |
+| `eval:capture`                      | `node scripts/eval/capture-case.js`                                  | Capture triage dataset cases        |
 | `agent:impact`                      | `node scripts/qa-agent/pr-impact-analyzer.js`                        | PR impact analyzer & test selector  |
 | `agent:cleanup-branches`            | `node scripts/qa-agent/cleanup-branches.js`                          | Prune stale/merged ai-heal branches |
 | `agent:crawl`                       | `node scripts/qa-agent/crawl-vaults.js`                              | Dynamic route crawler & 404 auditor |
@@ -279,6 +283,7 @@ Unit tests for test-infrastructure helpers live in one folder, `tests/unit/`:
 | `crawl-vaults.test.js`               | `scripts/qa-agent/crawl-vaults.js`                               | Node + `node:assert`                   |
 | `tc-traceability.test.js`            | `scripts/tc/check-traceability.js`                               | Node + `node:assert`                   |
 | `quality-metrics.test.js`            | `scripts/metrics/*` (fixtures in `tests/unit/fixtures/metrics/`) | Node + `node:assert`                   |
+| `triage-eval.test.js`                | `scripts/eval/*`, `triage-core.js`, the heal decision rule       | Node + `node:assert`                   |
 
 - Run them all with `pnpm test:unit`.
 - They are **not** part of regression, nightly or targeted e2e runs (the change-impact analyzer ignores `tests/unit/`).

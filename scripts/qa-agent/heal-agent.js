@@ -10,6 +10,48 @@ const REPORTS_DIR = path.resolve(process.cwd(), 'ai-reports');
 const LATEST_JSON_PATH = path.join(REPORTS_DIR, 'latest-triage-data.json');
 
 /**
+ * Which triage results may become a self-healing patch (HEAL_POLICY env):
+ * - `legacy` (default): any DOM_SELECTOR_DRIFT, or any result that carries a patch.
+ * - `evaluated`: only DOM_SELECTOR_DRIFT answered by Gemini (not the keyword fallback) with
+ *   confidenceScore >= HEAL_MIN_CONFIDENCE (default 95) and a patch. Derived from the triage
+ *   evaluation (docs/ai-triage-evaluation.md); everything else is reported, not patched.
+ */
+export const HEAL_POLICIES = ['legacy', 'evaluated'];
+export const DEFAULT_HEAL_MIN_CONFIDENCE = 95;
+
+export function healDecision(
+  item,
+  {
+    policy = process.env.HEAL_POLICY || 'legacy',
+    minConfidence = Number(process.env.HEAL_MIN_CONFIDENCE) || DEFAULT_HEAL_MIN_CONFIDENCE,
+  } = {},
+) {
+  const hasPatch =
+    (item.replacement !== null && item.replacement !== undefined) ||
+    (typeof item.selfHealingPatch === 'string' && item.selfHealingPatch.trim().length > 0);
+
+  if (policy !== 'evaluated') {
+    // Same condition as before HEAL_POLICY existed (kept as is, including `!== null`)
+    const heal =
+      item.classification === 'DOM_SELECTOR_DRIFT' ||
+      item.replacement !== null ||
+      (typeof item.selfHealingPatch === 'string' && item.selfHealingPatch.trim().length > 0);
+    return { heal, reason: heal ? 'legacy policy' : 'not drift and no patch' };
+  }
+  if (item.classification !== 'DOM_SELECTOR_DRIFT') {
+    return { heal: false, reason: `classified ${item.classification}, not DOM_SELECTOR_DRIFT` };
+  }
+  if (item.source !== 'gemini') {
+    return { heal: false, reason: 'answered by the heuristic fallback, not Gemini' };
+  }
+  if (!(Number(item.confidenceScore) >= minConfidence)) {
+    return { heal: false, reason: `confidence ${item.confidenceScore}% < ${minConfidence}%` };
+  }
+  if (!hasPatch) return { heal: false, reason: 'no patch proposed' };
+  return { heal: true, reason: `evaluated policy (Gemini, confidence >= ${minConfidence}%)` };
+}
+
+/**
  * Atomic Snapshot & State Registry for Batch Healing
  *
  * Tracks base snapshots of files before any modifications, records staged/verified
@@ -155,12 +197,13 @@ async function main() {
     process.exit(1);
   }
 
-  const healableItems = (triageData.analyses || []).filter(
-    (item) =>
-      item.classification === 'DOM_SELECTOR_DRIFT' ||
-      item.replacement !== null ||
-      (typeof item.selfHealingPatch === 'string' && item.selfHealingPatch.trim().length > 0),
-  );
+  const healableItems = (triageData.analyses || []).filter((item) => {
+    const decision = healDecision(item);
+    if (!decision.heal) {
+      console.log(`ℹ️  [qa-agent:heal] Not healing "${item.testTitle}": ${decision.reason}.`);
+    }
+    return decision.heal;
+  });
 
   if (healableItems.length === 0) {
     console.log(

@@ -1,0 +1,31 @@
+{
+  "id": "TRI-015",
+  "label": "DOM_SELECTOR_DRIFT",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: the landing hero heading copy changed (\"All of onchain finance, in one app.\"). Intended copy change; the page works. Hard: an assertion on visible text failing looks like broken content (regression) unless you know the copy change was intended.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should open Landing page from main app",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/topNavigation.spec.ts",
+    "specLine": 43,
+    "filePath": "src/pages/landingPage.ts",
+    "line": 21,
+    "column": 7,
+    "status": "failed",
+    "durationMs": 17890,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Timed out 15000ms waiting for expect(locator).toBeVisible()\n\nLocator: getByRole('heading', { name: 'Onchain finance, all in one app.' })\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n  - expect.toBeVisible with timeout 15000ms\n  - waiting for getByRole('heading', { name: 'Onchain finance, all in one app.' })\n\n\n   at ../src/pages/landingPage.ts:21\n\n  19 |     await expect(\n  20 |       this.page.getByRole('heading', { name: 'Onchain finance, all in one app.' }),\n> 21 |     ).toBeVisible({ timeout: heroRenderTimeout });\n     |       ^\n  22 |   }\n  23 |\n  24 |   @step\n    at LandingPage.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/landingPage.ts:21:7)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at LandingPage.shouldBeOpened (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/topNavigation.spec.ts:45:31",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     11 | \n     12 |   @step\n     13 |   async open() {\n     14 |     await this.page.goto('/');\n     15 |   }\n     16 | \n     17 |   @step\n     18 |   async shouldBeOpened() {\n     19 |     await expect(\n     20 |       this.page.getByRole('heading', { name: 'Onchain finance, all in one app.' }),\n >   21 |     ).toBeVisible({ timeout: heroRenderTimeout });\n     22 |   }\n     23 | \n     24 |   @step\n     25 |   async shouldHaveSecuritySectionInViewport() {\n     26 |     const securitySection = this.page.getByRole('heading', {\n     27 |       name: '100% Self-Custodial, powered by Safe',\n     28 |       exact: true,\n     29 |     });\n     30 |     await expect(securitySection).toBeInViewport({ ratio: 0.5 });",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit 58bb38eb77d077515f08da7092e2b79ddddc0e5e\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Oct 21 22:38:38 2026 +0200\n\n    feat: add e2e tests for top navigation in main app\n\ndiff --git a/src/pages/landingPage.ts b/src/pages/landingPage.ts\nindex 9e04371..96bdbcc 100644\n--- a/src/pages/landingPage.ts\n+++ b/src/pages/landingPage.ts\n@@ -1,6 +1,6 @@\n import type { Page } from '@playwright/test';\n-import { expect, step } from '../fixtures/index.ts';\n-import { heroRenderTimeout } from '../../utils/constants/timeouts.ts';\n+import { expect, step } from '../fixtures';\n+import { heroRenderTimeout } from '../../utils/constants/timeouts';\n \n export class LandingPage {\n   readonly page: Page;"
+  }
+}

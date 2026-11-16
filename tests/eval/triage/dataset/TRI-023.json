@@ -1,0 +1,31 @@
+{
+  "id": "TRI-023",
+  "label": "DOM_SELECTOR_DRIFT",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: the Multiply page-object text locator was edited to copy the app no longer shows ('any asset' instead of 'an asset'). The page is fine; the text locator is stale. Hard: a missing visible text reads like broken content.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should navigate to Multiply page",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/productsNavigation.spec.ts",
+    "specLine": 5,
+    "filePath": "src/pages/multiply.ts",
+    "line": 25,
+    "column": 7,
+    "status": "failed",
+    "durationMs": 10598,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Timed out 10000ms waiting for expect(locator).toBeVisible()\n\nLocator: getByText('Amplify long or short exposure to any asset in a single position')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n  - expect.toBeVisible with timeout 10000ms\n  - waiting for getByText('Amplify long or short exposure to any asset in a single position')\n\n\n   at ../src/pages/multiply.ts:25\n\n  23 |         exact: false,\n  24 |       }),\n> 25 |     ).toBeVisible();\n     |       ^\n  26 |   }\n  27 | }\n  28 |\n    at Multiply.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/multiply.ts:25:7)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at Multiply.shouldBeOpened (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at Object.app (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:17:24)",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     15 |   async open() {\n     16 |     await this.page.goto('/products/multiply');\n     17 |   }\n     18 | \n     19 |   @step\n     20 |   async shouldBeOpened() {\n     21 |     await expect(\n     22 |       this.page.getByText('Amplify long or short exposure to any asset in a single position', {\n     23 |         exact: false,\n     24 |       }),\n >   25 |     ).toBeVisible();\n     26 |   }\n     27 | }\n     28 | ",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "diff --git a/src/pages/multiply.ts b/src/pages/multiply.ts\nindex 74d3b36..2df6477 100644\n--- a/src/pages/multiply.ts\n+++ b/src/pages/multiply.ts\n@@ -19,7 +19,7 @@ export class Multiply {\n   @step\n   async shouldBeOpened() {\n     await expect(\n-      this.page.getByText('Amplify long or short exposure to an asset in a single position', {\n+      this.page.getByText('Amplify long or short exposure to any asset in a single position', {\n         exact: false,\n       }),\n     ).toBeVisible();"
+  }
+}

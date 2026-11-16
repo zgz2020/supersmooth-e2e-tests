@@ -1,0 +1,31 @@
+{
+  "id": "TRI-020",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: the Earn \"Most Liquidity\" tab rendered 3 product cards instead of 4. A product is missing from the page: an app defect (the locator still matches the other cards). Hard: the error is a locator count timeout, which reads like drift.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should display \"Most Liquidity\" tab as active by default with 4 cards",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/earnProductsPage.spec.ts",
+    "specLine": 10,
+    "filePath": "src/pages/topCards.ts",
+    "line": 51,
+    "column": 30,
+    "status": "failed",
+    "durationMs": 11516,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Timed out 10000ms waiting for expect(locator).toHaveCount(expected)\n\nLocator: getByTestId('top-card')\nExpected: 4\nReceived: 3\nCall log:\n  - expect.toHaveCount with timeout 10000ms\n  - waiting for getByTestId('top-card')\n    14 × locator resolved to 3 elements\n       - unexpected value \"3\"\n\n\n   at ../src/pages/topCards.ts:51\n\n  49 |   @step\n  50 |   async shouldHaveCount(count: number = 4) {\n> 51 |     await expect(this.cards).toHaveCount(count);\n     |                              ^\n  52 |   }\n  53 |\n  54 |   @step\n    at TopCards.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/topCards.ts:51:30)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at TopCards.shouldHaveCount (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/earnProductsPage.spec.ts:19:31",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     41 |   ) {\n     42 |     const allTabs = PRODUCT_TOP_CARDS_TABS[product] as readonly ProductTopCardsTabs[];\n     43 |     const otherTabs = allTabs.filter((tab) => tab !== selectedTab);\n     44 |     for (const tabName of otherTabs) {\n     45 |       await expect(this.tab(tabName)).toHaveAttribute('aria-selected', 'false');\n     46 |     }\n     47 |   }\n     48 | \n     49 |   @step\n     50 |   async shouldHaveCount(count: number = 4) {\n >   51 |     await expect(this.cards).toHaveCount(count);\n     52 |   }\n     53 | \n     54 |   @step\n     55 |   async shouldHaveValidCardData({\n     56 |     card,\n     57 |     product,\n     58 |   }: {\n     59 |     card: Locator;\n     60 |     product: TopCardsProductType;",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit dd0f0d1801e9ae0163d5d4b01062201ddaf5d817\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Oct 28 14:11:00 2026 +0100\n\n    feat(e2e): use data-testid locators in TopCards and ConfigurePosition and validate earn card data\n\ndiff --git a/src/pages/topCards.ts b/src/pages/topCards.ts\nindex a527ea8..7702c5b 100644\n--- a/src/pages/topCards.ts\n+++ b/src/pages/topCards.ts\n@@ -13,12 +13,8 @@ export class TopCards {\n \n   constructor(page: Page) {\n     this.page = page;\n-    // TODO: Scope tabList or add aria-label/data-testid in app code so a second tablist won't fail strict mode (see docs/TODO.md)\n-    this.tabList = page.getByRole('tablist');\n-    // TODO: Replace brittle XPath/class selector once data-testid='top-card' is added in app code (see docs/TODO.md)\n-    this.cards = this.tabList\n-      .locator('xpath=ancestor::div[contains(@class, \"items-start\")][1]')\n-      .locator('a[href^=\"/products/\"]');\n+    this.tabList = page.getByTestId('top-cards-tablist');\n+    this.cards = page.g"
+  }
+}

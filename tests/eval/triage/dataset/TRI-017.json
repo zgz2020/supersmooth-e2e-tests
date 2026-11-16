@@ -1,0 +1,26 @@
+{
+  "id": "TRI-017",
+  "label": "TRANSIENT_RPC",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: the landing page request never got a response and page.goto timed out. Stuck upstream or network, not a locator problem. Hard: a navigation timeout with no network keyword looks like a slow app.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should open Earn page",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/topNavigation.spec.ts",
+    "specLine": 11,
+    "filePath": "src/pages/landingPage.ts",
+    "line": 14,
+    "column": 21,
+    "status": "failed",
+    "durationMs": 35744,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "TimeoutError: page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://staging.supersmooth.fi/\", waiting until \"load\"\n\n\n   at ../src/pages/landingPage.ts:14\n\n  12 |   @step\n  13 |   async open() {\n> 14 |     await this.page.goto('/');\n     |                     ^\n  15 |   }\n  16 |\n  17 |   @step\n    at LandingPage.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/landingPage.ts:14:21)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at LandingPage.open (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/topNavigation.spec.ts:7:29",
+    "stackTrace": "",
+    "sourceCodeSnippet": "      4 | \n      5 | export class LandingPage {\n      6 |   readonly page: Page;\n      7 | \n      8 |   constructor(page: Page) {\n      9 |     this.page = page;\n     10 |   }\n     11 | \n     12 |   @step\n     13 |   async open() {\n >   14 |     await this.page.goto('/');\n     15 |   }\n     16 | \n     17 |   @step\n     18 |   async shouldBeOpened() {\n     19 |     await expect(\n     20 |       this.page.getByRole('heading', { name: 'Onchain finance, all in one app.' }),\n     21 |     ).toBeVisible({ timeout: heroRenderTimeout });\n     22 |   }\n     23 | ",
+    "attachments": [],
+    "gitDiff": "commit 58bb38eb77d077515f08da7092e2b79ddddc0e5e\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Oct 21 22:38:38 2026 +0200\n\n    feat: add e2e tests for top navigation in main app\n\ndiff --git a/src/pages/landingPage.ts b/src/pages/landingPage.ts\nindex 9e04371..96bdbcc 100644\n--- a/src/pages/landingPage.ts\n+++ b/src/pages/landingPage.ts\n@@ -1,6 +1,6 @@\n import type { Page } from '@playwright/test';\n-import { expect, step } from '../fixtures/index.ts';\n-import { heroRenderTimeout } from '../../utils/constants/timeouts.ts';\n+import { expect, step } from '../fixtures';\n+import { heroRenderTimeout } from '../../utils/constants/timeouts';\n \n export class LandingPage {\n   readonly page: Page;"
+  }
+}

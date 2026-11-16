@@ -1,0 +1,26 @@
+{
+  "id": "TRI-009",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: /api/effective-spread returned 200 for a request without chainId instead of 400. Input validation was removed: an app regression.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should return 400 bad request when chainId is missing",
+    "projectName": "api",
+    "specFile": "tests/api/effectiveSpread.spec.ts",
+    "specLine": 60,
+    "filePath": "tests/api/effectiveSpread.spec.ts",
+    "line": 66,
+    "column": 32,
+    "status": "failed",
+    "durationMs": 46,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Expected status code 400 but got 200.\nResponse body:\n{\"spread\":null}\n\n  64 |         const response = await request.get('/api/effective-spread', { params });\n  65 |\n> 66 |         await expect(response).toHaveStatusCode(400);\n     |                                ^\n  67 |\n  68 |         const body = await response.json();\n  69 |         expect(body).toEqual({\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/effectiveSpread.spec.ts:66:32",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     56 |     { description: 'unsupported numeric chain', params: { chainId: '99999', product: 'borrow' } },\n     57 |   ];\n     58 | \n     59 |   for (const { description, params } of invalidChainIdCases) {\n     60 |     test(\n     61 |       `should return 400 bad request when chainId is ${description}`,\n     62 |       tc('API-SPRD-002'),\n     63 |       async ({ request }) => {\n     64 |         const response = await request.get('/api/effective-spread', { params });\n     65 | \n >   66 |         await expect(response).toHaveStatusCode(400);\n     67 | \n     68 |         const body = await response.json();\n     69 |         expect(body).toEqual({\n     70 |           error: 'A valid, supported chainId query param is required',\n     71 |         });\n     72 |       },\n     73 |     );\n     74 |   }\n     75 | ",
+    "attachments": [],
+    "gitDiff": "commit a808e9d6a2e0c5cfe35656e1eb50ee07555c6ec2\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Thu Nov 12 16:52:36 2026 +0100\n\n    feat(tc): test case catalogue with traceability, coverage backlog and priority tags\n    \n    Catalogue (test-cases/):\n    - 183 cases: 122 automated (every existing test linked via tc('<ID>')),\n      49 planned and 12 manual\n    - Planned cases for the 37 app API route groups with no tests (positions,\n      markets, trading, automation, platform, admin/security access control) and\n      untested UI journeys (trade, portfolio, automations, migrate); known fork\n      gaps #72/#73 and aphelion-app#1667 linked\n    - Manual real-network automation execution cases (Stop-Loss, Trailing\n      Stop-Loss, Auto Sell, Take Profit across Aave V3, Aave V3 Lido, Morpho,\n      Compound V3, Euler and Spark on Ethereum, Base and Arbitrum), with a shared\n      procedure to trigger LTV-based automations deliberately\n    \n    Traceability:\n    - utils/testCase.ts: tc('<ID>') add"
+  }
+}

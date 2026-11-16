@@ -1,0 +1,31 @@
+{
+  "id": "TRI-019",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: the header \"Migrate\" link navigates to /products/borrow, so the wrong page opens. Broken navigation is an app defect. Hard: the failure is a missing element on the expected page, which looks like a stale selector.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should open Migrate page",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/topNavigation.spec.ts",
+    "specLine": 57,
+    "filePath": "src/pages/migrate.ts",
+    "line": 20,
+    "column": 7,
+    "status": "failed",
+    "durationMs": 13495,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Timed out 10000ms waiting for expect(locator).toBeVisible()\n\nLocator: getByRole('heading', { name: 'Migrate Position' })\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n  - expect.toBeVisible with timeout 10000ms\n  - waiting for getByRole('heading', { name: 'Migrate Position' })\n\n\n   at ../src/pages/migrate.ts:20\n\n  18 |     await expect(\n  19 |       this.page.getByRole('heading', { name: 'Migrate Position', exact: false }),\n> 20 |     ).toBeVisible();\n     |       ^\n  21 |   }\n  22 | }\n  23 |\n    at Migrate.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/migrate.ts:20:7)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at Migrate.shouldBeOpened (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/topNavigation.spec.ts:59:27",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     10 | \n     11 |   @step\n     12 |   async open() {\n     13 |     await this.page.goto('/migrate');\n     14 |   }\n     15 | \n     16 |   @step\n     17 |   async shouldBeOpened() {\n     18 |     await expect(\n     19 |       this.page.getByRole('heading', { name: 'Migrate Position', exact: false }),\n >   20 |     ).toBeVisible();\n     21 |   }\n     22 | }\n     23 | ",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit 58bb38eb77d077515f08da7092e2b79ddddc0e5e\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Oct 21 22:38:38 2026 +0200\n\n    feat: add e2e tests for top navigation in main app\n\ndiff --git a/src/pages/migrate.ts b/src/pages/migrate.ts\nnew file mode 100644\nindex 0000000..b480d21\n--- /dev/null\n+++ b/src/pages/migrate.ts\n@@ -0,0 +1,22 @@\n+import type { Page } from '@playwright/test';\n+import { expect, step } from '../fixtures';\n+\n+export class Migrate {\n+  readonly page: Page;\n+\n+  constructor(page: Page) {\n+    this.page = page;\n+  }\n+\n+  @step\n+  async open() {\n+    await this.page.goto('/migrate');\n+  }\n+\n+  @step\n+  async shouldBeOpened() {\n+    await expect(\n+      this.page.getByRole('heading', { name: 'Migrate Position', exact: false }),\n+    ).toBeVisible();\n+  }\n+}"
+  }
+}

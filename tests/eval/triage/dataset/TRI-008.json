@@ -1,0 +1,26 @@
+{
+  "id": "TRI-008",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: POST /api/migrate/adoptable-safes returned 200 instead of 405. The endpoint now accepts a method it must reject: a contract and security regression.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should return 405 method not allowed for POST request",
+    "projectName": "api",
+    "specFile": "tests/api/migrateAdoptableSafes.spec.ts",
+    "specLine": 165,
+    "filePath": "tests/api/migrateAdoptableSafes.spec.ts",
+    "line": 171,
+    "column": 32,
+    "status": "failed",
+    "durationMs": 53,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Expected status code 405 but got 200.\nResponse body:\n{\"safes\":[]}\n\n  169 |         const response = await request[method]('/api/migrate/adoptable-safes');\n  170 |\n> 171 |         await expect(response).toHaveStatusCode(405);\n      |                                ^\n  172 |       },\n  173 |     );\n  174 |   }\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/migrateAdoptableSafes.spec.ts:171:32",
+    "stackTrace": "",
+    "sourceCodeSnippet": "    161 | \n    162 |   const unsupportedMethods = ['post', 'put', 'delete', 'patch'] as const;\n    163 | \n    164 |   for (const method of unsupportedMethods) {\n    165 |     test(\n    166 |       `should return 405 method not allowed for ${method.toUpperCase()} request`,\n    167 |       tc('API-MIGR-005'),\n    168 |       async ({ request }) => {\n    169 |         const response = await request[method]('/api/migrate/adoptable-safes');\n    170 | \n >  171 |         await expect(response).toHaveStatusCode(405);\n    172 |       },\n    173 |     );\n    174 |   }\n    175 | });\n    176 | ",
+    "attachments": [],
+    "gitDiff": "commit a808e9d6a2e0c5cfe35656e1eb50ee07555c6ec2\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Thu Nov 12 16:52:36 2026 +0100\n\n    feat(tc): test case catalogue with traceability, coverage backlog and priority tags\n    \n    Catalogue (test-cases/):\n    - 183 cases: 122 automated (every existing test linked via tc('<ID>')),\n      49 planned and 12 manual\n    - Planned cases for the 37 app API route groups with no tests (positions,\n      markets, trading, automation, platform, admin/security access control) and\n      untested UI journeys (trade, portfolio, automations, migrate); known fork\n      gaps #72/#73 and aphelion-app#1667 linked\n    - Manual real-network automation execution cases (Stop-Loss, Trailing\n      Stop-Loss, Auto Sell, Take Profit across Aave V3, Aave V3 Lido, Morpho,\n      Compound V3, Euler and Spark on Ethereum, Base and Arbitrum), with a shared\n      procedure to trigger LTV-based automations deliberately\n    \n    Traceability:\n    - utils/testCase.ts: tc('<ID>') add"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "TRI-016",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: clicking \"Get Help\" does nothing (the handler is broken), so the modal never opens. The control is there and clickable but the feature is broken: an app defect. Hard: the error is a modal locator not becoming visible, which reads like drift.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should open Get Help modal",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/topNavigation.spec.ts",
+    "specLine": 66,
+    "filePath": "src/modals/getHelp.ts",
+    "line": 18,
+    "column": 37,
+    "status": "failed",
+    "durationMs": 12732,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Timed out 10000ms waiting for expect(locator).toBeVisible()\n\nLocator: getByRole('dialog').filter({ has: getByRole('heading', { name: 'Get Help' }) })\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n  - expect.toBeVisible with timeout 10000ms\n  - waiting for getByRole('dialog').filter({ has: getByRole('heading', { name: 'Get Help' }) })\n\n\n   at ../src/modals/getHelp.ts:18\n\n  16 |   @step\n  17 |   async shouldBeVisible() {\n> 18 |     await expect(this.modalLocator).toBeVisible();\n     |                                     ^\n  19 |   }\n  20 | }\n  21 |\n    at GetHelp.call (/__w/sov-e2e-tests/sov-e2e-tests/src/modals/getHelp.ts:18:37)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at GetHelp.shouldBeVisible (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/topNavigation.spec.ts:68:34",
+    "stackTrace": "",
+    "sourceCodeSnippet": "      8 | \n      9 |   constructor(page: Page) {\n     10 |     this.page = page;\n     11 |     this.modalLocator = page\n     12 |       .getByRole('dialog')\n     13 |       .filter({ has: page.getByRole('heading', { name: 'Get Help' }) });\n     14 |   }\n     15 | \n     16 |   @step\n     17 |   async shouldBeVisible() {\n >   18 |     await expect(this.modalLocator).toBeVisible();\n     19 |   }\n     20 | }\n     21 | ",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit 58bb38eb77d077515f08da7092e2b79ddddc0e5e\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Oct 21 22:38:38 2026 +0200\n\n    feat: add e2e tests for top navigation in main app\n\ndiff --git a/src/modals/getHelp.ts b/src/modals/getHelp.ts\nnew file mode 100644\nindex 0000000..f314fb1\n--- /dev/null\n+++ b/src/modals/getHelp.ts\n@@ -0,0 +1,20 @@\n+import type { Locator, Page } from '@playwright/test';\n+import { expect, step } from '../fixtures';\n+\n+export class GetHelp {\n+  readonly page: Page;\n+\n+  readonly modalLocator: Locator;\n+\n+  constructor(page: Page) {\n+    this.page = page;\n+    this.modalLocator = page\n+      .getByRole('dialog')\n+      .filter({ has: page.getByRole('heading', { name: 'Get Help' }) });\n+  }\n+\n+  @step\n+  async shouldBeVisible() {\n+    await expect(this.modalLocator).toBeVisible();\n+  }\n+}"
+  }
+}

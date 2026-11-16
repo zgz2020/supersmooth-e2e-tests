@@ -1,0 +1,31 @@
+{
+  "id": "TRI-014",
+  "label": "DOM_SELECTOR_DRIFT",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: a new full-page consent layer intercepts pointer events, so the click times out. The app works for a user who dismisses it; the test needs to handle the new UI element. Hard: \"element intercepts pointer events\" can also be a real layout bug, and the decision rule (new intended UI = drift) needs product context.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should open Get Help modal",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/topNavigation.spec.ts",
+    "specLine": 66,
+    "filePath": "src/pages/header.ts",
+    "line": 62,
+    "column": 85,
+    "status": "failed",
+    "durationMs": 11330,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('navigation').first().getByRole('button', { name: 'Get Help', exact: true })\n    - locator resolved to <button type=\"button\" class=\"inline-flex gap-between-xs items-center justify-center font-primary font-semibold transition-colors tracking-relaxed cursor-pointer bg-button-secondary-default border border-border-default max-w-fit text-text-primary rounded-pill hover:border-border-hover active:bg-button-secondary-disabled text-2xs px-squish-sm py-size-s\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div id=\"consent-banner\"> </div> intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div id=\"consent-banner\"> </div> intercepts pointer events\n    - retrying click action\n      - waiting 100ms\n    16 × waiting for element to be visible, enabled and stable\n       - element is visible, enabled and stable\n       - scrolling into view if needed\n       - done scrolling\n       - <div id=\"consent-banner\"> </div> intercepts pointer events\n     - retrying click action\n       - waiting 500ms\n\n\n   at ../src/pages/header.ts:62\n\n  60 |   @step\n  61 |   async getHelp() {\n> 62 |     await this.headerLocator.getByRole('button', { name: 'Get Help', exact: true }).click();\n     |                                                                                     ^\n  63 |   }\n  64 |\n  65 |   @step\n    at Header.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/header.ts:62:85)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at Header.getHelp (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/topNavigation.spec.ts:67:26",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     52 |     );\n     53 |   }\n     54 | \n     55 |   @step\n     56 |   async launchApp() {\n     57 |     await this.headerLocator.getByRole('link', { name: 'Launch app', exact: true }).click();\n     58 |   }\n     59 | \n     60 |   @step\n     61 |   async getHelp() {\n >   62 |     await this.headerLocator.getByRole('button', { name: 'Get Help', exact: true }).click();\n     63 |   }\n     64 | \n     65 |   @step\n     66 |   async shouldShowConnectWallet() {\n     67 |     await expect(this.connectWalletButton).toBeVisible();\n     68 |   }\n     69 | \n     70 |   @step\n     71 |   async connectWallet() {",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit fc10e33851e210e2123b7771725453068743cef4\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Nov 11 16:16:14 2026 +0100\n\n    feat(anvil): deterministic Anvil fork suite with EIP-1193 mock wallet and pnpm 9\n    \n    - Worker-isolated Anvil forks (ANVIL_BASE_PORT, default 8600) with port checks,\n      snapshot/revert for every test, and loud failures on revert errors\n    - In-page EIP-1193/EIP-6963 mock wallet: state persists across reloads, Viem signs\n      with the account named in each request\n    - Route only the forked chain's RPC (app proxy, WalletConnect fallback, public RPCs)\n      to Anvil; 502 instead of silently falling back to live chain data\n    - Fork helpers: exact setBalance, mine(n), fundToken with receipt/balance checks,\n      simulateRpcRateLimit\n    - Anvil tests: connect, terms acceptance verified server-side, rejection, network\n      changes, account switch across reload, RPC rate-limit recovery (known app bug\n      aphelion-app#1667, marked with knownAppBug)\n "
+  }
+}

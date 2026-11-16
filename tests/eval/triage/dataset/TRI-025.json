@@ -1,0 +1,31 @@
+{
+  "id": "TRI-025",
+  "label": "DOM_SELECTOR_DRIFT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: the Earn submenu entries were looked up with role 'option' instead of 'menuitem'. The menu works; the role in the locator is wrong.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should navigate to Earn - Passive Strategies page",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/productsNavigation.spec.ts",
+    "specLine": 24,
+    "filePath": "src/pages/productsTopNavigation.ts",
+    "line": 35,
+    "column": 10,
+    "status": "failed",
+    "durationMs": 59828,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: locator.click: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('option', { name: 'Passive Strategies' })\n\n\nCall Log:\n- Test timeout of 60000ms exceeded\n\n   at ../src/pages/productsTopNavigation.ts:35\n\n  33 |         await this.earnLocator.hover();\n  34 |         await this.page.getByRole('option', { name: productPage.replace('Earn - ', '') }).click();\n> 35 |       }).toPass();\n     |          ^\n  36 |     }\n  37 |   }\n  38 |\n    at ProductsTopNavigation.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/productsTopNavigation.ts:35:10)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at ProductsTopNavigation.open (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/productsNavigation.spec.ts:28:48",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     25 |   ) {\n     26 |     if (['Borrow', 'Multiply', 'Trade'].includes(productPage)) {\n     27 |       await this.page.getByRole('link', { name: productPage, exact: true }).click();\n     28 |     } else if (productPage === 'Earn') {\n     29 |       await this.earnLocator.click();\n     30 |     } else {\n     31 |       await expect(async () => {\n     32 |         // Loop needed to avoid flakiness for menu\n     33 |         await this.earnLocator.hover();\n     34 |         await this.page.getByRole('option', { name: productPage.replace('Earn - ', '') }).click();\n >   35 |       }).toPass();\n     36 |     }\n     37 |   }\n     38 | \n     39 |   @step\n     40 |   async shouldHaveEarnTag(tag: 'Passive Strategies' | 'Automated Strategies' | 'Yield Loops') {\n     41 |     await expect(this.earnLocator.getByText(tag, { exact: true })).toHaveAttribute(\n     42 |       'aria-hidden',\n     43 |       'false',\n     44 |     );",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "diff --git a/src/pages/productsTopNavigation.ts b/src/pages/productsTopNavigation.ts\nindex 0739dc8..817b603 100644\n--- a/src/pages/productsTopNavigation.ts\n+++ b/src/pages/productsTopNavigation.ts\n@@ -31,7 +31,7 @@ export class ProductsTopNavigation {\n       await expect(async () => {\n         // Loop needed to avoid flakiness for menu\n         await this.earnLocator.hover();\n-        await this.page.getByRole('menuitem', { name: productPage.replace('Earn - ', '') }).click();\n+        await this.page.getByRole('option', { name: productPage.replace('Earn - ', '') }).click();\n       }).toPass();\n     }\n   }"
+  }
+}

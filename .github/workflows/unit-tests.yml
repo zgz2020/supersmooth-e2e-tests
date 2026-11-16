@@ -11,6 +11,8 @@ on:
       - 'scripts/qa-agent/**'
       - 'scripts/tc/**'
       - 'scripts/metrics/**'
+      - 'scripts/eval/**'
+      - 'tests/eval/**'
       - 'docs/known-app-bugs.md'
       - 'utils/testCase.ts'
       - 'tests/unit/**'

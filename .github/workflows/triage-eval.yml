@@ -1,0 +1,100 @@
+name: 'Triage Classifier Evaluation'
+
+# Scores the AI triage classifier against the labelled dataset (tests/eval/triage/dataset) when the
+# classifier, its prompt or the dataset change. See docs/ai-triage-evaluation.md.
+on:
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - 'scripts/qa-agent/triage-core.js'
+      - 'scripts/qa-agent/triage-agent.js'
+      - 'scripts/eval/**'
+      - 'tests/eval/triage/**'
+      - '.github/workflows/triage-eval.yml'
+  workflow_dispatch:
+    inputs:
+      repeats:
+        description: 'Gemini runs per case (1 to 3; consistency needs 2 or more)'
+        type: 'choice'
+        options: ['1', '2', '3']
+        default: '1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: triage-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  heuristic:
+    name: 'Heuristic classifier (gate)'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 10
+    steps:
+      - uses: 'actions/checkout@v4'
+      - uses: 'pnpm/action-setup@v4'
+      - uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+      - run: 'pnpm install --frozen-lockfile'
+
+      # Baseline = measured heuristic accuracy, rounded down (78.1% on 32 cases, 2026-11-16).
+      # Raise it when the heuristic improves; a drop below it fails the PR.
+      - name: 'Evaluate heuristic'
+        run: 'pnpm eval:triage --provider heuristic --min-accuracy 0.78'
+
+      - name: 'Upload evaluation report'
+        if: always()
+        uses: 'actions/upload-artifact@v4'
+        with:
+          name: 'triage-eval-heuristic'
+          path: 'eval-reports/'
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # Manual only: the evaluation spends the same Gemini quota as production triage (the free tier
+  # allows 20 requests per model per day), so it must not run on every PR.
+  gemini:
+    name: 'Gemini classifier (report only)'
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 35
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - name: 'Check for the API key'
+        id: key
+        run: |
+          if [ -n "$GEMINI_API_KEY" ]; then echo "available=true" >> "$GITHUB_OUTPUT"; else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "GEMINI_API_KEY is not configured: Gemini evaluation skipped." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - if: steps.key.outputs.available == 'true'
+        uses: 'actions/checkout@v4'
+      - if: steps.key.outputs.available == 'true'
+        uses: 'pnpm/action-setup@v4'
+      - if: steps.key.outputs.available == 'true'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+      - if: steps.key.outputs.available == 'true'
+        run: 'pnpm install --frozen-lockfile'
+
+      # At most 3 runs × dataset size API calls (enforced in the script), one every 13s by default
+      # to stay under the free tier's 5 requests/minute: about 7 minutes per run of 32 cases
+      - name: 'Evaluate Gemini'
+        if: steps.key.outputs.available == 'true'
+        run: pnpm eval:triage --provider gemini --repeats "${{ inputs.repeats }}"
+
+      - name: 'Upload evaluation report'
+        if: always() && steps.key.outputs.available == 'true'
+        uses: 'actions/upload-artifact@v4'
+        with:
+          name: 'triage-eval-gemini'
+          path: 'eval-reports/'
+          retention-days: 30
+          if-no-files-found: ignore
