@@ -134,3 +134,14 @@ jobs:
           name: 'with-wallet'
           path: 'playwright-reports/with-wallet'
           retention-days: 30
+
+      - name: 'Upload JSON results (metrics)'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'results-json-with-wallet'
+          path: |
+            test-results/results.json
+            ai-reports/latest-triage-data.json
+          retention-days: 90
+          if-no-files-found: 'ignore'

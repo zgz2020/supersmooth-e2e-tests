@@ -40,3 +40,6 @@ TODO.md
 TODO.*
 GEMINI.md
 Claude outputs
+
+# Local quality metrics history and dashboard (CI keeps history on the metrics-data branch)
+.metrics/

@@ -10,6 +10,7 @@ End-to-end (E2E), API, and performance testing suite for the Sovereign (SOV) Web
 - **Web3 Wallet Automation:** [Synpress](https://github.com/Synthetixio/synpress) (`@synthetixio/synpress` v4) with MetaMask
 - **Performance Testing:** [Grafana k6](https://k6.io/) & TypeScript
 - **Applied AI & Agentic QA:** Google Gemini Flash (`gemini-flash-latest`), root-cause triage & autonomous self-healing (`agent:heal`), predictive PR change-impact analyzer (`agent:impact`), Discord webhook alerts
+- **Quality Metrics:** 7-metric model (pass rate, flaky rate, top flaky tests, failure cause mix, P1 automation coverage, duration p95, known app bugs) with thresholds and owners, history on the `metrics-data` branch and an offline HTML dashboard ([guide](docs/quality-metrics.md))
 - **Language & Runtime:** [TypeScript](https://www.typescriptlang.org/) / Node.js (v20+ LTS via `.nvmrc`)
 - **Package Manager:** [`pnpm`](https://pnpm.io/)
 
@@ -50,22 +51,23 @@ pnpm synpress-build-cache:base
 
 ## 🧪 Essential Test Commands
 
-| Test Suite           | Purpose                                                                        | Command                                        |
-| :------------------- | :----------------------------------------------------------------------------- | :--------------------------------------------- |
-| **No-Wallet E2E**    | User flows without Web3 wallet connectivity                                    | `pnpm test:no-wallet`                          |
-| **With-Wallet E2E**  | MetaMask wallet connection, approvals, and trading                             | `pnpm test:with-wallet`                        |
-| **Anvil Fork E2E**   | Deterministic Anvil fork tests with instant state reset & funded tokens        | `pnpm test:anvil` (or `:headed`)               |
-| **API Suites**       | Direct backend HTTP endpoints & schema validation                              | `pnpm test:api`                                |
-| **Cross-Browser**    | Responsive layout smoke matrix across engines & devices                        | `pnpm test:cross-browser`                      |
-| **Performance**      | Grafana k6 high-throughput load and SLA tests                                  | `pnpm test:performance`                        |
-| **Local dApp Fork**  | Runs `aphelion-app` locally with Anvil mainnet/L2 state                        | `pnpm app:fork`                                |
-| **AI Test Triage**   | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs      | `pnpm agent:triage`                            |
-| **AI Self-Healing**  | Automatically applies proposed selector patches and verifies fix in isolation  | `pnpm agent:heal`                              |
-| **AI Route Crawler** | Dynamically discovers liquidity pools and audits routes for 404s (Issue #1649) | `pnpm agent:crawl` (or `pnpm agent:crawl:all`) |
-| **Predictive CI**    | Analyzes PR git diffs and dynamically resolves targeted test sub-suites        | `pnpm agent:impact`                            |
-| **Test Repeater**    | Interactive flakiness detection runner                                         | `pnpm test:repeat`                             |
-| **Test Case Check**  | Validates test ↔ test case links (`test-cases/`) and prints coverage           | `pnpm tc:check`                                |
-| **Code Quality**     | TypeScript type check and ESLint verification                                  | `pnpm typecheck && pnpm lint`                  |
+| Test Suite           | Purpose                                                                        | Command                                          |
+| :------------------- | :----------------------------------------------------------------------------- | :----------------------------------------------- |
+| **No-Wallet E2E**    | User flows without Web3 wallet connectivity                                    | `pnpm test:no-wallet`                            |
+| **With-Wallet E2E**  | MetaMask wallet connection, approvals, and trading                             | `pnpm test:with-wallet`                          |
+| **Anvil Fork E2E**   | Deterministic Anvil fork tests with instant state reset & funded tokens        | `pnpm test:anvil` (or `:headed`)                 |
+| **API Suites**       | Direct backend HTTP endpoints & schema validation                              | `pnpm test:api`                                  |
+| **Cross-Browser**    | Responsive layout smoke matrix across engines & devices                        | `pnpm test:cross-browser`                        |
+| **Performance**      | Grafana k6 high-throughput load and SLA tests                                  | `pnpm test:performance`                          |
+| **Local dApp Fork**  | Runs `aphelion-app` locally with Anvil mainnet/L2 state                        | `pnpm app:fork`                                  |
+| **AI Test Triage**   | Diagnoses failed runs, isolates RPC flakiness, outputs self-healing diffs      | `pnpm agent:triage`                              |
+| **AI Self-Healing**  | Automatically applies proposed selector patches and verifies fix in isolation  | `pnpm agent:heal`                                |
+| **AI Route Crawler** | Dynamically discovers liquidity pools and audits routes for 404s (Issue #1649) | `pnpm agent:crawl` (or `pnpm agent:crawl:all`)   |
+| **Predictive CI**    | Analyzes PR git diffs and dynamically resolves targeted test sub-suites        | `pnpm agent:impact`                              |
+| **Test Repeater**    | Interactive flakiness detection runner                                         | `pnpm test:repeat`                               |
+| **Quality Metrics**  | Collects a run into the metrics history and builds the quality dashboard       | `pnpm metrics:collect && pnpm metrics:dashboard` |
+| **Test Case Check**  | Validates test ↔ test case links (`test-cases/`) and prints coverage           | `pnpm tc:check`                                  |
+| **Code Quality**     | TypeScript type check and ESLint verification                                  | `pnpm typecheck && pnpm lint`                    |
 
 > 📖 **Full Command List:** For the exhaustive list of all 36+ scripts, CI flags, and targeted browser commands, see the **[Scripts & Test Suites Reference](docs/scripts-reference.md)**.
 
@@ -154,18 +156,19 @@ pnpm agent:crawl
 
 Detailed architectural documentation, setup guides, and references are organized under [`docs/`](docs/):
 
-| Guide                                                                           | Description                                                                      |
-| :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------- |
-| **[📜 Scripts Reference](docs/scripts-reference.md)**                           | Complete breakdown of all scripts in `package.json` with execution flags         |
-| **[🧾 Test Case Management](docs/test-case-management.md)**                     | Test case catalogue, `tc()` links to automated tests, and the traceability check |
-| **[🤖 Applied AI & Agentic QA](docs/applied-ai-agent-qa.md)**                   | Autonomous failure diagnosis, self-healing code repair, and predictive CI        |
-| **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)**               | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s       |
-| **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**                | Run `aphelion-app` locally against Anvil state fork with pre-funded balances     |
-| **[🏛️ Anvil Fork Testing (CI & Local)](docs/anvil-fork-playwright-testing.md)** | Deterministic Playwright Anvil fixture, worker isolation, and CI workflows       |
-| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                                | Synpress v4 cache configuration, MetaMask automation, and wallet helpers         |
-| **[⚡ Performance Testing](docs/performance-testing-k6.md)**                    | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide                |
-| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)**                 | Architecture, status reporting, and dispatch from `aphelion-app` to CI           |
-| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**                     | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting   |
+| Guide                                                                           | Description                                                                           |
+| :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------ |
+| **[📜 Scripts Reference](docs/scripts-reference.md)**                           | Complete breakdown of all scripts in `package.json` with execution flags              |
+| **[🧾 Test Case Management](docs/test-case-management.md)**                     | Test case catalogue, `tc()` links to automated tests, and the traceability check      |
+| **[📈 Quality Metrics & Health Dashboard](docs/quality-metrics.md)**            | Metrics model with thresholds and owners, CI history, dashboard and quarantine policy |
+| **[🤖 Applied AI & Agentic QA](docs/applied-ai-agent-qa.md)**                   | Autonomous failure diagnosis, self-healing code repair, and predictive CI             |
+| **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)**               | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s            |
+| **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**                | Run `aphelion-app` locally against Anvil state fork with pre-funded balances          |
+| **[🏛️ Anvil Fork Testing (CI & Local)](docs/anvil-fork-playwright-testing.md)** | Deterministic Playwright Anvil fixture, worker isolation, and CI workflows            |
+| **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                                | Synpress v4 cache configuration, MetaMask automation, and wallet helpers              |
+| **[⚡ Performance Testing](docs/performance-testing-k6.md)**                    | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide                     |
+| **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)**                 | Architecture, status reporting, and dispatch from `aphelion-app` to CI                |
+| **[🌍 CI & GitHub Runs Reference](docs/ci-github-runs.md)**                     | Regional IP geo-blocking, US proxy routing, and GitHub Actions troubleshooting        |
 
 ---
 
@@ -177,6 +180,7 @@ Detailed architectural documentation, setup guides, and references are organized
 ├── ai-reports/                 # AI triage markdown diagnoses & PR comment markups
 ├── docs/                       # Architectural documentation & technical guides
 ├── scripts/                    # CLI test runners, repeater, and mock servers
+│   ├── metrics/                # Quality metrics collector & dashboard (pnpm metrics:*)
 │   ├── qa-agent/               # Applied AI failure harvester & triage engine
 │   └── tc/                     # Test case traceability check (pnpm tc:check)
 ├── src/                        # Page objects, modals, and test fixtures

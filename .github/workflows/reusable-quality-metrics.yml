@@ -1,0 +1,100 @@
+name: '⚙️ [Reusable] Quality Metrics'
+
+# Collects this run's Playwright JSON results (`results-json-*` artifacts uploaded by every
+# reusable test workflow) into the metrics history on the orphan `metrics-data` branch, then builds
+# the quality dashboard artifact and the job summary. See docs/quality-metrics.md.
+on:
+  workflow_call:
+    inputs:
+      scope:
+        description: 'Test selection of the calling run: full (nightly) or regression (PR gating)'
+        type: 'string'
+        required: false
+        default: 'full'
+
+permissions:
+  contents: write
+
+jobs:
+  quality-metrics:
+    name: 'Quality metrics'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 10
+    # One writer at a time on the history branch (nightly and regression runs can overlap)
+    concurrency:
+      group: 'quality-metrics-history'
+      cancel-in-progress: false
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Download JSON results of this run'
+        uses: 'actions/download-artifact@v4'
+        continue-on-error: true
+        with:
+          pattern: 'results-json-*'
+          path: 'metrics-input'
+
+      - name: 'Append runs to the metrics-data history'
+        env:
+          SCOPE: '${{ inputs.scope }}'
+          HISTORY: 'metrics-data/metrics/history.jsonl'
+        run: |
+          set -euo pipefail
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          # Re-collect from a fresh copy on every attempt: collecting is idempotent (runs are keyed
+          # by run id + suite), so a push rejected by a concurrent writer is simply redone.
+          for attempt in 1 2 3; do
+            git worktree remove --force metrics-data 2>/dev/null || true
+            if git ls-remote --exit-code --heads origin metrics-data > /dev/null; then
+              git fetch --depth=1 origin metrics-data
+              git worktree add --detach metrics-data FETCH_HEAD
+            else
+              echo 'Creating the orphan metrics-data branch'
+              git worktree add --detach metrics-data
+              git -C metrics-data checkout --orphan metrics-data-init
+              git -C metrics-data rm -rfq .
+            fi
+
+            node scripts/metrics/collect-run.js --artifacts-dir metrics-input --scope "$SCOPE" --history "$HISTORY"
+            git -C metrics-data add metrics/history.jsonl 2> /dev/null || true
+            if git -C metrics-data diff --cached --quiet; then
+              echo 'No new runs to store'
+              exit 0
+            fi
+            git -C metrics-data commit -qm "chore(metrics): ${GITHUB_WORKFLOW} run ${GITHUB_RUN_ID} [skip ci]"
+            if git -C metrics-data push origin HEAD:refs/heads/metrics-data; then
+              exit 0
+            fi
+            echo "Push rejected (history updated by another run), retrying (${attempt}/3)"
+            sleep $((attempt * 5))
+          done
+          echo '::error::Could not push the metrics history after 3 attempts'
+          exit 1
+
+      - name: 'Build quality dashboard'
+        run: |
+          node scripts/metrics/build-dashboard.js --history metrics-data/metrics/history.jsonl --out quality-dashboard/quality-dashboard.html
+          node scripts/metrics/build-dashboard.js --history metrics-data/metrics/history.jsonl --summary >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 'Upload quality dashboard'
+        uses: 'actions/upload-artifact@v4'
+        with:
+          name: 'quality-dashboard'
+          path: 'quality-dashboard/quality-dashboard.html'
+          retention-days: 90

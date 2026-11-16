@@ -42,6 +42,14 @@ jobs:
     with:
       script: 'ci:anvil'
 
+  quality-metrics:
+    # Appends this run to the metrics history (metrics-data branch) and publishes the dashboard
+    needs: [api-tests, no-wallet-tests, cross-browser-tests, with-wallet-tests, anvil-tests]
+    if: always()
+    uses: './.github/workflows/reusable-quality-metrics.yml'
+    with:
+      scope: 'full'
+
   performance-tests:
     uses: './.github/workflows/reusable-performance-tests.yml'
     secrets: inherit

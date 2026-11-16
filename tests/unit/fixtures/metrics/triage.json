@@ -1,0 +1,14 @@
+{
+  "suiteName": "no-wallet",
+  "generatedAt": "2026-11-16T01:12:00.000Z",
+  "failuresCount": 1,
+  "triagedCount": 1,
+  "analyses": [
+    {
+      "testTitle": "opens the menu",
+      "specFile": "tests/e2e/no-wallet/navigation.spec.ts",
+      "classification": "DOM_SELECTOR_DRIFT",
+      "confidenceScore": 90
+    }
+  ]
+}
