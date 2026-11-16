@@ -15,7 +15,9 @@ export const openPosition = async ({
   depositAmount,
   borrowAmount,
 }: OpenPositionParams) => {
-  await app.vaultPage.rightSidePanel.configurePosition.setDeposit(depositAmount);
+  await app.vaultPage.rightSidePanel.configurePosition.setDeposit(depositAmount, {
+    trade: positionType === 'Trade',
+  });
 
   if (positionType === 'Borrow' && borrowAmount) {
     await app.vaultPage.rightSidePanel.configurePosition.setBorrow(borrowAmount);

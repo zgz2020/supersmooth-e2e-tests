@@ -9,6 +9,7 @@ export class ConfigurePosition {
   readonly page: Page;
   readonly balanceLocator: Locator;
   readonly depositInputLocator: Locator;
+  readonly tradeDepositInputLocator: Locator;
   readonly panelLocator: Locator;
 
   constructor(page: Page) {
@@ -16,6 +17,11 @@ export class ConfigurePosition {
     this.panelLocator = this.page.getByTestId('right-side-panel');
     this.balanceLocator = this.panelLocator.getByTestId(/^input-box-deposit-[\w-]*balance$/);
     this.depositInputLocator = this.panelLocator.getByTestId(/^input-box-deposit-[\w-]*input$/);
+    // Trade (perp/spot) pages: "Add Funds" deposit box. The amount input has no test id, and the
+    // panel also holds the order-size input (size-input-field), so scope to the Add Funds card.
+    this.tradeDepositInputLocator = this.panelLocator
+      .getByTestId('hyperliquid-add-funds')
+      .getByRole('textbox');
   }
 
   @step
@@ -35,8 +41,8 @@ export class ConfigurePosition {
   }
 
   @step
-  async setDeposit(amount: string) {
-    await this.depositInputLocator.fill(amount);
+  async setDeposit(amount: string, { trade = false }: { trade?: boolean } = {}) {
+    await (trade ? this.tradeDepositInputLocator : this.depositInputLocator).fill(amount);
   }
 
   @step
