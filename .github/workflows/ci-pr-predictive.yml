@@ -107,7 +107,14 @@ jobs:
           TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
           REPORT_FOLDER: 'pr-predictive'
           CI: 'true'
-          HEADLESS: 'true'
+          # No HEADLESS here: Synpress then launches Chrome with --headless=new, and the MetaMask
+          # approval popup never opens as a page (connectToDapp times out). Run headed under
+          # xvfb, like the with-wallet workflows.
+          # with-wallet tests share one MetaMask profile and wallet, so they must not run in
+          # parallel; everything else gets 2 workers like ci:no-wallet. Set explicitly so it
+          # doesn't depend on the runner's CPU count.
+          WORKERS: ${{ needs.analyze-impact.outputs.hasWalletTests == 'true' && '1' || '2' }}
+          FULLY_PARALLEL: 'true'
         run: |
           xvfb-run pnpm playwright test ${{ needs.analyze-impact.outputs.specList }} ${{ needs.analyze-impact.outputs.projectArgs }}
 
