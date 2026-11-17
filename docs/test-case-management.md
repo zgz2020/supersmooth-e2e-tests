@@ -47,6 +47,7 @@ test-cases/
 └── e2e/                    # E2E-<AREA>-NNN
     ├── navigation.md
     ├── open-position.md
+    ├── manage-position.md
     └── ...
 ```
 

@@ -79,9 +79,15 @@ const DOMAIN_RULES = [
       /^src\/pages\/topCards\.ts$/,
       /^utils\/getActiveVault\.ts$/,
       /^utils\/openPosition\.ts$/,
+      /^utils\/constants\/positions\.ts$/,
       /^utils\/types\/e2e\/productTopCards\.ts$/,
+      /^src\/pages\/amount\.ts$/,
     ],
-    specs: ['tests/e2e/no-wallet/vaultPages.spec.ts', 'tests/e2e/with-wallet/openPosition.spec.ts'],
+    specs: [
+      'tests/e2e/no-wallet/vaultPages.spec.ts',
+      'tests/e2e/with-wallet/openPosition.spec.ts',
+      'tests/e2e/with-wallet/closePosition.spec.ts',
+    ],
     projects: ['no-wallet', 'with-wallet'],
   },
 
