@@ -1,0 +1,31 @@
+{
+  "id": "TRI-013",
+  "label": "DOM_SELECTOR_DRIFT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: the header now renders a second \"Migrate\" link (e.g. a new mobile menu item), so the locator matches two elements (strict mode violation). The test must scope its locator.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should open Migrate page",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/topNavigation.spec.ts",
+    "specLine": 57,
+    "filePath": "src/pages/header.ts",
+    "line": 36,
+    "column": 83,
+    "status": "failed",
+    "durationMs": 1987,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: locator.click: Error: strict mode violation: getByRole('navigation').first().getByRole('link', { name: 'Migrate', exact: true }) resolved to 2 elements:\n    1) <a href=\"/migrate\" class=\"flex gap-2 items-center px-inset-md py-inset-s rounded-xs bg-transparent text-xs text-text-gray hover:text-text-primary transition-colors duration-200\">Migrate</a> aka getByRole('link', { name: 'Migrate' }).first()\n    2) <a href=\"/migrate\" data-cloned=\"1\" class=\"flex gap-2 items-center px-inset-md py-inset-s rounded-xs bg-transparent text-xs text-text-gray hover:text-text-primary transition-colors duration-200\">Migrate</a> aka getByRole('link', { name: 'Migrate' }).nth(1)\n\nCall log:\n  - waiting for getByRole('navigation').first().getByRole('link', { name: 'Migrate', exact: true })\n\n\n   at ../src/pages/header.ts:36\n\n  34 |   @step\n  35 |   async goTo(menuOption: LandingPageMenuOptions | AppMenuOptions) {\n> 36 |     await this.headerLocator.getByRole('link', { name: menuOption, exact: true }).click();\n     |                                                                                   ^\n  37 |   }\n  38 |\n  39 |   @step\n    at Header.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/header.ts:36:83)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at Header.goTo (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/topNavigation.spec.ts:58:26",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     26 |     await expect(this.headerLocator).toBeVisible();\n     27 |   }\n     28 | \n     29 |   @step\n     30 |   async clickOnSupersmoothLogo() {\n     31 |     await this.headerLocator.getByRole('link', { name: 'Supersmooth' }).click();\n     32 |   }\n     33 | \n     34 |   @step\n     35 |   async goTo(menuOption: LandingPageMenuOptions | AppMenuOptions) {\n >   36 |     await this.headerLocator.getByRole('link', { name: menuOption, exact: true }).click();\n     37 |   }\n     38 | \n     39 |   @step\n     40 |   async goToSecuritySection() {\n     41 |     await this.headerLocator.getByRole('link', { name: 'Security', exact: true }).click();\n     42 |   }\n     43 | \n     44 |   @step\n     45 |   async shouldOpenDocsInNewTab() {",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit fc10e33851e210e2123b7771725453068743cef4\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Nov 11 16:16:14 2026 +0100\n\n    feat(anvil): deterministic Anvil fork suite with EIP-1193 mock wallet and pnpm 9\n    \n    - Worker-isolated Anvil forks (ANVIL_BASE_PORT, default 8600) with port checks,\n      snapshot/revert for every test, and loud failures on revert errors\n    - In-page EIP-1193/EIP-6963 mock wallet: state persists across reloads, Viem signs\n      with the account named in each request\n    - Route only the forked chain's RPC (app proxy, WalletConnect fallback, public RPCs)\n      to Anvil; 502 instead of silently falling back to live chain data\n    - Fork helpers: exact setBalance, mine(n), fundToken with receipt/balance checks,\n      simulateRpcRateLimit\n    - Anvil tests: connect, terms acceptance verified server-side, rejection, network\n      changes, account switch across reload, RPC rate-limit recovery (known app bug\n      aphelion-app#1667, marked with knownAppBug)\n "
+  }
+}

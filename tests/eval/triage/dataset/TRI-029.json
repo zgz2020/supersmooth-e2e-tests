@@ -1,0 +1,26 @@
+{
+  "id": "TRI-029",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: /api/compliance/screen stopped flagging a sanctioned wallet (every boolean flag returned false). Compliance screening is broken: a critical app defect.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should flag sanctioned wallet address",
+    "projectName": "api",
+    "specFile": "tests/api/complianceScreen.spec.ts",
+    "specLine": 87,
+    "filePath": "tests/api/complianceScreen.spec.ts",
+    "line": 102,
+    "column": 83,
+    "status": "failed",
+    "durationMs": 246,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Sanctioned wallet should return sanctioned: true\n\nexpect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false\n\n  100 |       const body: ComplianceScreenResponse = await response.json();\n  101 |       await validateSchema({ schema: complianceScreenSchema, json: body });\n> 102 |       expect(body.sanctioned, 'Sanctioned wallet should return sanctioned: true').toBe(true);\n      |                                                                                   ^\n  103 |     },\n  104 |   );\n  105 |\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/complianceScreen.spec.ts:102:83",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     92 | \n     93 |       const response = await request.post('/api/compliance/screen', {\n     94 |         headers: getOriginHeader(baseURL),\n     95 |         data: payload,\n     96 |       });\n     97 | \n     98 |       await expect(response).toHaveStatusCode(200);\n     99 | \n    100 |       const body: ComplianceScreenResponse = await response.json();\n    101 |       await validateSchema({ schema: complianceScreenSchema, json: body });\n >  102 |       expect(body.sanctioned, 'Sanctioned wallet should return sanctioned: true').toBe(true);\n    103 |     },\n    104 |   );\n    105 | \n    106 |   test(\n    107 |     'should return 401 unauthorized when origin header is missing',\n    108 |     tc('API-COMP-010'),\n    109 |     async ({ request }) => {\n    110 |       const payload = { wallet: validAddress, context: 'connect' };\n    111 | ",
+    "attachments": [],
+    "gitDiff": "commit a808e9d6a2e0c5cfe35656e1eb50ee07555c6ec2\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Thu Nov 12 16:52:36 2026 +0100\n\n    feat(tc): test case catalogue with traceability, coverage backlog and priority tags\n    \n    Catalogue (test-cases/):\n    - 183 cases: 122 automated (every existing test linked via tc('<ID>')),\n      49 planned and 12 manual\n    - Planned cases for the 37 app API route groups with no tests (positions,\n      markets, trading, automation, platform, admin/security access control) and\n      untested UI journeys (trade, portfolio, automations, migrate); known fork\n      gaps #72/#73 and aphelion-app#1667 linked\n    - Manual real-network automation execution cases (Stop-Loss, Trailing\n      Stop-Loss, Auto Sell, Take Profit across Aave V3, Aave V3 Lido, Morpho,\n      Compound V3, Euler and Spark on Ethereum, Base and Arbitrum), with a shared\n      procedure to trigger LTV-based automations deliberately\n    \n    Traceability:\n    - utils/testCase.ts: tc('<ID>') add"
+  }
+}

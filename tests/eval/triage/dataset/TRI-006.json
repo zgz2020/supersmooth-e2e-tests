@@ -1,0 +1,26 @@
+{
+  "id": "TRI-006",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: /api/portfolio/summary returned suppliedUsd inflated by 5, so net worth no longer equals supplied minus borrowed. Wrong data from the API: a real calculation defect.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should fetch portfolio summary regardless of address casing",
+    "projectName": "api",
+    "specFile": "tests/api/portfolioSummary.spec.ts",
+    "specLine": 35,
+    "filePath": "tests/api/portfolioSummary.spec.ts",
+    "line": 15,
+    "column": 5,
+    "status": "failed",
+    "durationMs": 342,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Summary net worth must equal supplied - borrowed within epsilon\n\nexpect(received).toBeLessThan(expected)\n\nExpected: < 0.05\nReceived:   4.999999999999993\n\n  13 |     Math.abs(body.supersmoothPortfolioUsd - calculatedNetUsd),\n  14 |     'Summary net worth must equal supplied - borrowed within epsilon',\n> 15 |   ).toBeLessThan(epsilon);\n     |     ^\n  16 |\n  17 |   if (body.chainBreakdown.length > 0) {\n  18 |     const breakdownSum = body.chainBreakdown.reduce((acc, curr) => acc + curr.valueUsd, 0);\n    at assertPortfolioConservation (/__w/sov-e2e-tests/sov-e2e-tests/tests/api/portfolioSummary.spec.ts:15:5)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/portfolioSummary.spec.ts:54:11\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/portfolioSummary.spec.ts:40:9",
+    "stackTrace": "",
+    "sourceCodeSnippet": "      5 | import type { PortfolioSafesResponse } from '../../utils/types/api/portfolioSafes';\n      6 | import { validAddress, zeroAddress, invalidAddressCases } from '../../utils/constants/addresses';\n      7 | import '../../utils/assertions/matchers';\n      8 | import { tc } from '../../utils/testCase';\n      9 | \n     10 | function assertPortfolioConservation(body: PortfolioSummaryResponse, epsilon = 0.05): void {\n     11 |   const calculatedNetUsd = body.suppliedUsd - body.borrowedUsd;\n     12 |   expect(\n     13 |     Math.abs(body.supersmoothPortfolioUsd - calculatedNetUsd),\n     14 |     'Summary net worth must equal supplied - borrowed within epsilon',\n >   15 |   ).toBeLessThan(epsilon);\n     16 | \n     17 |   if (body.chainBreakdown.length > 0) {\n     18 |     const breakdownSum = body.chainBreakdown.reduce((acc, curr) => acc + curr.valueUsd, 0);\n     19 |     expect(\n     20 |       Math.abs(body.supersmoothPortfolioUsd - breakdownSum),\n     21 |       'Chain breakdown value sum must equal total portfolio USD within epsilon',\n     22 |     ).toBeLessThan(epsilon);\n     23 | \n     24 |     if (body.supersmoothPortfolioUsd > 0) {",
+    "attachments": [],
+    "gitDiff": "commit a808e9d6a2e0c5cfe35656e1eb50ee07555c6ec2\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Thu Nov 12 16:52:36 2026 +0100\n\n    feat(tc): test case catalogue with traceability, coverage backlog and priority tags\n    \n    Catalogue (test-cases/):\n    - 183 cases: 122 automated (every existing test linked via tc('<ID>')),\n      49 planned and 12 manual\n    - Planned cases for the 37 app API route groups with no tests (positions,\n      markets, trading, automation, platform, admin/security access control) and\n      untested UI journeys (trade, portfolio, automations, migrate); known fork\n      gaps #72/#73 and aphelion-app#1667 linked\n    - Manual real-network automation execution cases (Stop-Loss, Trailing\n      Stop-Loss, Auto Sell, Take Profit across Aave V3, Aave V3 Lido, Morpho,\n      Compound V3, Euler and Spark on Ethereum, Base and Arbitrum), with a shared\n      procedure to trigger LTV-based automations deliberately\n    \n    Traceability:\n    - utils/testCase.ts: tc('<ID>') add"
+  }
+}

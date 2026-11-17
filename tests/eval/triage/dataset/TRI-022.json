@@ -1,0 +1,31 @@
+{
+  "id": "TRI-022",
+  "label": "DOM_SELECTOR_DRIFT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: a commit introduced a typo in the tab list test id in the TopCards page object ('top-card-tablist' instead of 'top-cards-tablist'). The app is unchanged; the locator is wrong and the diff shows it.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should display \"Most Liquidity\" tab as active by default with 4 cards",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/earnProductsPage.spec.ts",
+    "specLine": 10,
+    "filePath": "src/pages/topCards.ts",
+    "line": 34,
+    "column": 37,
+    "status": "failed",
+    "durationMs": 12321,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Timed out 10000ms waiting for expect(locator).toHaveAttribute(expected)\n\nLocator: getByTestId('top-card-tablist').getByRole('tab', { name: 'Most Liquidity' })\nExpected string: \"true\"\nReceived: <element(s) not found>\nCall log:\n  - expect.toHaveAttribute with timeout 10000ms\n  - waiting for getByTestId('top-card-tablist').getByRole('tab', { name: 'Most Liquidity' })\n\n\n   at ../src/pages/topCards.ts:34\n\n  32 |     tabName: ProductTopCardsTabs<T>,\n  33 |   ) {\n> 34 |     await expect(this.tab(tabName)).toHaveAttribute('aria-selected', 'true');\n     |                                     ^\n  35 |   }\n  36 |\n  37 |   @step\n    at TopCards.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/topCards.ts:34:37)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at TopCards.shouldHaveTabSelected (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/earnProductsPage.spec.ts:15:31",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     24 |   @step\n     25 |   async selectTab<T extends TopCardsProductType>(product: T, tabName: ProductTopCardsTabs<T>) {\n     26 |     await this.tab(tabName).click();\n     27 |   }\n     28 | \n     29 |   @step\n     30 |   async shouldHaveTabSelected<T extends TopCardsProductType>(\n     31 |     product: T,\n     32 |     tabName: ProductTopCardsTabs<T>,\n     33 |   ) {\n >   34 |     await expect(this.tab(tabName)).toHaveAttribute('aria-selected', 'true');\n     35 |   }\n     36 | \n     37 |   @step\n     38 |   async shouldNotHaveOtherTabsSelected<T extends TopCardsProductType>(\n     39 |     product: T,\n     40 |     selectedTab: ProductTopCardsTabs<T>,\n     41 |   ) {\n     42 |     const allTabs = PRODUCT_TOP_CARDS_TABS[product] as readonly ProductTopCardsTabs[];\n     43 |     const otherTabs = allTabs.filter((tab) => tab !== selectedTab);",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "diff --git a/src/pages/topCards.ts b/src/pages/topCards.ts\nindex 7702c5b..a39fc22 100644\n--- a/src/pages/topCards.ts\n+++ b/src/pages/topCards.ts\n@@ -13,7 +13,7 @@ export class TopCards {\n \n   constructor(page: Page) {\n     this.page = page;\n-    this.tabList = page.getByTestId('top-cards-tablist');\n+    this.tabList = page.getByTestId('top-card-tablist');\n     this.cards = page.getByTestId('top-card');\n   }"
+  }
+}

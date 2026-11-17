@@ -43,3 +43,6 @@ Claude outputs
 
 # Local quality metrics history and dashboard (CI keeps history on the metrics-data branch)
 .metrics/
+
+# Triage classifier evaluation reports (scripts/eval/triage-eval.js)
+eval-reports/

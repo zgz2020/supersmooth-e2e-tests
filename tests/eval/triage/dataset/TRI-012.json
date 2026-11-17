@@ -1,0 +1,31 @@
+{
+  "id": "TRI-012",
+  "label": "DOM_SELECTOR_DRIFT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: the header button label changed from \"Connect Wallet\" to \"Connect\". The button still works; the role/name locator is stale.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should open \"Connect wallet\" modal - Connect Wallet button",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/topNavigation.spec.ts",
+    "specLine": 71,
+    "filePath": "src/pages/header.ts",
+    "line": 72,
+    "column": 36,
+    "status": "failed",
+    "durationMs": 12579,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole('navigation').first().getByRole('button', { name: 'Connect Wallet' })\n\n\n   at ../src/pages/header.ts:72\n\n  70 |   @step\n  71 |   async connectWallet() {\n> 72 |     await this.connectWalletButton.click();\n     |                                    ^\n  73 |   }\n  74 |\n  75 |   @step\n    at Header.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/header.ts:72:36)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at Header.connectWallet (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/topNavigation.spec.ts:75:28",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     62 |     await this.headerLocator.getByRole('button', { name: 'Get Help', exact: true }).click();\n     63 |   }\n     64 | \n     65 |   @step\n     66 |   async shouldShowConnectWallet() {\n     67 |     await expect(this.connectWalletButton).toBeVisible();\n     68 |   }\n     69 | \n     70 |   @step\n     71 |   async connectWallet() {\n >   72 |     await this.connectWalletButton.click();\n     73 |   }\n     74 | \n     75 |   @step\n     76 |   async shouldHaveShortAddress(\n     77 |     shortAddress: ShortAddress = /^0x[a-fA-F0-9]{4}\\.\\.\\.[a-fA-F0-9]{4}$/,\n     78 |   ) {\n     79 |     await expect(this.connectedWalletButton).toHaveText(shortAddress);\n     80 |   }\n     81 | ",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "commit fc10e33851e210e2123b7771725453068743cef4\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Wed Nov 11 16:16:14 2026 +0100\n\n    feat(anvil): deterministic Anvil fork suite with EIP-1193 mock wallet and pnpm 9\n    \n    - Worker-isolated Anvil forks (ANVIL_BASE_PORT, default 8600) with port checks,\n      snapshot/revert for every test, and loud failures on revert errors\n    - In-page EIP-1193/EIP-6963 mock wallet: state persists across reloads, Viem signs\n      with the account named in each request\n    - Route only the forked chain's RPC (app proxy, WalletConnect fallback, public RPCs)\n      to Anvil; 502 instead of silently falling back to live chain data\n    - Fork helpers: exact setBalance, mine(n), fundToken with receipt/balance checks,\n      simulateRpcRateLimit\n    - Anvil tests: connect, terms acceptance verified server-side, rejection, network\n      changes, account switch across reload, RPC rate-limit recovery (known app bug\n      aphelion-app#1667, marked with knownAppBug)\n "
+  }
+}

@@ -162,6 +162,7 @@ Detailed architectural documentation, setup guides, and references are organized
 | **[🧾 Test Case Management](docs/test-case-management.md)**                     | Test case catalogue, `tc()` links to automated tests, and the traceability check      |
 | **[📈 Quality Metrics & Health Dashboard](docs/quality-metrics.md)**            | Metrics model with thresholds and owners, CI history, dashboard and quarantine policy |
 | **[🤖 Applied AI & Agentic QA](docs/applied-ai-agent-qa.md)**                   | Autonomous failure diagnosis, self-healing code repair, and predictive CI             |
+| **[🧪 AI Triage Evaluation](docs/ai-triage-evaluation.md)**                     | Labelled dataset, accuracy / calibration / consistency of the triage classifier       |
 | **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)**               | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s            |
 | **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**                | Run `aphelion-app` locally against Anvil state fork with pre-funded balances          |
 | **[🏛️ Anvil Fork Testing (CI & Local)](docs/anvil-fork-playwright-testing.md)** | Deterministic Playwright Anvil fixture, worker isolation, and CI workflows            |

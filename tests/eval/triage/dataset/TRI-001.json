@@ -1,0 +1,26 @@
+{
+  "id": "TRI-001",
+  "label": "TRANSIENT_RPC",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: the edge returned an HTML 502 Bad Gateway page for /api/compliance/geo. An infrastructure blip, not an app contract change: a re-run passes. Hard: the error has no network keyword, only an unexpected status, which reads like a regression.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should fetch compliance geo information successfully",
+    "projectName": "api",
+    "specFile": "tests/api/complianceGeo.spec.ts",
+    "specLine": 9,
+    "filePath": "tests/api/complianceGeo.spec.ts",
+    "line": 15,
+    "column": 30,
+    "status": "failed",
+    "durationMs": 48,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Expected status code 200 but got 502.\nResponse body:\n<html><body><h1>502 Bad Gateway</h1></body></html>\n\n  13 |       const response = await request.get('/api/compliance/geo');\n  14 |\n> 15 |       await expect(response).toHaveStatusCode(200);\n     |                              ^\n  16 |\n  17 |       const headers = response.headers();\n  18 |       expect(\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/complianceGeo.spec.ts:15:30",
+    "stackTrace": "",
+    "sourceCodeSnippet": "      5 | import '../../utils/assertions/matchers';\n      6 | import { tc } from '../../utils/testCase';\n      7 | \n      8 | test.describe('Compliance Geo API', () => {\n      9 |   test(\n     10 |     'should fetch compliance geo information successfully',\n     11 |     tc('API-COMP-001'),\n     12 |     async ({ request }) => {\n     13 |       const response = await request.get('/api/compliance/geo');\n     14 | \n >   15 |       await expect(response).toHaveStatusCode(200);\n     16 | \n     17 |       const headers = response.headers();\n     18 |       expect(\n     19 |         headers['content-type'],\n     20 |         'Response content-type header should contain application/json',\n     21 |       ).toContain('application/json');\n     22 |       expect(headers['cache-control'], 'Response cache-control header should be no-store').toBe(\n     23 |         'no-store',\n     24 |       );",
+    "attachments": [],
+    "gitDiff": "commit a808e9d6a2e0c5cfe35656e1eb50ee07555c6ec2\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Thu Nov 12 16:52:36 2026 +0100\n\n    feat(tc): test case catalogue with traceability, coverage backlog and priority tags\n    \n    Catalogue (test-cases/):\n    - 183 cases: 122 automated (every existing test linked via tc('<ID>')),\n      49 planned and 12 manual\n    - Planned cases for the 37 app API route groups with no tests (positions,\n      markets, trading, automation, platform, admin/security access control) and\n      untested UI journeys (trade, portfolio, automations, migrate); known fork\n      gaps #72/#73 and aphelion-app#1667 linked\n    - Manual real-network automation execution cases (Stop-Loss, Trailing\n      Stop-Loss, Auto Sell, Take Profit across Aave V3, Aave V3 Lido, Morpho,\n      Compound V3, Euler and Spark on Ethereum, Base and Arbitrum), with a shared\n      procedure to trigger LTV-based automations deliberately\n    \n    Traceability:\n    - utils/testCase.ts: tc('<ID>') add"
+  }
+}

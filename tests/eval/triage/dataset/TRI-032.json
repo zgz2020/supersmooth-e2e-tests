@@ -1,0 +1,31 @@
+{
+  "id": "TRI-032",
+  "label": "TRANSIENT_RPC",
+  "labelSource": "synthetic",
+  "difficulty": "hard",
+  "notes": "Synthetic: the upstream archive RPC behind the fork returned 503 while the fork fetched state, so funding failed. Provider outage. Hard: the message names a token transfer and a revert-like failure, which can be mistaken for an app or contract problem. The provider key in the URL must be scrubbed.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should sign Terms of Service",
+    "projectName": "anvil",
+    "specFile": "tests/e2e/anvil/protocolCases.spec.ts",
+    "specLine": 35,
+    "filePath": "tests/e2e/anvil/protocolCases.spec.ts",
+    "line": 23,
+    "column": 7,
+    "status": "failed",
+    "retries": 0,
+    "attempts": 1,
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "sourceCodeSnippet": "     13 |     let targetVaultUrl: string;\n     14 | \n     15 |     test.beforeEach(async ({ app, anvilFork }) => {\n     16 |       const { url } = await getActiveVault(app.page.request, 'multiply', {\n     17 |         network: 'Ethereum',\n     18 |         collateral: 'ETH',\n     19 |       });\n     20 |       targetVaultUrl = url;\n     21 | \n     22 |       // Seed Anvil accounts with WETH collateral for position setup\n >   23 |       await anvilFork.fundToken({\n     24 |         tokenAddress: wethMainnetAddress,\n     25 |         recipient: defaultAnvilAddress,\n     26 |         amount: FORK_AMOUNTS.wethFunding,\n     27 |       });\n     28 |       await anvilFork.fundToken({\n     29 |         tokenAddress: wethMainnetAddress,\n     30 |         recipient: anvilAccount1Address,\n     31 |         amount: FORK_AMOUNTS.wethFunding,\n     32 |       });",
+    "gitDiff": "",
+    "durationMs": 30512,
+    "errorSnippet": "HttpRequestError: HTTP request failed.\n\nStatus: 503\nURL: https://base-mainnet.g.alchemy.com/v2/<redacted>\nRequest body: {\"method\":\"eth_getStorageAt\",\"params\":[\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"0x0\",\"0x15c1a2f\"]}\n\nDetails: failed to get storage for fork: upstream unavailable\nVersion: viem@2.21.54",
+    "stackTrace": "HttpRequestError: HTTP request failed.\n    at Object.request (/__w/sov-e2e-tests/sov-e2e-tests/node_modules/viem/_esm/utils/rpc/http.js:96:23)\n    at AnvilFork.fundToken (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/anvilFork.ts:131:5)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/anvil/protocolCases.spec.ts:23:7"
+  }
+}

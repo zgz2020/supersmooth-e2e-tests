@@ -1,0 +1,26 @@
+{
+  "id": "TRI-007",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "hard",
+  "notes": "Fault injection: /api/compliance/screen returned 500 with a server-side TypeError. The server crashes on a valid request: an app defect. Hard: a 5xx status looks like an infrastructure blip, but the body shows a code error that a retry will not fix.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should screen wallet successfully for perps-submit context",
+    "projectName": "api",
+    "specFile": "tests/api/complianceScreen.spec.ts",
+    "specLine": 69,
+    "filePath": "tests/api/complianceScreen.spec.ts",
+    "line": 80,
+    "column": 30,
+    "status": "failed",
+    "durationMs": 46,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Expected status code 200 but got 500.\nResponse body:\n{\"error\":\"Internal Server Error\",\"message\":\"Cannot read properties of undefined (reading toLowerCase)\"}\n\n  78 |       });\n  79 |\n> 80 |       await expect(response).toHaveStatusCode(200);\n     |                              ^\n  81 |\n  82 |       const body: ComplianceScreenResponse = await response.json();\n  83 |       await validateSchema({ schema: complianceScreenSchema, json: body });\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/complianceScreen.spec.ts:80:30",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     70 |     'should screen wallet successfully for perps-submit context',\n     71 |     tc('API-COMP-008'),\n     72 |     async ({ request, baseURL }) => {\n     73 |       const payload = { wallet: validAddress, context: 'perps-submit' };\n     74 | \n     75 |       const response = await request.post('/api/compliance/screen', {\n     76 |         headers: getOriginHeader(baseURL),\n     77 |         data: payload,\n     78 |       });\n     79 | \n >   80 |       await expect(response).toHaveStatusCode(200);\n     81 | \n     82 |       const body: ComplianceScreenResponse = await response.json();\n     83 |       await validateSchema({ schema: complianceScreenSchema, json: body });\n     84 |     },\n     85 |   );\n     86 | \n     87 |   test(\n     88 |     'should flag sanctioned wallet address',\n     89 |     tc('API-COMP-009'),",
+    "attachments": [],
+    "gitDiff": "commit a808e9d6a2e0c5cfe35656e1eb50ee07555c6ec2\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Thu Nov 12 16:52:36 2026 +0100\n\n    feat(tc): test case catalogue with traceability, coverage backlog and priority tags\n    \n    Catalogue (test-cases/):\n    - 183 cases: 122 automated (every existing test linked via tc('<ID>')),\n      49 planned and 12 manual\n    - Planned cases for the 37 app API route groups with no tests (positions,\n      markets, trading, automation, platform, admin/security access control) and\n      untested UI journeys (trade, portfolio, automations, migrate); known fork\n      gaps #72/#73 and aphelion-app#1667 linked\n    - Manual real-network automation execution cases (Stop-Loss, Trailing\n      Stop-Loss, Auto Sell, Take Profit across Aave V3, Aave V3 Lido, Morpho,\n      Compound V3, Euler and Spark on Ethereum, Base and Arbitrum), with a shared\n      procedure to trigger LTV-based automations deliberately\n    \n    Traceability:\n    - utils/testCase.ts: tc('<ID>') add"
+  }
+}

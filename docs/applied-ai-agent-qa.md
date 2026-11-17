@@ -43,6 +43,11 @@ flowchart TD
 | **`DOM_SELECTOR_DRIFT`** | Locator timeout, element not visible, DOM mutation, strict mode violations               | Identifies the failing locator, checks the Playwright trace, and generates a ready-to-copy code diff updating the selector.                               |
 | **`REGRESSION_DEFECT`**  | Assertion mismatches (`expect(received).toEqual(expected)`), contract reverts, HTTP 500s | Flags a potential application code bug or breaking API schema change for developer investigation.                                                         |
 
+> 🧪 **How accurate is it?** The classifier is scored against a labelled dataset of 32 failures:
+> the keyword fallback is right 78% of the time (42% on hard cases). Every result now says which
+> classifier answered (`source`, `fallbackReason`), and `HEAL_POLICY=evaluated` restricts
+> self-healing to confident Gemini answers. See **[AI Triage Evaluation](ai-triage-evaluation.md)**.
+
 ---
 
 ## 🚀 Local Developer Usage

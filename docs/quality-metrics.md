@@ -40,6 +40,8 @@ green side (e.g. exactly 98.0% pass rate is green).
 | **M6** | **Suite duration p95**                  | p95 of run wall-clock over the last 14 runs vs the p95 of the 14 runs before (same test selection: full or regression). Needs ≥ 5 runs in each window.         | Playwright JSON report (`stats.duration`)                                   | ≤ baseline +10% / +10–25% / > +25%                    | **QA** → profile slow tests, rebalance workers                                                       |
 | **M7** | **Defect escape indicator**             | open known app bugs (register + `issue` annotations in the latest runs) and the age of the oldest                                                              | [`docs/known-app-bugs.md`](known-app-bugs.md) + `knownAppBug()` annotations | 0 / 1–2 / ≥ 3 open **or** any > 30 days               | **Product / Eng lead** → prioritise the fixes                                                        |
 
+> **M4 trust:** M4 counts AI triage labels, whose accuracy is measured in [AI Triage Evaluation](ai-triage-evaluation.md) (keyword fallback: 78%; with the current free-tier Gemini key, many labels are likely the fallback's, which the triage reports now show in their `source` field). Read the cause mix with that error rate in mind.
+
 ### 🎯 M7 target metric: real defect escape rate
 
 M7 is a **proxy**. The target metric is the defect escape rate:

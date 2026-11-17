@@ -1,0 +1,31 @@
+{
+  "id": "TRI-030",
+  "label": "TRANSIENT_RPC",
+  "labelSource": "synthetic",
+  "difficulty": "easy",
+  "notes": "Synthetic: funding the fork account failed with \"nonce too low\" because a previous funding transaction from the same impersonated whale was still pending in another worker. A race on shared fork state; a re-run passes.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should sign Terms of Service",
+    "projectName": "anvil",
+    "specFile": "tests/e2e/anvil/protocolCases.spec.ts",
+    "specLine": 35,
+    "filePath": "tests/e2e/anvil/protocolCases.spec.ts",
+    "line": 23,
+    "column": 7,
+    "status": "failed",
+    "retries": 0,
+    "attempts": 1,
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "sourceCodeSnippet": "     13 |     let targetVaultUrl: string;\n     14 | \n     15 |     test.beforeEach(async ({ app, anvilFork }) => {\n     16 |       const { url } = await getActiveVault(app.page.request, 'multiply', {\n     17 |         network: 'Ethereum',\n     18 |         collateral: 'ETH',\n     19 |       });\n     20 |       targetVaultUrl = url;\n     21 | \n     22 |       // Seed Anvil accounts with WETH collateral for position setup\n >   23 |       await anvilFork.fundToken({\n     24 |         tokenAddress: wethMainnetAddress,\n     25 |         recipient: defaultAnvilAddress,\n     26 |         amount: FORK_AMOUNTS.wethFunding,\n     27 |       });\n     28 |       await anvilFork.fundToken({\n     29 |         tokenAddress: wethMainnetAddress,\n     30 |         recipient: anvilAccount1Address,\n     31 |         amount: FORK_AMOUNTS.wethFunding,\n     32 |       });",
+    "gitDiff": "",
+    "durationMs": 4120,
+    "errorSnippet": "TransactionExecutionError: Nonce provided for the transaction is lower than the current nonce of the account.\nTry increasing the nonce or find the latest nonce with `getTransactionCount`.\n\nRequest Arguments:\n  from:   0xF977814e90dA44bFA03b6295A0616a897441aceC\n  to:     0x4200000000000000000000000000000000000006\n  data:   0xa9059cbb000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb92266\n  nonce:  41\n\nDetails: nonce too low\nVersion: viem@2.21.54",
+    "stackTrace": "TransactionExecutionError: Nonce provided for the transaction is lower than the current nonce of the account.\n    at getTransactionError (/__w/sov-e2e-tests/sov-e2e-tests/node_modules/viem/_esm/utils/errors/getTransactionError.js:17:12)\n    at sendTransaction (/__w/sov-e2e-tests/sov-e2e-tests/node_modules/viem/_esm/actions/wallet/sendTransaction.js:136:15)\n    at AnvilFork.fundToken (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/anvilFork.ts:142:7)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/anvil/protocolCases.spec.ts:23:7"
+  }
+}

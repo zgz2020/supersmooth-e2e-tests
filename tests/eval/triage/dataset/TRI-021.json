@@ -1,0 +1,26 @@
+{
+  "id": "TRI-021",
+  "label": "REGRESSION_DEFECT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: /api/token-prices/current returned prices as strings instead of numbers. The API changed its contract (schema validation fails).",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should fetch current token prices for requested coins",
+    "projectName": "api",
+    "specFile": "tests/api/tokenPricesCurrent.spec.ts",
+    "specLine": 34,
+    "filePath": "utils/schema/validator.ts",
+    "line": 19,
+    "column": 13,
+    "status": "failed",
+    "durationMs": 153,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Schema validation error: [\n  {\n    \"instancePath\": \"/prices/ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48\",\n    \"schemaPath\": \"#/properties/prices/additionalProperties/type\",\n    \"keyword\": \"type\",\n    \"params\": {\n      \"type\": \"number\"\n    },\n    \"message\": \"must be number\"\n  }\n]\nJSON: {\n  \"prices\": {\n    \"ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48\": \"0.9997347164999999\",\n    \"ethereum:0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2\": \"1822.9905323740986\",\n    \"ethereum:0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf\": \"64631.148237845104\"\n  }\n}\n\n   at ../utils/schema/validator.ts:19\n\n  17 |       const prettyJson = JSON.stringify(json, null, 2);\n  18 |       const prettyError = JSON.stringify(validate.errors, null, 2);\n> 19 |       throw Error(`Schema validation error: ${prettyError}\\nJSON: ${prettyJson}`);\n     |             ^\n  20 |     }\n  21 |   });\n  22 | };\n    at /__w/sov-e2e-tests/sov-e2e-tests/utils/schema/validator.ts:19:13\n    at validateSchema (/__w/sov-e2e-tests/sov-e2e-tests/utils/schema/validator.ts:13:14)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/tokenPricesCurrent.spec.ts:51:13",
+    "stackTrace": "",
+    "sourceCodeSnippet": "      9 |   json: T;\n     10 | };\n     11 | \n     12 | export const validateSchema = async <T>({ schema, json }: ValidateSchemaProps<T>) => {\n     13 |   await test.step('Validating json schema', async () => {\n     14 |     const validate = ajv.compile(schema);\n     15 | \n     16 |     if (!validate(json)) {\n     17 |       const prettyJson = JSON.stringify(json, null, 2);\n     18 |       const prettyError = JSON.stringify(validate.errors, null, 2);\n >   19 |       throw Error(`Schema validation error: ${prettyError}\\nJSON: ${prettyJson}`);\n     20 |     }\n     21 |   });\n     22 | };\n     23 | ",
+    "attachments": [],
+    "gitDiff": "commit 8064ddcca8f3d0b5563b70540c270ebd4cc93788\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Fri Oct 23 11:16:44 2026 +0200\n\n    fix: resolve CI execution, schema imports, and downgrade node to v20\n\ndiff --git a/utils/schema/validator.ts b/utils/schema/validator.ts\nindex 7303167..8f76da7 100644\n--- a/utils/schema/validator.ts\n+++ b/utils/schema/validator.ts\n@@ -1,5 +1,6 @@\n import test from '@playwright/test';\n-import Ajv, { AnySchemaObject, JSONSchemaType } from 'ajv';\n+import Ajv from 'ajv';\n+import type { AnySchemaObject, JSONSchemaType } from 'ajv';\n \n const ajv = new Ajv({ allowUnionTypes: true });"
+  }
+}

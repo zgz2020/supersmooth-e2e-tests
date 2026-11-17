@@ -1,0 +1,31 @@
+{
+  "id": "TRI-031",
+  "label": "TRANSIENT_RPC",
+  "labelSource": "synthetic",
+  "difficulty": "easy",
+  "notes": "Synthetic: the fork rejected a funding transaction with \"replacement transaction underpriced\" (same nonce as a pending one, same gas price). A pending-transaction collision on the node, not an app or test defect.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should sign Terms of Service",
+    "projectName": "anvil",
+    "specFile": "tests/e2e/anvil/protocolCases.spec.ts",
+    "specLine": 35,
+    "filePath": "tests/e2e/anvil/protocolCases.spec.ts",
+    "line": 28,
+    "column": 7,
+    "status": "failed",
+    "retries": 0,
+    "attempts": 1,
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "sourceCodeSnippet": "     18 |         collateral: 'ETH',\n     19 |       });\n     20 |       targetVaultUrl = url;\n     21 | \n     22 |       // Seed Anvil accounts with WETH collateral for position setup\n     23 |       await anvilFork.fundToken({\n     24 |         tokenAddress: wethMainnetAddress,\n     25 |         recipient: defaultAnvilAddress,\n     26 |         amount: FORK_AMOUNTS.wethFunding,\n     27 |       });\n >   28 |       await anvilFork.fundToken({\n     29 |         tokenAddress: wethMainnetAddress,\n     30 |         recipient: anvilAccount1Address,\n     31 |         amount: FORK_AMOUNTS.wethFunding,\n     32 |       });\n     33 |     });\n     34 | \n     35 |     test('should sign Terms of Service', tc('E2E-PROTO-001'), async ({ app }) => {\n     36 |       await app.vaultPage.openPage(targetVaultUrl, { withBalance: true });\n     37 | ",
+    "gitDiff": "",
+    "durationMs": 3870,
+    "errorSnippet": "TransactionExecutionError: replacement transaction underpriced\n\nRequest Arguments:\n  from:   0xF977814e90dA44bFA03b6295A0616a897441aceC\n  to:     0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\n  nonce:  42\n\nDetails: replacement transaction underpriced\nVersion: viem@2.21.54",
+    "stackTrace": "TransactionExecutionError: replacement transaction underpriced\n    at getTransactionError (/__w/sov-e2e-tests/sov-e2e-tests/node_modules/viem/_esm/utils/errors/getTransactionError.js:17:12)\n    at sendTransaction (/__w/sov-e2e-tests/sov-e2e-tests/node_modules/viem/_esm/actions/wallet/sendTransaction.js:136:15)\n    at AnvilFork.fundToken (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/anvilFork.ts:142:7)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/anvil/protocolCases.spec.ts:28:7"
+  }
+}

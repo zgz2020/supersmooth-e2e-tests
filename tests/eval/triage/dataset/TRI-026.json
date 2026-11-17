@@ -1,0 +1,31 @@
+{
+  "id": "TRI-026",
+  "label": "DOM_SELECTOR_DRIFT",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: the Migrate page heading locator was changed to an exact 'Migrate Positions' that the app does not render. Stale heading locator; the page is fine.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "it should open Migrate page",
+    "projectName": "no-wallet",
+    "specFile": "tests/e2e/no-wallet/topNavigation.spec.ts",
+    "specLine": 57,
+    "filePath": "src/pages/migrate.ts",
+    "line": 20,
+    "column": 7,
+    "status": "failed",
+    "durationMs": 12403,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: Timed out 10000ms waiting for expect(locator).toBeVisible()\n\nLocator: getByRole('heading', { name: 'Migrate Positions', exact: true })\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n  - expect.toBeVisible with timeout 10000ms\n  - waiting for getByRole('heading', { name: 'Migrate Positions', exact: true })\n\n\n   at ../src/pages/migrate.ts:20\n\n  18 |     await expect(\n  19 |       this.page.getByRole('heading', { name: 'Migrate Positions', exact: true }),\n> 20 |     ).toBeVisible();\n     |       ^\n  21 |   }\n  22 | }\n  23 |\n    at Migrate.call (/__w/sov-e2e-tests/sov-e2e-tests/src/pages/migrate.ts:20:7)\n    at /__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:49:27\n    at Migrate.shouldBeOpened (/__w/sov-e2e-tests/sov-e2e-tests/src/fixtures/index.ts:48:17)\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/e2e/no-wallet/topNavigation.spec.ts:59:27",
+    "stackTrace": "",
+    "sourceCodeSnippet": "     10 | \n     11 |   @step\n     12 |   async open() {\n     13 |     await this.page.goto('/migrate');\n     14 |   }\n     15 | \n     16 |   @step\n     17 |   async shouldBeOpened() {\n     18 |     await expect(\n     19 |       this.page.getByRole('heading', { name: 'Migrate Positions', exact: true }),\n >   20 |     ).toBeVisible();\n     21 |   }\n     22 | }\n     23 | ",
+    "attachments": [
+      {
+        "name": "screenshot",
+        "contentType": "image/png"
+      }
+    ],
+    "gitDiff": "diff --git a/src/pages/migrate.ts b/src/pages/migrate.ts\nindex b480d21..02e2298 100644\n--- a/src/pages/migrate.ts\n+++ b/src/pages/migrate.ts\n@@ -16,7 +16,7 @@ export class Migrate {\n   @step\n   async shouldBeOpened() {\n     await expect(\n-      this.page.getByRole('heading', { name: 'Migrate Position', exact: false }),\n+      this.page.getByRole('heading', { name: 'Migrate Positions', exact: true }),\n     ).toBeVisible();\n   }\n }"
+  }
+}

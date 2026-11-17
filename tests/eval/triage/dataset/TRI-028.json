@@ -1,0 +1,26 @@
+{
+  "id": "TRI-028",
+  "label": "TRANSIENT_RPC",
+  "labelSource": "fault-injection",
+  "difficulty": "easy",
+  "notes": "Fault injection: the connection to the API host was refused (ECONNREFUSED). The service was unreachable during the run; nothing in the app or test changed.",
+  "capturedAt": "2026-11-16",
+  "failure": {
+    "testTitle": "should fetch recommended strategies",
+    "projectName": "api",
+    "specFile": "tests/api/portfolioRecommendedStrategies.spec.ts",
+    "specLine": 9,
+    "filePath": "tests/api/portfolioRecommendedStrategies.spec.ts",
+    "line": 10,
+    "column": 36,
+    "status": "failed",
+    "durationMs": 43,
+    "retries": 0,
+    "attempts": 1,
+    "errorSnippet": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:9\nCall log:\n  - → GET https://staging.supersmooth.fi/api/portfolio/recommended-strategies\n    - user-agent: Playwright/1.49.1 (x64; macOS 13.4) node/20.18\n    - accept: */*\n    - accept-encoding: gzip,deflate,br\n\n\n   8 | test.describe('Portfolio Recommended Strategies API', () => {\n   9 |   test('should fetch recommended strategies', tc('API-PORT-001'), async ({ request }) => {\n> 10 |     const response = await request.get('/api/portfolio/recommended-strategies');\n     |                                    ^\n  11 |\n  12 |     await expect(response).toHaveStatusCode(200);\n  13 |\n    at /__w/sov-e2e-tests/sov-e2e-tests/tests/api/portfolioRecommendedStrategies.spec.ts:10:36",
+    "stackTrace": "",
+    "sourceCodeSnippet": "      1 | import { test, expect } from '@playwright/test';\n      2 | import { portfolioRecommendedStrategiesSchema } from '../../utils/schema/api/portfolioRecommendedStrategiesSchema';\n      3 | import { validateSchema } from '../../utils/schema/validator';\n      4 | import type { PortfolioRecommendedStrategies } from '../../utils/types/api/portfolioRecommendedStrategies';\n      5 | import '../../utils/assertions/matchers';\n      6 | import { tc } from '../../utils/testCase';\n      7 | \n      8 | test.describe('Portfolio Recommended Strategies API', () => {\n      9 |   test('should fetch recommended strategies', tc('API-PORT-001'), async ({ request }) => {\n >   10 |     const response = await request.get('/api/portfolio/recommended-strategies');\n     11 | \n     12 |     await expect(response).toHaveStatusCode(200);\n     13 | \n     14 |     const body: PortfolioRecommendedStrategies = await response.json();\n     15 |     await validateSchema({ schema: portfolioRecommendedStrategiesSchema, json: body });\n     16 |     expect(\n     17 |       body.cards.length,\n     18 |       'Response should contain at least one recommended strategy card',\n     19 |     ).toBeGreaterThan(0);",
+    "attachments": [],
+    "gitDiff": "commit a808e9d6a2e0c5cfe35656e1eb50ee07555c6ec2\nAuthor: zgz2020 <jjlanga@hotmail.com>\nDate:   Thu Nov 12 16:52:36 2026 +0100\n\n    feat(tc): test case catalogue with traceability, coverage backlog and priority tags\n    \n    Catalogue (test-cases/):\n    - 183 cases: 122 automated (every existing test linked via tc('<ID>')),\n      49 planned and 12 manual\n    - Planned cases for the 37 app API route groups with no tests (positions,\n      markets, trading, automation, platform, admin/security access control) and\n      untested UI journeys (trade, portfolio, automations, migrate); known fork\n      gaps #72/#73 and aphelion-app#1667 linked\n    - Manual real-network automation execution cases (Stop-Loss, Trailing\n      Stop-Loss, Auto Sell, Take Profit across Aave V3, Aave V3 Lido, Morpho,\n      Compound V3, Euler and Spark on Ethereum, Base and Arbitrum), with a shared\n      procedure to trigger LTV-based automations deliberately\n    \n    Traceability:\n    - utils/testCase.ts: tc('<ID>') add"
+  }
+}
