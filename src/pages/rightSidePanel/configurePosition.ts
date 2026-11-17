@@ -4,6 +4,8 @@ import type { WaitToBeStableProps } from '../../../utils/types/e2e/common';
 
 // Formatted positive amount (e.g. 0.00025, 5.6, 1,250.00) with at least one non-zero digit
 const POSITIVE_AMOUNT = /^(?=.*[1-9])[\d,.]+$/;
+// Same, as a USD value (e.g. $429.64)
+const POSITIVE_USD_AMOUNT = /^\$(?=.*[1-9])[\d,.]+$/;
 
 export class ConfigurePosition {
   readonly page: Page;
@@ -25,9 +27,15 @@ export class ConfigurePosition {
   }
 
   @step
-  async waitToBeStable({ collateral, trade, withBalance, timeout }: WaitToBeStableProps) {
+  async waitToBeStable({ collateral, trade, withBalance, position, timeout }: WaitToBeStableProps) {
     const timeoutOption = timeout !== undefined ? { timeout } : undefined;
-    if (withBalance) {
+    if (position) {
+      // Existing position page: the panel's Liquidation Price shows once the position data loaded
+      await expect(this.panelLocator.getByTestId('liquidation-slider-price')).toHaveText(
+        POSITIVE_USD_AMOUNT,
+        timeoutOption,
+      );
+    } else if (withBalance) {
       await expect(this.balanceLocator).toHaveText(POSITIVE_AMOUNT, timeoutOption);
     } else if (trade) {
       await expect(

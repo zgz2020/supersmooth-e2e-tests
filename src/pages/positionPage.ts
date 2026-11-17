@@ -2,6 +2,7 @@ import { expect, Locator, Page } from '@playwright/test';
 import { step } from '../fixtures';
 import { RightSidePanel } from './rightSidePanel';
 import { parseAmount } from './amount';
+import type { WaitToBeStableProps } from '../../utils/types/e2e/common';
 
 export type PositionOverviewValues = {
   netValueUsd: number;
@@ -30,9 +31,9 @@ export class PositionPage {
   }
 
   @step
-  async openPage(url: string) {
+  async openPage(url: string, props: WaitToBeStableProps) {
     await this.page.goto(url);
-    await this.shouldShowOpenPosition();
+    await this.rightSidePanel.configurePosition.waitToBeStable(props);
   }
 
   /** The position has loaded and is still open (its net value is above zero). */

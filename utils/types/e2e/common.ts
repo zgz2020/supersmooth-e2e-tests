@@ -17,9 +17,10 @@ export type Token =
   | (string & {});
 
 export type WaitToBeStableProps = (
-  | { withBalance: true; collateral?: never; trade?: never }
-  | { trade: true; collateral?: never; withBalance?: never }
-  | { collateral: Token; trade?: never; withBalance?: never }
+  | { withBalance: true; collateral?: never; trade?: never; position?: never }
+  | { trade: true; collateral?: never; withBalance?: never; position?: never }
+  | { collateral: Token; trade?: never; withBalance?: never; position?: never }
+  | { position: true; collateral?: never; trade?: never; withBalance?: never }
 ) & { timeout?: number };
 
 export type Wallets =

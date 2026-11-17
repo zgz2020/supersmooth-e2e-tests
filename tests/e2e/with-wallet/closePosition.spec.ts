@@ -5,7 +5,10 @@ import { tc } from '../../../utils/testCase';
 test.describe('Close position - Multiply on Base', () => {
   test.beforeEach(async ({ app }, testInfo) => {
     testInfo.setTimeout(testInfo.timeout + 35_000);
-    await app.positionPage.openPage(TEST_WALLET_POSITIONS.multiplyAaveV3WethUsdcBase);
+    await app.positionPage.openPage(TEST_WALLET_POSITIONS.multiplyAaveV3WethUsdcBase, {
+      position: true,
+    });
+    await app.positionPage.shouldShowOpenPosition();
   });
 
   test(
