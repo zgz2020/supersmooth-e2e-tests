@@ -54,7 +54,7 @@ export class Header {
 
   @step
   async launchApp() {
-    await this.headerLocator.getByRole('link', { name: 'Launch app', exact: true }).click();
+    await this.headerLocator.getByRole('link', { name: 'Use Supersmooth', exact: true }).click();
   }
 
   @step
