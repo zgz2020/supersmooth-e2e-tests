@@ -1,6 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { step } from '../../fixtures';
-import { parseAmount } from '../amount';
+import { expectAmount } from '../../../utils/amount';
 import type { Token } from '../../../utils/types/e2e/common';
 
 type SummaryChange = {
@@ -61,11 +61,9 @@ export class ClosePosition {
   @step
   async shouldHaveChange(label: string, { from, tolerance, to }: SummaryChange) {
     const values = this.rowValue(label).locator('p');
-    await expect
-      .poll(async () => Math.abs(parseAmount(await values.first().innerText()) - from), {
-        message: `${label} should start at ${from} (±${tolerance})`,
-      })
-      .toBeLessThanOrEqual(tolerance);
+    // `<current> → <after>`: both values must be rendered before reading them
+    await expect(values).toHaveCount(2);
+    await expectAmount(values.first(), { value: from, tolerance }, `${label} (current)`);
     await expect(values.last()).toHaveText(to);
   }
 
