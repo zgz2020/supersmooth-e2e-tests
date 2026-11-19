@@ -97,11 +97,11 @@ test.
 
 | Status          |   Cases |
 | :-------------- | ------: |
-| automated       |     123 |
+| automated       |     124 |
 | manual          |      12 |
 | planned         |      49 |
 | not-automatable |       0 |
-| **Total**       | **184** |
+| **Total**       | **185** |
 
 <!-- tc-index:end -->
 
