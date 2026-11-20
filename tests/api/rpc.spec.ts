@@ -17,7 +17,6 @@ import { tc } from '../../utils/testCase';
 
 const supportedChainIds = [
   { name: 'Ethereum Mainnet', chainId: 1 },
-  { name: 'Optimism', chainId: 10 },
   { name: 'Base', chainId: 8453 },
   { name: 'Arbitrum', chainId: 42161 },
 ];

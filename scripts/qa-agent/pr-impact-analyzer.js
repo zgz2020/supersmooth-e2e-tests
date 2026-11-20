@@ -199,6 +199,19 @@ const DOMAIN_RULES = [
     projects: ['api'],
   },
 
+  // --- API: FEE ENTITLEMENT (SWAP FEE TIERS) ---
+  {
+    domain: 'API: Fee Entitlement',
+    patterns: [
+      /^utils\/schema\/api\/feeEntitlement/,
+      /^utils\/types\/api\/feeEntitlement/,
+      /^utils\/constants\/feeTiers\.ts$/,
+      /^tests\/api\/feeEntitlement\.spec\.ts$/,
+    ],
+    specs: ['tests/api/feeEntitlement.spec.ts'],
+    projects: ['api'],
+  },
+
   // --- API: TERMS, RPC, TOKEN PRICES & SPREAD ---
   {
     domain: 'API: Terms, RPC, Token Prices & Spread',

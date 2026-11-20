@@ -31,13 +31,13 @@ expected result behind each link. Highest priority first.
 | [E2E-AUTO-014](e2e/automations.md#e2e-auto-014-take-profit-executes-on-base-compound-v3)                                 | Take Profit executes on Base: Compound V3                                  | P1       | manual | `e2e/automations.md` |
 | [E2E-AUTO-015](e2e/automations.md#e2e-auto-015-take-profit-executes-on-arbitrum-aave-v3)                                 | Take Profit executes on Arbitrum: Aave V3                                  | P1       | manual | `e2e/automations.md` |
 
-## 🗺️ Planned cases (49)
+## 🗺️ Planned cases (48)
 
 Cases with no test yet: the automation backlog. Each one becomes `automated` together with its
 test.
 
 <details>
-<summary>Show the 49 planned cases</summary>
+<summary>Show the 48 planned cases</summary>
 
 | ID                                                                                                                 | Case                                                             | Priority | File                    |
 | :----------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------- | :------- | :---------------------- |
@@ -74,7 +74,6 @@ test.
 | [API-POS-009](api/positions.md#api-pos-009-unlink-a-borrowearn-pair-only-with-a-valid-signature)                   | Unlink a Borrow/Earn pair only with a valid signature            | P1       | `api/positions.md`      |
 | [API-TRADE-001](api/trading.md#api-trade-001-swap-quote-for-a-valid-pair)                                          | Swap quote for a valid pair                                      | P1       | `api/trading.md`        |
 | [API-TRADE-002](api/trading.md#api-trade-002-swap-quote-rejects-invalid-input)                                     | Swap quote rejects invalid input                                 | P2       | `api/trading.md`        |
-| [API-TRADE-003](api/trading.md#api-trade-003-fee-entitlement-is-issued-for-a-valid-request)                        | Fee entitlement is issued for a valid request                    | P1       | `api/trading.md`        |
 | [API-TRADE-004](api/trading.md#api-trade-004-cctp-relay-accepts-only-valid-deposit-attestations)                   | CCTP relay accepts only valid deposit attestations               | P1       | `api/trading.md`        |
 | [API-TRADE-005](api/trading.md#api-trade-005-hyperliquid-coin-icon-proxy)                                          | Hyperliquid coin icon proxy                                      | P3       | `api/trading.md`        |
 | [E2E-AUTO-001](e2e/automations.md#e2e-auto-001-configure-a-stop-loss-and-reject-the-transaction)                   | Configure a stop loss and reject the transaction                 | P1       | `e2e/automations.md`    |
@@ -97,11 +96,11 @@ test.
 
 | Status          |   Cases |
 | :-------------- | ------: |
-| automated       |     124 |
+| automated       |     131 |
 | manual          |      12 |
-| planned         |      49 |
+| planned         |      48 |
 | not-automatable |       0 |
-| **Total**       | **185** |
+| **Total**       | **191** |
 
 <!-- tc-index:end -->
 
