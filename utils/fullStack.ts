@@ -96,24 +96,29 @@ export type PositionSnapshot = {
 };
 
 /** The newest position snapshot Ponder holds for `safe`, or null if it has none. */
-export async function latestPositionSnapshot(safe: Address): Promise<PositionSnapshot | null> {
+/**
+ * Every snapshot of the Safe's latest indexed block (empty if none). One transaction can record
+ * several, and their ids are hashes, so no field orders them within a block.
+ */
+export async function latestBlockPositionSnapshots(safe: Address): Promise<PositionSnapshot[]> {
   const { safes } = await ponderQuery<{ safes: { items: { id: string }[] } }>(
     'query ($address: String!) { safes(where: { address: $address }) { items { id } } }',
     { address: safe.toLowerCase() },
   );
   const safeId = safes.items[0]?.id;
-  if (!safeId) return null;
+  if (!safeId) return [];
   const { positionSnapshots } = await ponderQuery<{
     positionSnapshots: { items: PositionSnapshot[] };
   }>(
     `query ($safeId: String!) {
-      positionSnapshots(where: { safeId: $safeId }, orderBy: "blockNumber", orderDirection: "desc", limit: 1) {
+      positionSnapshots(where: { safeId: $safeId }, orderBy: "blockNumber", orderDirection: "desc", limit: 20) {
         items { lifecycle action netValueUsd collateralUsd debtUsd blockNumber }
       }
     }`,
     { safeId },
   );
-  return positionSnapshots.items[0] ?? null;
+  const latestBlock = positionSnapshots.items[0]?.blockNumber;
+  return positionSnapshots.items.filter((snapshot) => snapshot.blockNumber === latestBlock);
 }
 
 /** Calls a view function on the fork. `abi` must contain `functionName`. */

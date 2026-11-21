@@ -220,7 +220,7 @@ To add a scenario:
   debt
 - The position page's total exposure and debt (priced with Aave's oracle) match the chain within
   1%, and the multiple is > 1
-- Ponder's latest snapshot for the Safe is the `open`, with a net value above zero; the portfolio
+- The snapshots of the Safe's latest indexed block include the `open`, with a net value above zero; the portfolio
   API sources the position from the indexer (not its on-chain fallback), and the card's Net Value
   matches the snapshot within $1 (it shows whole dollars)
 

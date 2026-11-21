@@ -42,6 +42,10 @@ const IGNORED_PATHS = [
   'docs/',
   // Helper unit tests run in their own workflow (unit-tests.yml), never in e2e/regression runs
   'tests/unit/',
+  // These suites need their own environment (an Anvil fork, or the full local stack) and run in
+  // their own workflows; the predictive run has neither, so their specs would fail there
+  'tests/e2e/anvil/',
+  'tests/e2e/fullstack/',
   '.vscode/',
   '.gitignore',
   '.prettierrc',

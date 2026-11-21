@@ -6,6 +6,9 @@
  * a chain that is rewound under it, so tests never rewind. A generated account owns its own Safe and
  * positions, so tests cannot see each other's state, even in parallel on the same chain.
  */
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { test as base, type Page } from '@playwright/test';
 import {
   encodeFunctionData,
@@ -64,6 +67,58 @@ type TestFixtures = {
 const isAddress = (value: unknown): value is string =>
   typeof value === 'string' && /^0x[a-fA-F0-9]{40}$/.test(value);
 
+// Cross-worker locks (workers are separate processes): one directory per lock, created atomically
+const LOCK_DIR = path.resolve('.temp/fullstack/locks');
+// A lock older than this was left by a crashed worker; funding itself takes a few seconds
+const STALE_LOCK_MS = 120_000;
+
+/** Runs `fn` while holding the lock `name`, shared by every worker on this machine. */
+async function withLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  const lock = path.join(LOCK_DIR, name);
+  await fs.mkdir(LOCK_DIR, { recursive: true });
+  for (;;) {
+    try {
+      await fs.mkdir(lock);
+      break;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      const stat = await fs.stat(lock).catch(() => null);
+      if (stat && Date.now() - stat.mtimeMs > STALE_LOCK_MS) {
+        await fs.rm(lock, { recursive: true, force: true });
+      } else {
+        await sleep(250);
+      }
+    }
+  }
+  try {
+    return await fn();
+  } finally {
+    await fs.rm(lock, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Transfers `raw` of `token` from `holder` while impersonating it. Locked per holder: another
+ * worker's `anvil_stopImpersonatingAccount` would otherwise cut this transfer off mid-way.
+ */
+async function transferFromHolder(token: Address, holder: Address, to: Address, raw: bigint) {
+  await withLock(`holder-${holder.toLowerCase()}`, async () => {
+    // Gas money for the holder (it may be a contract), added to whatever it already holds
+    const balance = BigInt(await rpc<Hex>('eth_getBalance', [holder, 'latest']));
+    await rpc('anvil_setBalance', [holder, toHex(balance + parseEther('1'))]);
+    await rpc('anvil_impersonateAccount', [holder]);
+    try {
+      await sendAndConfirm({
+        from: holder,
+        to: token,
+        data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [to, raw] }),
+      });
+    } finally {
+      await rpc('anvil_stopImpersonatingAccount', [holder]);
+    }
+  });
+}
+
 async function fundWallet(wallet: Address, token: Address, amount: number, holder?: Address) {
   const decimals = await readContract<number>(token, erc20Abi, 'decimals');
   const raw = parseUnits(String(amount), decimals);
@@ -79,18 +134,7 @@ async function fundWallet(wallet: Address, token: Address, amount: number, holde
   } else {
     if (!holder)
       throw new Error(`wallet.fund: pass a holder of ${token}; only WETH can be wrapped`);
-    // Gas money for the holder (it may be a contract), then transfer from it while impersonated
-    await rpc('anvil_setBalance', [holder, toHex(parseEther('1'))]);
-    await rpc('anvil_impersonateAccount', [holder]);
-    try {
-      await sendAndConfirm({
-        from: holder,
-        to: token,
-        data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [wallet, raw] }),
-      });
-    } finally {
-      await rpc('anvil_stopImpersonatingAccount', [holder]);
-    }
+    await transferFromHolder(token, holder, wallet, raw);
   }
 
   // Some tokens return false instead of reverting, so confirm the balance really moved

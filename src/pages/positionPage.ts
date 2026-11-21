@@ -89,13 +89,12 @@ export class PositionPage {
     });
   }
 
-  /** The Safe the page shows: the last URL segment. */
+  /** The Safe the page shows: the last path segment (ignoring any query, hash or trailing slash). */
   @step
   async getSafeAddress(): Promise<Address> {
-    await expect(this.page, 'position page URL should end in a Safe address').toHaveURL(
-      /\/0x[0-9a-fA-F]{40}$/,
-    );
-    return this.page.url().split('/').at(-1) as Address;
+    const safePath = /\/(0x[0-9a-fA-F]{40})\/?(?:[?#].*)?$/;
+    await expect(this.page, 'position page path should end in a Safe address').toHaveURL(safePath);
+    return this.page.url().match(safePath)![1] as Address;
   }
 
   /**

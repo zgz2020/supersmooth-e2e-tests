@@ -523,6 +523,8 @@ async function down() {
     log('Nothing to stop (no state file).');
     return;
   }
+  // The checkout `up` changed, even if APHELION_APP_DIR points elsewhere now
+  const appDir = state.appDir || APP_DIR;
 
   if (state.appPid) {
     try {
@@ -535,7 +537,7 @@ async function down() {
 
   log('Removing the stack containers and volumes');
   try {
-    compose(['down', '-v', '--remove-orphans'], { quiet: true });
+    compose(['down', '-v', '--remove-orphans'], { quiet: true, cwd: appDir });
   } catch (error) {
     console.error(String(error));
   }
@@ -551,7 +553,7 @@ async function down() {
           '_',
           state.sdkBackupDir,
         ],
-        { quiet: true },
+        { quiet: true, cwd: appDir },
       );
       log('SDK files restored');
     } catch (error) {
@@ -559,11 +561,28 @@ async function down() {
       console.error(`SDK restore failed; the backup is kept at ${state.sdkBackupDir}\n${error}`);
     }
   }
+  // Each step runs even if an earlier one failed; a failure keeps the state file for a retry
+  const restoreStep = (name, fn) => {
+    try {
+      fn();
+    } catch (error) {
+      restored = false;
+      console.error(`${name} failed:\n${error}`);
+    }
+  };
   if (state.ponderGeneratedWasClean) {
-    run('git', ['checkout', '--', ...PONDER_GENERATED], { quiet: true });
+    restoreStep('Restoring the Ponder generated files', () =>
+      run('git', ['checkout', '--', ...PONDER_GENERATED], { quiet: true, cwd: appDir }),
+    );
   }
-  if (!state.agentsMdExisted) fs.rmSync(path.join(APP_DIR, NEXT_AGENTS_MD), { force: true });
-  fs.rmSync(path.join(APP_DIR, RUNTIME_MANIFEST), { force: true });
+  if (!state.agentsMdExisted) {
+    restoreStep(`Removing ${NEXT_AGENTS_MD}`, () =>
+      fs.rmSync(path.join(appDir, NEXT_AGENTS_MD), { force: true }),
+    );
+  }
+  restoreStep(`Removing ${RUNTIME_MANIFEST}`, () =>
+    fs.rmSync(path.join(appDir, RUNTIME_MANIFEST), { force: true }),
+  );
 
   if (restored) fs.rmSync(STATE_FILE, { force: true });
   log(restored ? 'Down: aphelion-app restored' : 'Down, but see the errors above');
@@ -581,17 +600,43 @@ async function status() {
   });
 }
 
+/**
+ * A state file only says a stack was started: a failed `up` keeps it on purpose (for debugging and
+ * `down`). Reuse the stack only if every service answers, so tests never run against a dead one.
+ */
+async function assertStackHealthy() {
+  const [block, head, app] = await Promise.all([
+    jsonRpc('eth_blockNumber').catch(() => null),
+    ponderHead().catch(() => null),
+    httpStatus(APP_URL, 10_000).catch(() => null),
+  ]);
+  const dead = [!block && 'Anvil', !head && 'Ponder', !app && 'the app'].filter(Boolean);
+  if (dead.length) {
+    fail(
+      `A stack state file exists but ${dead.join(', ')} did not respond: a previous run did not ` +
+        'finish starting or cleaning up. Run `pnpm fullstack:down`, then try again.',
+    );
+  }
+}
+
 async function test(argv) {
   const keep = argv.includes('--keep');
   const passthrough = argv.includes('--') ? argv.slice(argv.indexOf('--') + 1) : [];
   const alreadyUp = !!readState();
+  if (alreadyUp) await assertStackHealthy();
 
   let cleaningUp = false;
   const cleanupAndExit = async (code) => {
     if (cleaningUp) return;
     cleaningUp = true;
-    if (!alreadyUp && !keep) await down();
-    process.exit(code);
+    try {
+      if (!alreadyUp && !keep) await down();
+    } catch (error) {
+      // Teardown problems are reported, but never change the tests' result
+      console.error(`\n[fullstack] Teardown failed: ${error.message ?? error}`);
+    } finally {
+      process.exit(code);
+    }
   };
   process.on('SIGINT', () => void cleanupAndExit(130));
   process.on('SIGTERM', () => void cleanupAndExit(143));

@@ -53,7 +53,7 @@ Wallet, network and RPC edge cases on a local Anvil fork with an EIP-1193 mock p
 8. Check the receipt of every transaction the app sent through the wallet, then wait for Ponder to index the last of their blocks
 9. Click "Go to position"
 10. Read the Safe's collateral aToken and variable debt token balances on chain (token addresses from Aave's data provider for the chosen market) and compare them with the Position Overview
-11. Read Ponder's latest position snapshot for the Safe
+11. Read Ponder's position snapshots for the Safe's latest indexed block (one transaction can record several)
 12. Open the wallet's portfolio (`/portfolio/<wallet>`)
 
 **Expected result**
@@ -94,7 +94,7 @@ Position page (steps 9 and 10)
 
 Portfolio and indexer (steps 11 and 12)
 
-- Ponder holds a snapshot for the Safe; the latest one has `action` `open` and a `netValueUsd` above zero
+- Ponder holds snapshots for the Safe; those of its latest block include one with `action` `open` and a `netValueUsd` above zero (polled for up to 30 s)
 - `/api/portfolio/safes` returns exactly one position for the wallet, with `dataQuality.source` `indexer` (not the `onchain-recovery` fallback)
 - The portfolio shows a card linking to the Safe's position page
 - The card's Net Value equals the snapshot's `netValueUsd` within $1 (the card shows whole dollars)

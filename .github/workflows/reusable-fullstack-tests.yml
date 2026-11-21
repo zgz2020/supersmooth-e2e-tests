@@ -178,6 +178,8 @@ jobs:
         working-directory: sov-e2e-tests
         env:
           PLAYWRIGHT_ARGS: ${{ inputs.playwrightArgs }}
+          # The runner has no display; the suite's injected wallet needs no extension UI
+          HEADLESS: 'true'
         run: |
           # Word splitting of PLAYWRIGHT_ARGS is intended (several arguments)
           # shellcheck disable=SC2086

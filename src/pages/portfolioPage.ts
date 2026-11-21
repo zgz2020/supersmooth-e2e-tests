@@ -16,11 +16,14 @@ export class PortfolioPage {
   /** Opens the wallet's portfolio; returns the source of each position the page loaded. */
   @step
   async openPage(wallet: string): Promise<PositionSource[]> {
-    const safesResponse = this.page.waitForResponse(
-      (response) => response.url().includes('/api/portfolio/safes') && response.ok(),
+    const safesResponse = this.page.waitForResponse((response) =>
+      response.url().includes('/api/portfolio/safes'),
     );
     await this.page.goto(`/portfolio/${wallet}`);
-    return positionSources(await (await safesResponse).json());
+    const response = await safesResponse;
+    // Matched on the URL only, so an error status fails here with its code instead of timing out
+    expect(response.status(), `${response.url()} should succeed`).toBe(200);
+    return positionSources(await response.json());
   }
 
   /**
