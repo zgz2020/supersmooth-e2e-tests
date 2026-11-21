@@ -166,6 +166,7 @@ Detailed architectural documentation, setup guides, and references are organized
 | **[🛡️ Dynamic Vault Selection](docs/dynamic-vault-selection.md)**               | Resilient runtime pool discovery helper (`getActiveVault`) preventing 404s            |
 | **[🍴 Local dApp & Anvil Fork](docs/local-app-fork-testing.md)**                | Run `aphelion-app` locally against Anvil state fork with pre-funded balances          |
 | **[🏛️ Anvil Fork Testing (CI & Local)](docs/anvil-fork-playwright-testing.md)** | Deterministic Playwright Anvil fixture, worker isolation, and CI workflows            |
+| **[🧱 Full Local Stack E2E](docs/fullstack-e2e-testing.md)**                    | Fork + contracts + indexer + app, one command: open a real position end to end        |
 | **[🦊 Web3 Wallet Setup](docs/wallet-setup.md)**                                | Synpress v4 cache configuration, MetaMask automation, and wallet helpers              |
 | **[⚡ Performance Testing](docs/performance-testing-k6.md)**                    | Grafana k6 profiles, tiered tagged SLAs, and HTML reporting guide                     |
 | **[🔄 Cross-Repo CI Strategy](docs/ci-cross-repo-strategy.md)**                 | Architecture, status reporting, and dispatch from `aphelion-app` to CI                |

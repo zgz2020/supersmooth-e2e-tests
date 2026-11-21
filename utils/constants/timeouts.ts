@@ -49,6 +49,14 @@ export const TIMEOUTS = {
     action: scaled(20_000),
     fixture: scaled(90_000),
   },
+  // Full local stack (real swap quotes, real transactions, indexer catch-up, dev-server compiles)
+  fullStack: {
+    test: scaled(480_000, 'TEST_TIMEOUT_FULLSTACK'),
+    expect: scaled(60_000, 'EXPECT_TIMEOUT_FULLSTACK'),
+    navigation: scaled(120_000),
+    // Long enough for "Open Position" to enable: it waits for a live aggregator quote
+    action: scaled(60_000),
+  },
 };
 
 // Base for explicit waits multiplied at call sites (e.g. `defaultExpectTimeout * 3`).

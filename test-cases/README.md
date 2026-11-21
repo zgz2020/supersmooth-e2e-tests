@@ -31,64 +31,63 @@ expected result behind each link. Highest priority first.
 | [E2E-AUTO-014](e2e/automations.md#e2e-auto-014-take-profit-executes-on-base-compound-v3)                                 | Take Profit executes on Base: Compound V3                                  | P1       | manual | `e2e/automations.md` |
 | [E2E-AUTO-015](e2e/automations.md#e2e-auto-015-take-profit-executes-on-arbitrum-aave-v3)                                 | Take Profit executes on Arbitrum: Aave V3                                  | P1       | manual | `e2e/automations.md` |
 
-## 🗺️ Planned cases (48)
+## 🗺️ Planned cases (47)
 
 Cases with no test yet: the automation backlog. Each one becomes `automated` together with its
 test.
 
 <details>
-<summary>Show the 48 planned cases</summary>
+<summary>Show the 47 planned cases</summary>
 
-| ID                                                                                                                 | Case                                                             | Priority | File                    |
-| :----------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------- | :------- | :---------------------- |
-| [API-SEC-001](api/admin-security.md#api-sec-001-cockpit-endpoints-reject-requests-without-a-cockpit-session)       | Cockpit endpoints reject requests without a cockpit session      | P1       | `api/admin-security.md` |
-| [API-SEC-002](api/admin-security.md#api-sec-002-scheduled-jobs-reject-unauthenticated-triggers)                    | Scheduled jobs reject unauthenticated triggers                   | P1       | `api/admin-security.md` |
-| [API-SEC-003](api/admin-security.md#api-sec-003-product-table-debug-export-is-not-exposed-in-production)           | Product table debug export is not exposed in production          | P2       | `api/admin-security.md` |
-| [API-SEC-004](api/admin-security.md#api-sec-004-indexer-auth-endpoint-is-rate-limited-and-validates-input)         | Indexer auth endpoint is rate-limited and validates input        | P2       | `api/admin-security.md` |
-| [API-SEC-005](api/admin-security.md#api-sec-005-mcp-oauth-rejects-invalid-grants-and-unsigned-authorizations)      | MCP OAuth rejects invalid grants and unsigned authorizations     | P1       | `api/admin-security.md` |
-| [API-AUTO-001](api/automation.md#api-auto-001-automation-subscriptions-for-a-wallet)                               | Automation subscriptions for a wallet                            | P1       | `api/automation.md`     |
-| [API-AUTO-002](api/automation.md#api-auto-002-shield-coverage-and-guarded-positions)                               | Shield coverage and guarded positions                            | P2       | `api/automation.md`     |
-| [API-MKT-001](api/markets.md#api-mkt-001-product-detail-returns-the-markets-real-tokens)                           | Product detail returns the market's real tokens                  | P1       | `api/markets.md`        |
-| [API-MKT-002](api/markets.md#api-mkt-002-product-rate-history-chart-data)                                          | Product rate history chart data                                  | P2       | `api/markets.md`        |
-| [API-MKT-003](api/markets.md#api-mkt-003-market-stats-and-global-market-metrics)                                   | Market stats and global market metrics                           | P2       | `api/markets.md`        |
-| [API-MKT-004](api/markets.md#api-mkt-004-market-overview-lists-top-search-favorites-stablecoin-rates)              | Market overview lists (top, search, favorites, stablecoin rates) | P2       | `api/markets.md`        |
-| [API-MKT-005](api/markets.md#api-mkt-005-price-performance)                                                        | Price performance                                                | P3       | `api/markets.md`        |
-| [API-MKT-006](api/markets.md#api-mkt-006-token-catalog)                                                            | Token catalog                                                    | P2       | `api/markets.md`        |
-| [API-MKT-007](api/markets.md#api-mkt-007-liquidation-risk-market-distribution-and-price-stats)                     | Liquidation risk market distribution and price stats             | P1       | `api/markets.md`        |
-| [API-MKT-008](api/markets.md#api-mkt-008-earn-data-protocol-stats-apy-history-vaultsfyi-enrichment)                | Earn data (protocol stats, APY history, vaults.fyi enrichment)   | P2       | `api/markets.md`        |
-| [API-MKT-009](api/markets.md#api-mkt-009-morpho-vault-details-allocation-peers-and-reallocations)                  | Morpho vault details, allocation, peers and reallocations        | P2       | `api/markets.md`        |
-| [API-PLAT-001](api/platform.md#api-plat-001-health-and-deep-health-checks)                                         | Health and deep health checks                                    | P2       | `api/platform.md`       |
-| [API-PLAT-002](api/platform.md#api-plat-002-indexer-freshness-and-status)                                          | Indexer freshness and status                                     | P2       | `api/platform.md`       |
-| [API-PLAT-003](api/platform.md#api-plat-003-client-error-reporting-is-bounded)                                     | Client error reporting is bounded                                | P3       | `api/platform.md`       |
-| [API-PLAT-004](api/platform.md#api-plat-004-cookie-consent)                                                        | Cookie consent                                                   | P3       | `api/platform.md`       |
-| [API-PLAT-005](api/platform.md#api-plat-005-support-form-is-validated-and-rate-limited)                            | Support form is validated and rate-limited                       | P2       | `api/platform.md`       |
-| [API-PLAT-006](api/platform.md#api-plat-006-my-invites-requires-a-valid-wallet-signature)                          | My invites requires a valid wallet signature                     | P2       | `api/platform.md`       |
-| [API-POS-001](api/positions.md#api-pos-001-position-history-returns-the-events-of-an-existing-position)            | Position history returns the events of an existing position      | P1       | `api/positions.md`      |
-| [API-POS-002](api/positions.md#api-pos-002-position-pnl-is-consistent-with-position-value)                         | Position PnL is consistent with position value                   | P1       | `api/positions.md`      |
-| [API-POS-003](api/positions.md#api-pos-003-multiply-performance--payoff-returns-a-cost-basis)                      | Multiply performance & payoff returns a cost basis               | P2       | `api/positions.md`      |
-| [API-POS-004](api/positions.md#api-pos-004-yield-loop-fees-since-open)                                             | Yield-loop fees since open                                       | P2       | `api/positions.md`      |
-| [API-POS-005](api/positions.md#api-pos-005-position-opened-at-lookup)                                              | Position opened-at lookup                                        | P3       | `api/positions.md`      |
-| [API-POS-006](api/positions.md#api-pos-006-borrow-costs-accrued-breakdown-net-rate)                                | Borrow costs (accrued, breakdown, net rate)                      | P1       | `api/positions.md`      |
-| [API-POS-007](api/positions.md#api-pos-007-yield-loop-history)                                                     | Yield-loop history                                               | P2       | `api/positions.md`      |
-| [API-POS-008](api/positions.md#api-pos-008-create-a-borrow--earn-position-link-only-with-a-valid-signature)        | Create a Borrow → Earn position link only with a valid signature | P1       | `api/positions.md`      |
-| [API-POS-009](api/positions.md#api-pos-009-unlink-a-borrowearn-pair-only-with-a-valid-signature)                   | Unlink a Borrow/Earn pair only with a valid signature            | P1       | `api/positions.md`      |
-| [API-TRADE-001](api/trading.md#api-trade-001-swap-quote-for-a-valid-pair)                                          | Swap quote for a valid pair                                      | P1       | `api/trading.md`        |
-| [API-TRADE-002](api/trading.md#api-trade-002-swap-quote-rejects-invalid-input)                                     | Swap quote rejects invalid input                                 | P2       | `api/trading.md`        |
-| [API-TRADE-004](api/trading.md#api-trade-004-cctp-relay-accepts-only-valid-deposit-attestations)                   | CCTP relay accepts only valid deposit attestations               | P1       | `api/trading.md`        |
-| [API-TRADE-005](api/trading.md#api-trade-005-hyperliquid-coin-icon-proxy)                                          | Hyperliquid coin icon proxy                                      | P3       | `api/trading.md`        |
-| [E2E-AUTO-001](e2e/automations.md#e2e-auto-001-configure-a-stop-loss-and-reject-the-transaction)                   | Configure a stop loss and reject the transaction                 | P1       | `e2e/automations.md`    |
-| [E2E-AUTO-002](e2e/automations.md#e2e-auto-002-trailing-stop-and-auto-sell-forms-validate-input)                   | Trailing stop and auto sell forms validate input                 | P2       | `e2e/automations.md`    |
-| [E2E-AUTO-003](e2e/automations.md#e2e-auto-003-active-automation-is-shown-on-the-position-page)                    | Active automation is shown on the position page                  | P2       | `e2e/automations.md`    |
-| [E2E-MIGR-001](e2e/migrate.md#e2e-migr-001-migrate-page-lists-adoptable-safes)                                     | Migrate page lists adoptable Safes                               | P1       | `e2e/migrate.md`        |
-| [E2E-MIGR-002](e2e/migrate.md#e2e-migr-002-start-a-migration-and-reject-the-transaction)                           | Start a migration and reject the transaction                     | P1       | `e2e/migrate.md`        |
-| [E2E-PORT-001](e2e/portfolio.md#e2e-port-001-portfolio-lists-the-wallets-open-positions)                           | Portfolio lists the wallet's open positions                      | P1       | `e2e/portfolio.md`      |
-| [E2E-PORT-002](e2e/portfolio.md#e2e-port-002-open-a-position-page-from-portfolio)                                  | Open a position page from Portfolio                              | P1       | `e2e/portfolio.md`      |
-| [E2E-PORT-003](e2e/portfolio.md#e2e-port-003-empty-portfolio-state)                                                | Empty portfolio state                                            | P3       | `e2e/portfolio.md`      |
-| [E2E-PROTO-006](e2e/protocol-cases.md#e2e-proto-006-open-a-multiply-position-with-a-realistic-deposit-on-the-fork) | Open a Multiply position with a realistic deposit on the fork    | P1       | `e2e/protocol-cases.md` |
-| [E2E-PROTO-007](e2e/protocol-cases.md#e2e-proto-007-server-side-and-browser-data-come-from-the-same-fork)          | Server-side and browser data come from the same fork             | P2       | `e2e/protocol-cases.md` |
-| [E2E-TRADE-001](e2e/trade.md#e2e-trade-001-perps-and-spot-trade-pages-load-their-markets)                          | Perps and spot trade pages load their markets                    | P1       | `e2e/trade.md`          |
-| [E2E-TRADE-002](e2e/trade.md#e2e-trade-002-deposit-from-base-prompt-for-a-connected-wallet)                        | Deposit from Base prompt for a connected wallet                  | P1       | `e2e/trade.md`          |
-| [E2E-TRADE-003](e2e/trade.md#e2e-trade-003-place-and-reject-a-perps-order)                                         | Place and reject a perps order                                   | P2       | `e2e/trade.md`          |
+| ID                                                                                                            | Case                                                             | Priority | File                    |
+| :------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------- | :------- | :---------------------- |
+| [API-SEC-001](api/admin-security.md#api-sec-001-cockpit-endpoints-reject-requests-without-a-cockpit-session)  | Cockpit endpoints reject requests without a cockpit session      | P1       | `api/admin-security.md` |
+| [API-SEC-002](api/admin-security.md#api-sec-002-scheduled-jobs-reject-unauthenticated-triggers)               | Scheduled jobs reject unauthenticated triggers                   | P1       | `api/admin-security.md` |
+| [API-SEC-003](api/admin-security.md#api-sec-003-product-table-debug-export-is-not-exposed-in-production)      | Product table debug export is not exposed in production          | P2       | `api/admin-security.md` |
+| [API-SEC-004](api/admin-security.md#api-sec-004-indexer-auth-endpoint-is-rate-limited-and-validates-input)    | Indexer auth endpoint is rate-limited and validates input        | P2       | `api/admin-security.md` |
+| [API-SEC-005](api/admin-security.md#api-sec-005-mcp-oauth-rejects-invalid-grants-and-unsigned-authorizations) | MCP OAuth rejects invalid grants and unsigned authorizations     | P1       | `api/admin-security.md` |
+| [API-AUTO-001](api/automation.md#api-auto-001-automation-subscriptions-for-a-wallet)                          | Automation subscriptions for a wallet                            | P1       | `api/automation.md`     |
+| [API-AUTO-002](api/automation.md#api-auto-002-shield-coverage-and-guarded-positions)                          | Shield coverage and guarded positions                            | P2       | `api/automation.md`     |
+| [API-MKT-001](api/markets.md#api-mkt-001-product-detail-returns-the-markets-real-tokens)                      | Product detail returns the market's real tokens                  | P1       | `api/markets.md`        |
+| [API-MKT-002](api/markets.md#api-mkt-002-product-rate-history-chart-data)                                     | Product rate history chart data                                  | P2       | `api/markets.md`        |
+| [API-MKT-003](api/markets.md#api-mkt-003-market-stats-and-global-market-metrics)                              | Market stats and global market metrics                           | P2       | `api/markets.md`        |
+| [API-MKT-004](api/markets.md#api-mkt-004-market-overview-lists-top-search-favorites-stablecoin-rates)         | Market overview lists (top, search, favorites, stablecoin rates) | P2       | `api/markets.md`        |
+| [API-MKT-005](api/markets.md#api-mkt-005-price-performance)                                                   | Price performance                                                | P3       | `api/markets.md`        |
+| [API-MKT-006](api/markets.md#api-mkt-006-token-catalog)                                                       | Token catalog                                                    | P2       | `api/markets.md`        |
+| [API-MKT-007](api/markets.md#api-mkt-007-liquidation-risk-market-distribution-and-price-stats)                | Liquidation risk market distribution and price stats             | P1       | `api/markets.md`        |
+| [API-MKT-008](api/markets.md#api-mkt-008-earn-data-protocol-stats-apy-history-vaultsfyi-enrichment)           | Earn data (protocol stats, APY history, vaults.fyi enrichment)   | P2       | `api/markets.md`        |
+| [API-MKT-009](api/markets.md#api-mkt-009-morpho-vault-details-allocation-peers-and-reallocations)             | Morpho vault details, allocation, peers and reallocations        | P2       | `api/markets.md`        |
+| [API-PLAT-001](api/platform.md#api-plat-001-health-and-deep-health-checks)                                    | Health and deep health checks                                    | P2       | `api/platform.md`       |
+| [API-PLAT-002](api/platform.md#api-plat-002-indexer-freshness-and-status)                                     | Indexer freshness and status                                     | P2       | `api/platform.md`       |
+| [API-PLAT-003](api/platform.md#api-plat-003-client-error-reporting-is-bounded)                                | Client error reporting is bounded                                | P3       | `api/platform.md`       |
+| [API-PLAT-004](api/platform.md#api-plat-004-cookie-consent)                                                   | Cookie consent                                                   | P3       | `api/platform.md`       |
+| [API-PLAT-005](api/platform.md#api-plat-005-support-form-is-validated-and-rate-limited)                       | Support form is validated and rate-limited                       | P2       | `api/platform.md`       |
+| [API-PLAT-006](api/platform.md#api-plat-006-my-invites-requires-a-valid-wallet-signature)                     | My invites requires a valid wallet signature                     | P2       | `api/platform.md`       |
+| [API-POS-001](api/positions.md#api-pos-001-position-history-returns-the-events-of-an-existing-position)       | Position history returns the events of an existing position      | P1       | `api/positions.md`      |
+| [API-POS-002](api/positions.md#api-pos-002-position-pnl-is-consistent-with-position-value)                    | Position PnL is consistent with position value                   | P1       | `api/positions.md`      |
+| [API-POS-003](api/positions.md#api-pos-003-multiply-performance--payoff-returns-a-cost-basis)                 | Multiply performance & payoff returns a cost basis               | P2       | `api/positions.md`      |
+| [API-POS-004](api/positions.md#api-pos-004-yield-loop-fees-since-open)                                        | Yield-loop fees since open                                       | P2       | `api/positions.md`      |
+| [API-POS-005](api/positions.md#api-pos-005-position-opened-at-lookup)                                         | Position opened-at lookup                                        | P3       | `api/positions.md`      |
+| [API-POS-006](api/positions.md#api-pos-006-borrow-costs-accrued-breakdown-net-rate)                           | Borrow costs (accrued, breakdown, net rate)                      | P1       | `api/positions.md`      |
+| [API-POS-007](api/positions.md#api-pos-007-yield-loop-history)                                                | Yield-loop history                                               | P2       | `api/positions.md`      |
+| [API-POS-008](api/positions.md#api-pos-008-create-a-borrow--earn-position-link-only-with-a-valid-signature)   | Create a Borrow → Earn position link only with a valid signature | P1       | `api/positions.md`      |
+| [API-POS-009](api/positions.md#api-pos-009-unlink-a-borrowearn-pair-only-with-a-valid-signature)              | Unlink a Borrow/Earn pair only with a valid signature            | P1       | `api/positions.md`      |
+| [API-TRADE-001](api/trading.md#api-trade-001-swap-quote-for-a-valid-pair)                                     | Swap quote for a valid pair                                      | P1       | `api/trading.md`        |
+| [API-TRADE-002](api/trading.md#api-trade-002-swap-quote-rejects-invalid-input)                                | Swap quote rejects invalid input                                 | P2       | `api/trading.md`        |
+| [API-TRADE-004](api/trading.md#api-trade-004-cctp-relay-accepts-only-valid-deposit-attestations)              | CCTP relay accepts only valid deposit attestations               | P1       | `api/trading.md`        |
+| [API-TRADE-005](api/trading.md#api-trade-005-hyperliquid-coin-icon-proxy)                                     | Hyperliquid coin icon proxy                                      | P3       | `api/trading.md`        |
+| [E2E-AUTO-001](e2e/automations.md#e2e-auto-001-configure-a-stop-loss-and-reject-the-transaction)              | Configure a stop loss and reject the transaction                 | P1       | `e2e/automations.md`    |
+| [E2E-AUTO-002](e2e/automations.md#e2e-auto-002-trailing-stop-and-auto-sell-forms-validate-input)              | Trailing stop and auto sell forms validate input                 | P2       | `e2e/automations.md`    |
+| [E2E-AUTO-003](e2e/automations.md#e2e-auto-003-active-automation-is-shown-on-the-position-page)               | Active automation is shown on the position page                  | P2       | `e2e/automations.md`    |
+| [E2E-MIGR-001](e2e/migrate.md#e2e-migr-001-migrate-page-lists-adoptable-safes)                                | Migrate page lists adoptable Safes                               | P1       | `e2e/migrate.md`        |
+| [E2E-MIGR-002](e2e/migrate.md#e2e-migr-002-start-a-migration-and-reject-the-transaction)                      | Start a migration and reject the transaction                     | P1       | `e2e/migrate.md`        |
+| [E2E-PORT-001](e2e/portfolio.md#e2e-port-001-portfolio-lists-the-wallets-open-positions)                      | Portfolio lists the wallet's open positions                      | P1       | `e2e/portfolio.md`      |
+| [E2E-PORT-002](e2e/portfolio.md#e2e-port-002-open-a-position-page-from-portfolio)                             | Open a position page from Portfolio                              | P1       | `e2e/portfolio.md`      |
+| [E2E-PORT-003](e2e/portfolio.md#e2e-port-003-empty-portfolio-state)                                           | Empty portfolio state                                            | P3       | `e2e/portfolio.md`      |
+| [E2E-PROTO-007](e2e/protocol-cases.md#e2e-proto-007-server-side-and-browser-data-come-from-the-same-fork)     | Server-side and browser data come from the same fork             | P2       | `e2e/protocol-cases.md` |
+| [E2E-TRADE-001](e2e/trade.md#e2e-trade-001-perps-and-spot-trade-pages-load-their-markets)                     | Perps and spot trade pages load their markets                    | P1       | `e2e/trade.md`          |
+| [E2E-TRADE-002](e2e/trade.md#e2e-trade-002-deposit-from-base-prompt-for-a-connected-wallet)                   | Deposit from Base prompt for a connected wallet                  | P1       | `e2e/trade.md`          |
+| [E2E-TRADE-003](e2e/trade.md#e2e-trade-003-place-and-reject-a-perps-order)                                    | Place and reject a perps order                                   | P2       | `e2e/trade.md`          |
 
 </details>
 
@@ -96,11 +95,11 @@ test.
 
 | Status          |   Cases |
 | :-------------- | ------: |
-| automated       |     131 |
+| automated       |     134 |
 | manual          |      12 |
-| planned         |      48 |
+| planned         |      47 |
 | not-automatable |       0 |
-| **Total**       | **191** |
+| **Total**       | **193** |
 
 <!-- tc-index:end -->
 

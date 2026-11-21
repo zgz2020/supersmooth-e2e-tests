@@ -1,4 +1,4 @@
-import { expect, Locator, Page } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import { step } from '../../fixtures';
 import type { WaitToBeStableProps } from '../../../utils/types/e2e/common';
 
@@ -73,6 +73,52 @@ export class ConfigurePosition {
     await this.panelLocator
       .getByRole('button', { name: /^(Open Position|Deposit|Deposit from Base)$/ })
       .click();
+  }
+
+  /** Success screen after the open transactions are mined, e.g. "WETH/USDC Multiply position opened!" */
+  @step
+  async shouldShowPositionOpened(args?: { timeout?: number }) {
+    await expect(this.panelLocator.getByText(/position opened!$/)).toBeVisible(args);
+    await expect(this.panelLocator.getByRole('button', { name: 'Go to position' })).toBeEnabled();
+  }
+
+  /**
+   * Success screen, retrying the open when a step would revert inside the Safe (GS013). On a fork
+   * this happens when the live swap quote is routed through liquidity whose state differs on the
+   * fork: the app simulates the step, sends nothing and offers Retry, which takes a fresh quote.
+   * Each retry is recorded as an `open retried` annotation; any other failure fails at once.
+   */
+  @step
+  async shouldShowPositionOpenedRetryingReverts({
+    timeout,
+    retries = 2,
+  }: { timeout?: number; retries?: number } = {}) {
+    const opened = this.panelLocator.getByText(/position opened!$/);
+    const reverted = this.panelLocator.getByText(/^Transaction failed: .*\(Safe code GS013\)/);
+    const failed = this.panelLocator.getByText(/^Transaction failed/);
+
+    for (let attempt = 0; ; attempt++) {
+      await expect(opened.or(failed), 'the open flow should finish').toBeVisible({ timeout });
+      if (await opened.isVisible()) break;
+
+      const reason = await failed.innerText();
+      await expect(
+        reverted,
+        `the open should not fail for another reason: ${reason}`,
+      ).toBeVisible();
+      expect(attempt, `the open still reverted after ${retries} retries: ${reason}`).toBeLessThan(
+        retries,
+      );
+      test.info().annotations.push({ type: 'open retried', description: reason });
+      await this.panelLocator.getByRole('button', { name: 'Retry' }).click();
+      await expect(failed, 'the failure should clear once retried').toBeHidden();
+    }
+    await expect(this.panelLocator.getByRole('button', { name: 'Go to position' })).toBeEnabled();
+  }
+
+  @step
+  async goToPosition() {
+    await this.panelLocator.getByRole('button', { name: 'Go to position' }).click();
   }
 
   @step

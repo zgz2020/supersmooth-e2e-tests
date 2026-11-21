@@ -1,0 +1,237 @@
+name: '⚙️ [Reusable] Full-stack E2E Tests'
+
+# Brings up the isolated local stack (Anvil mainnet fork + fresh core-v1 deployment + Postgres/Redis
+# + Ponder + aphelion-app on its own database) on the runner, runs the `fullstack` Playwright
+# project against it and tears it down. Guide: docs/fullstack-e2e-testing.md (section "CI").
+#
+# Call it from another workflow:
+#
+#   jobs:
+#     fullstack:
+#       uses: Aphelion-Co/sov-e2e-tests/.github/workflows/reusable-fullstack-tests.yml@main
+#       secrets: inherit            # or pass the secrets below one by one
+#       with:
+#         aphelionAppRef: staging   # optional
+
+on:
+  workflow_call:
+    inputs:
+      aphelionAppRef:
+        description: 'aphelion-app branch, tag or SHA to test. Empty: the calling commit when called from aphelion-app, else its default branch'
+        type: 'string'
+        required: false
+        default: ''
+      e2eTestsRef:
+        description: 'sov-e2e-tests branch, tag or SHA with the tests. Empty: the calling commit when called from sov-e2e-tests, else its default branch'
+        type: 'string'
+        required: false
+        default: ''
+      playwrightArgs:
+        description: 'Extra Playwright arguments, e.g. --grep E2E-PROTO-006'
+        type: 'string'
+        required: false
+        default: ''
+      productTableProtocols:
+        description: 'Protocols whose product table the stack fills (comma-separated), one per protocol the scenarios open'
+        type: 'string'
+        required: false
+        default: 'aaveV3,spark,aaveV3Lido'
+      anvilCups:
+        description: "Alchemy compute units per second the fork may use; keep it under the key's plan limit"
+        type: 'string'
+        required: false
+        default: '100'
+      workers:
+        description: 'Playwright workers. 1 runs the scenarios one after another (the verified setup); more runs them in parallel on the same stack'
+        type: 'string'
+        required: false
+        default: '1'
+      retries:
+        description: 'Playwright retries per failed test (each one opens a new position with a new wallet)'
+        type: 'string'
+        required: false
+        default: '1'
+      timeoutMinutes:
+        description: 'Job timeout. A cold run takes ~10 min for the stack and tests, plus installs and image builds'
+        type: 'number'
+        required: false
+        default: 60
+      skipWithoutSecrets:
+        description: 'Skip the suite (instead of failing) when APHELION_STATUS_TOKEN or APHELION_APP_ENV is missing, e.g. in a scheduled run of a repository that lacks them'
+        type: 'boolean'
+        required: false
+        default: false
+    # Not marked required, so the skipWithoutSecrets check below can handle missing ones
+    secrets:
+      APHELION_STATUS_TOKEN:
+        description: 'Fine-grained token with Contents read on Aphelion-Co/aphelion-app (and on sov-e2e-tests when called from another repository). Needed'
+        required: false
+      APHELION_APP_ENV:
+        description: "The app's root .env for CI; must contain ZEROX_API_KEY (and ALCHEMY_KEY unless E2E_ALCHEMY_KEY is set). Needed"
+        required: false
+      E2E_ALCHEMY_KEY:
+        description: 'Optional dedicated Alchemy key for the fork, so test bursts do not share the rate limit of ALCHEMY_KEY'
+        required: false
+      GEMINI_API_KEY:
+        description: 'Optional: AI triage of failures'
+        required: false
+      DISCORD_WEBHOOK_URL:
+        description: 'Optional: where the AI triage posts'
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Secrets cannot be read in a job's `if`, so this job turns their presence into an output
+  check-secrets:
+    name: 'Check required secrets'
+    runs-on: ubuntu-24.04
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          HAS_TOKEN: ${{ secrets.APHELION_STATUS_TOKEN != '' }}
+          HAS_APP_ENV: ${{ secrets.APHELION_APP_ENV != '' }}
+          SKIP_WITHOUT_SECRETS: ${{ inputs.skipWithoutSecrets }}
+        run: |
+          missing=""
+          [ "$HAS_TOKEN" = true ] || missing="$missing APHELION_STATUS_TOKEN"
+          [ "$HAS_APP_ENV" = true ] || missing="$missing APHELION_APP_ENV"
+          if [ -z "$missing" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          elif [ "$SKIP_WITHOUT_SECRETS" = true ]; then
+            echo "::notice::Full-stack suite skipped: missing secret(s)$missing (see docs/fullstack-e2e-testing.md, CI)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Missing secret(s)$missing: APHELION_STATUS_TOKEN reads Aphelion-Co/aphelion-app, APHELION_APP_ENV is the app's .env with ZEROX_API_KEY (see docs/fullstack-e2e-testing.md, CI)."
+            exit 1
+          fi
+
+  fullstack-tests:
+    name: 'Run Full-stack E2E Tests'
+    # Not a container job: the stack runs in Docker Compose on the runner itself
+    needs: check-secrets
+    if: needs.check-secrets.outputs.ready == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeoutMinutes }}
+    env:
+      APHELION_APP_DIR: ${{ github.workspace }}/aphelion-app
+      E2E_ALCHEMY_KEY: ${{ secrets.E2E_ALCHEMY_KEY }}
+      E2E_ANVIL_CUPS: ${{ inputs.anvilCups }}
+      E2E_PRODUCT_TABLE_PROTOCOLS: ${{ inputs.productTableProtocols }}
+      WORKERS: ${{ inputs.workers }}
+      RETRIES: ${{ inputs.retries }}
+
+    steps:
+      - name: 'Checkout sov-e2e-tests'
+        uses: 'actions/checkout@v4'
+        with:
+          repository: Aphelion-Co/sov-e2e-tests
+          ref: ${{ inputs.e2eTestsRef || (github.repository == 'Aphelion-Co/sov-e2e-tests' && github.sha || '') }}
+          token: ${{ github.repository == 'Aphelion-Co/sov-e2e-tests' && github.token || secrets.APHELION_STATUS_TOKEN }}
+          path: sov-e2e-tests
+
+      - name: 'Checkout aphelion-app'
+        uses: 'actions/checkout@v4'
+        with:
+          repository: Aphelion-Co/aphelion-app
+          ref: ${{ inputs.aphelionAppRef || (github.repository == 'Aphelion-Co/aphelion-app' && github.sha || '') }}
+          token: ${{ secrets.APHELION_STATUS_TOKEN }}
+          path: aphelion-app
+
+      - name: "Write aphelion-app's .env"
+        working-directory: aphelion-app
+        env:
+          APHELION_APP_ENV: ${{ secrets.APHELION_APP_ENV }}
+        # The stack never uses its DATABASE_URL: the app runs on the stack's own database
+        run: printf '%s\n' "$APHELION_APP_ENV" > .env
+
+      - name: 'Check Docker Compose (needs v2.24+)'
+        run: docker compose version
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: 'aphelion-app/.nvmrc'
+
+      # Each repository pins its own pnpm version (packageManager); corepack picks it per directory
+      - name: 'Enable corepack (pnpm)'
+        run: |
+          corepack enable
+          echo "COREPACK_ENABLE_DOWNLOAD_PROMPT=0" >> "$GITHUB_ENV"
+
+      - name: 'Install aphelion-app dependencies'
+        working-directory: aphelion-app
+        run: pnpm install --frozen-lockfile
+
+      - name: 'Install E2E dependencies and Chromium'
+        working-directory: sov-e2e-tests
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+
+      # --keep leaves the stack up after the tests so its logs can be collected below; the last
+      # step always tears it down
+      - name: 'Run full-stack tests'
+        working-directory: sov-e2e-tests
+        env:
+          PLAYWRIGHT_ARGS: ${{ inputs.playwrightArgs }}
+        run: |
+          # Word splitting of PLAYWRIGHT_ARGS is intended (several arguments)
+          # shellcheck disable=SC2086
+          node scripts/fullstack/run.js test --keep -- $PLAYWRIGHT_ARGS
+
+      - name: 'Collect stack logs'
+        if: always()
+        working-directory: sov-e2e-tests
+        run: |
+          mkdir -p .temp/fullstack
+          docker compose -p keeper-loop-e2e ps -a > .temp/fullstack/containers.txt 2>&1 || true
+          docker compose -p keeper-loop-e2e logs --no-color --timestamps > .temp/fullstack/stack.log 2>&1 || true
+
+      - name: 'Tear down the stack'
+        if: always()
+        working-directory: sov-e2e-tests
+        run: node scripts/fullstack/run.js down || true
+
+      - name: '🤖 AI Agent Test Triage'
+        if: failure()
+        working-directory: sov-e2e-tests
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: pnpm agent:triage || true
+
+      - name: 'Upload Playwright Report'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'fullstack-report'
+          path: 'sov-e2e-tests/playwright-reports/fullstack'
+          retention-days: 14
+          if-no-files-found: 'ignore'
+
+      - name: 'Upload traces and stack logs'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'fullstack-debug'
+          path: |
+            sov-e2e-tests/test-results
+            sov-e2e-tests/.temp/fullstack/*.log
+            sov-e2e-tests/.temp/fullstack/containers.txt
+          retention-days: 14
+          if-no-files-found: 'ignore'
+
+      - name: 'Upload JSON results (metrics)'
+        uses: 'actions/upload-artifact@v4'
+        if: always()
+        with:
+          name: 'results-json-fullstack'
+          path: |
+            sov-e2e-tests/test-results/results.json
+            sov-e2e-tests/ai-reports/latest-triage-data.json
+          retention-days: 90
+          if-no-files-found: 'ignore'

@@ -1,0 +1,27 @@
+name: 'Full-stack E2E Tests'
+
+on:
+  workflow_dispatch:
+    inputs:
+      aphelionAppRef:
+        description: 'aphelion-app branch, tag or SHA (empty: default branch)'
+        type: 'string'
+        required: false
+        default: ''
+      playwrightArgs:
+        description: 'Extra Playwright arguments, e.g. --grep E2E-PROTO-006'
+        type: 'string'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  fullstack-tests:
+    name: 'Full-stack E2E Tests'
+    uses: './.github/workflows/reusable-fullstack-tests.yml'
+    secrets: inherit
+    with:
+      aphelionAppRef: '${{ inputs.aphelionAppRef }}'
+      playwrightArgs: '${{ inputs.playwrightArgs }}'

@@ -73,10 +73,14 @@ export function collectTests(report) {
           location,
           titles: new Set(),
           ids: new Set(),
+          idsByTitle: new Map(),
           projects: new Set(),
         };
         entry.titles.add(spec.title);
         ids.forEach((id) => entry.ids.add(id));
+        const variantIds = entry.idsByTitle.get(spec.title) ?? new Set();
+        ids.forEach((id) => variantIds.add(id));
+        entry.idsByTitle.set(spec.title, variantIds);
         entry.projects.add(test.projectName);
         declarations.set(location, entry);
       }
@@ -89,6 +93,8 @@ export function collectTests(report) {
     title: [...entry.titles][0],
     variants: entry.titles.size,
     ids: [...entry.ids],
+    // Per variant (title): a data-driven test may link each of its variants to its own case
+    variantIds: [...entry.idsByTitle.entries()].map(([title, ids]) => ({ title, ids: [...ids] })),
     projects: [...entry.projects],
   }));
 }
@@ -110,13 +116,17 @@ export function validate(catalogue, tests) {
 
   const locationsById = new Map();
   for (const test of tests) {
-    if (test.ids.length === 0) {
-      errors.push(`${test.location} "${test.title}" is not linked to a test case: add tc('<ID>')`);
-      continue;
-    }
-    if (test.ids.length > 1) {
+    const variants = test.variantIds ?? [{ title: test.title, ids: test.ids }];
+    const unlinked = variants.filter((variant) => variant.ids.length === 0);
+    for (const variant of unlinked) {
       errors.push(
-        `${test.location} "${test.title}" is linked to several cases (${test.ids.join(', ')})`,
+        `${test.location} "${variant.title}" is not linked to a test case: add tc('<ID>')`,
+      );
+    }
+    if (unlinked.length === variants.length) continue;
+    for (const variant of variants.filter((v) => v.ids.length > 1)) {
+      errors.push(
+        `${test.location} "${variant.title}" is linked to several cases (${variant.ids.join(', ')})`,
       );
     }
     for (const id of test.ids) {
