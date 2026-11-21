@@ -14,6 +14,9 @@ const BASE = {
   cbEth: '0x0ca10126f6c94cbd9cf0a48cc9516ae5e3dec5aa68303e6d988ee37c5149bf0d',
   weth: FALLBACK_MARKETS.morphoEthBase,
 };
+// Aave v3 Ethereum market ids are `<pool>-<collateral>-<debt>`, with a camelCase protocol slug
+const AAVE_WETH_USDC =
+  '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2-0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const PRODUCT_DETAIL_COLLATERAL: Record<string, string> = {
   [BASE.cbBtc]: 'cbBTC',
   [BASE.wstEth]: 'wstETH',
@@ -21,6 +24,7 @@ const PRODUCT_DETAIL_COLLATERAL: Record<string, string> = {
   [BASE.weth]: 'WETH',
   [FALLBACK_MARKETS.sparkWethUsdsEthereum]: 'WETH',
   '0xspark-cbbtc': 'cbBTC',
+  [AAVE_WETH_USDC]: 'WETH',
 };
 
 interface TopCard {
@@ -151,6 +155,61 @@ test.describe('getActiveVault', () => {
       url: vaultPath('multiply', 'morpho', 8453, FALLBACK_MARKETS.morphoEthBase),
       collateral: 'ETH',
       protocol: 'morpho',
+    });
+  });
+
+  test('moves past a candidate the accept check rejects to the next step', async () => {
+    const { request } = fakeRequest({
+      topCards: stagingTopCards,
+      catalogHtml: catalog(baseMultiply(BASE.weth)),
+    });
+    const offered: string[] = [];
+
+    // No ETH top card on Base, so the first candidate is the catalog's; reject it, accept the next
+    const vault = await getActiveVault(request, 'multiply', {
+      network: 'Base',
+      collateral: 'ETH',
+      accept: async (candidate) => {
+        offered.push(`${candidate.title}`);
+        return offered.length > 1;
+      },
+    });
+
+    expect(offered).toEqual(['WETH/USDC multiply', 'Morpho WETH Multiply on Base']);
+    expect(vault.title).toBe('Morpho WETH Multiply on Base');
+  });
+
+  test('throws when the accept check rejects every candidate', async () => {
+    const { request } = fakeRequest({ topCards: stagingTopCards, catalogHtml: catalog() });
+
+    await expect(
+      getActiveVault(request, 'multiply', {
+        network: 'Base',
+        collateral: 'cbBTC',
+        accept: async () => false,
+      }),
+    ).rejects.toThrow('No active vaults found');
+  });
+
+  test('reads Aave-style market ids (address triples, camelCase protocol) from the catalog', async () => {
+    const aaveUrl = vaultPath('multiply', 'aaveV3', 1, AAVE_WETH_USDC);
+    const { request, calls } = fakeRequest({ topCards: [], catalogHtml: catalog(aaveUrl) });
+
+    const vault = await getActiveVault(request, 'multiply', {
+      network: 'Ethereum',
+      collateral: 'WETH',
+      protocols: 'aaveV3',
+    });
+
+    expect(vault).toMatchObject({ url: aaveUrl, collateral: 'WETH', protocol: 'aaveV3' });
+    expect(calls).toContainEqual({
+      url: '/api/product-detail',
+      params: {
+        protocol: 'aaveV3',
+        chainId: '1',
+        marketIdentifier: AAVE_WETH_USDC,
+        productType: 'multiply',
+      },
     });
   });
 

@@ -5,6 +5,7 @@ export * from './landingPage';
 export * from './migrate';
 export * from './multiply';
 export * from './perpAndSpotPage';
+export * from './portfolioPage';
 export * from './positionPage';
 export * from './trade';
 export * from './vaultPage';

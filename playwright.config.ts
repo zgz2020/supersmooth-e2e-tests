@@ -89,6 +89,23 @@ export default defineConfig({
       },
     },
     {
+      // Real UI + app server + indexer + fork, all local (`pnpm test:fullstack` starts them).
+      // Tests are isolated by a fresh account each, so they can run in parallel on one stack.
+      name: 'fullstack',
+      testDir: './tests/e2e/fullstack',
+      timeout: TIMEOUTS.fullStack.test,
+      expect: {
+        timeout: TIMEOUTS.fullStack.expect,
+      },
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: normalizeBaseUrl(process.env.FULLSTACK_APP_URL || 'http://localhost:3000'),
+        actionTimeout: TIMEOUTS.fullStack.action,
+        navigationTimeout: TIMEOUTS.fullStack.navigation,
+        trace: 'retain-on-failure',
+      },
+    },
+    {
       name: 'api',
       testDir: './tests/api',
       testIgnore: ['**/complianceGeoFakeLocation.spec.ts'],

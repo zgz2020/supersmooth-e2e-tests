@@ -101,6 +101,33 @@ async function runTests() {
     console.log('  ✓ Test 3 Passed: declarations collapse variants and skip unit project');
   }
 
+  // Test 3b: Data-driven variants at one location may each link their own case, but not several
+  {
+    const twoCaseCatalogue = parseCatalogueFile(
+      `${catalogueFixture}\n## API-FIX-004: Second scenario\n\n- **Priority:** P1\n- **Automation:** automated\n`,
+      'test-cases/api/fixture.md',
+    );
+    const perScenario = validate(
+      twoCaseCatalogue,
+      collectTests(
+        report(
+          spec('api/a.spec.ts', 10, 'scenario 1', ['API-FIX-001']),
+          spec('api/a.spec.ts', 10, 'scenario 2', ['API-FIX-004']),
+        ),
+      ),
+    );
+    assert(
+      !perScenario.errors.some((e) => e.includes('several cases')),
+      'one case per variant is allowed',
+    );
+    const doubled = validate(
+      twoCaseCatalogue,
+      collectTests(report(spec('api/a.spec.ts', 10, 'scenario 1', ['API-FIX-001', 'API-FIX-004']))),
+    );
+    assert(doubled.errors.some((e) => e.includes('"scenario 1" is linked to several cases')));
+    console.log('  ✓ Test 3b Passed: data-driven variants link one case each');
+  }
+
   // Test 4: A catalogue fully in sync produces no errors, and warns about a planned case without steps
   {
     const result = validate(

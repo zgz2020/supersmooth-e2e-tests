@@ -75,6 +75,21 @@ Located in `tests/e2e/anvil`. Powered by **Foundry Anvil** and **Playwright + Mo
 
 ---
 
+## 🧱 E2E Full Local Stack (fork + contracts + indexer + app)
+
+Located in `tests/e2e/fullstack`. Brings up an isolated local copy of the whole stack, runs the `fullstack` project and tears it down. See the [Full Local Stack guide](fullstack-e2e-testing.md).
+
+| Script                     | Purpose                               | Details                                                      |
+| :------------------------- | :------------------------------------ | :----------------------------------------------------------- |
+| `pnpm test:fullstack`      | Up, run the suite, down               | Reuses a stack that is already up; `-- <args>` to Playwright |
+| `pnpm test:fullstack:keep` | Same, but leave the stack running     | For fast reruns with `test:fullstack:only`                   |
+| `pnpm test:fullstack:only` | Run the suite against a running stack | Plain `playwright test --project=fullstack`                  |
+| `pnpm fullstack:up`        | Bring the stack and app up            | Needs `APHELION_APP_DIR`, `ALCHEMY_KEY`, `ZEROX_API_KEY`     |
+| `pnpm fullstack:down`      | Stop everything                       | Restores aphelion-app's staged SDK and generated files       |
+| `pnpm fullstack:status`    | Show what is running                  | Containers, app process, indexer head                        |
+
+---
+
 ## 🌐 Cross-Browser Suite
 
 Located in `tests/e2e/no-wallet-cross-browser`. Validates responsive layouts, navigation, and rendering across multiple engines and device form-factors.

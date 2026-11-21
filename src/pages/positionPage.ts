@@ -1,8 +1,9 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { step } from '../fixtures';
 import { RightSidePanel } from './rightSidePanel';
-import { expectAmount, parseAmount, type ApproxAmount } from '../../utils/amount';
+import { approx, expectAmount, parseAmount, type ApproxAmount } from '../../utils/amount';
 import type { WaitToBeStableProps } from '../../utils/types/e2e/common';
+import type { Address } from 'viem';
 
 export type PositionOverviewValues = {
   multiple: number;
@@ -61,12 +62,56 @@ export class PositionPage {
 
   /** The position has loaded and is still open (its net value is above zero). */
   @step
-  async shouldShowOpenPosition() {
+  async shouldShowOpenPosition(args?: { timeout?: number }) {
     await expect
       .poll(async () => parseAmount(await this.overviewFields.netValueUsd.innerText()), {
         message: 'Position Overview should show a net value above zero',
+        ...args,
       })
       .toBeGreaterThan(0);
+  }
+
+  /**
+   * Like {@link shouldShowOpenPosition}, reloading the page while it fails to load. On a fresh
+   * fork Anvil fetches every slot it has not read yet from the upstream RPC, so the app server's
+   * first reads for a new position can time out, and the page does not retry them. A user would
+   * reload; a warm fork loads it on the first try.
+   */
+  @step
+  async shouldLoadOpenPositionReloading({ attemptTimeout = 45_000, timeout = 180_000 } = {}) {
+    let attempt = 0;
+    await expect(async () => {
+      if (attempt++ > 0) await this.page.reload();
+      await this.shouldShowOpenPosition({ timeout: attemptTimeout });
+    }, 'position page should load the open position (reloading on a cold fork)').toPass({
+      timeout,
+      intervals: [0],
+    });
+  }
+
+  /** The Safe the page shows: the last path segment (ignoring any query, hash or trailing slash). */
+  @step
+  async getSafeAddress(): Promise<Address> {
+    const safePath = /\/(0x[0-9a-fA-F]{40})\/?(?:[?#].*)?$/;
+    await expect(this.page, 'position page path should end in a Safe address').toHaveURL(safePath);
+    return this.page.url().match(safePath)![1] as Address;
+  }
+
+  /**
+   * The overview shows the position the chain holds: exposure in collateral tokens and debt in USD
+   * within 1% (interest accrues every block, and the app may price the debt from another feed),
+   * and a multiple above 1x.
+   */
+  @step
+  async shouldMatchPosition(position: { collateral: number; debtUsd: number }) {
+    await this.shouldHaveOverviewValues({
+      totalExposure: approx(position.collateral, { relative: 0.01 }),
+      positionDebtUsd: approx(position.debtUsd, { relative: 0.01 }),
+    });
+    expect(
+      parseAmount(await this.overviewFields.multiple.innerText()),
+      'position multiple should be above 1x',
+    ).toBeGreaterThan(1);
   }
 
   /**

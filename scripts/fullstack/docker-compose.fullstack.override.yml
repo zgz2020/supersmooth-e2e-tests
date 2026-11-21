@@ -1,0 +1,23 @@
+# Layered on top of aphelion-app's dev-infra/docker-compose.yml + dev-infra/e2e/docker-compose.e2e.yml
+# by scripts/fullstack/run.js. Only fixes what the base files need to run on a developer machine.
+services:
+  anvil:
+    # `environment` wins over the base file's `env_file: ../.env`, so only this stack's fork uses
+    # the dedicated key (run.js falls back to the shared ALCHEMY_KEY when E2E_ALCHEMY_KEY is unset).
+    environment:
+      ALCHEMY_KEY: ${FULLSTACK_ALCHEMY_KEY:-}
+      FULLSTACK_ANVIL_CUPS: ${FULLSTACK_ANVIL_CUPS:-100}
+      # The throttling shim shadows the real /usr/local/bin/anvil; cast and the rest are unchanged
+      PATH: /opt/fullstack/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      # Absolute path: compose resolves relative paths against aphelion-app/dev-infra, not this file
+      - ${FULLSTACK_SCRIPTS_DIR:-.}/anvil-throttled.sh:/opt/fullstack/bin/anvil:ro
+  indexer:
+    volumes:
+      # The base indexer bind-mounts the whole repo (..:/app). On macOS that exposes the host's
+      # node_modules, which lack Linux native binaries (e.g. @rollup/rollup-linux-x64-gnu), and
+      # ponder crashes at boot. Anonymous volumes keep the image's own Linux installs instead.
+      # Harmless on Linux hosts (the image and host installs are equivalent there).
+      - /app/node_modules
+      - /app/packages/sovereign-types/node_modules
+      - /app/packages/eslint-config/node_modules

@@ -42,9 +42,25 @@ jobs:
     with:
       script: 'ci:anvil'
 
+  fullstack-tests:
+    # Skipped (not failed) until APHELION_STATUS_TOKEN and APHELION_APP_ENV are set
+    uses: './.github/workflows/reusable-fullstack-tests.yml'
+    secrets: inherit
+    with:
+      workers: '2'
+      skipWithoutSecrets: true
+
   quality-metrics:
     # Appends this run to the metrics history (metrics-data branch) and publishes the dashboard
-    needs: [api-tests, no-wallet-tests, cross-browser-tests, with-wallet-tests, anvil-tests]
+    needs:
+      [
+        api-tests,
+        no-wallet-tests,
+        cross-browser-tests,
+        with-wallet-tests,
+        anvil-tests,
+        fullstack-tests,
+      ]
     if: always()
     uses: './.github/workflows/reusable-quality-metrics.yml'
     with:

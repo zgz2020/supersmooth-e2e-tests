@@ -19,7 +19,14 @@ export interface GetActiveVaultOptions {
   protocols?: string;
   network?: 'Base' | 'Ethereum' | 'Arbitrum One' | string | number;
   collateral?: Token;
+  /**
+   * Extra check a candidate must pass, e.g. on-chain liquidity for the trade the test makes.
+   * Candidates are tried in the order each step ranks them; a rejected one moves on to the next.
+   */
+  accept?: (vault: ActiveVaultResult) => Promise<boolean>;
 }
+
+const acceptAll = async () => true;
 
 const NETWORK_CHAIN_IDS: Record<string, string> = {
   ethereum: '1',
@@ -67,6 +74,7 @@ export async function getActiveVault(
     ? NETWORK_CHAIN_IDS[String(options.network).toLowerCase()]
     : undefined;
   const targetNetworkName = options?.network ? String(options.network).toLowerCase() : undefined;
+  const accept = options?.accept ?? acceptAll;
 
   // 1. Query /api/product-table/top-cards API
   try {
@@ -83,7 +91,7 @@ export async function getActiveVault(
       if (data.cards && data.cards.length > 0) {
         // Filter by network and collateral if specified.
         // For multiply, borrow, yield loop, and earn, tokens[0] is the deposited collateral asset.
-        const matchingCard = data.cards.find((c) => {
+        const matchingCards = data.cards.filter((c) => {
           if (targetChainId && !c.url.includes(`/${targetChainId}/`)) {
             if (c.network?.toLowerCase() !== targetNetworkName) return false;
           }
@@ -94,27 +102,15 @@ export async function getActiveVault(
           return true;
         });
 
-        if (matchingCard) {
-          const matchedToken = matchingCard.tokens[0];
-          return {
-            url: matchingCard.url,
-            collateral: (options?.collateral ?? matchedToken) as Token,
-            title: matchingCard.title,
-            protocol: matchingCard.protocol,
-            network: matchingCard.network,
+        for (const card of matchingCards) {
+          const vault: ActiveVaultResult = {
+            url: card.url,
+            collateral: (options?.collateral ?? card.tokens[0]) as Token,
+            title: card.title,
+            protocol: card.protocol,
+            network: card.network,
           };
-        }
-
-        // If no network/collateral filter was requested, return first card
-        if (!options?.network && !options?.collateral) {
-          const topCard = data.cards[0];
-          return {
-            url: topCard.url,
-            collateral: topCard.tokens[0] as Token,
-            title: topCard.title,
-            protocol: topCard.protocol,
-            network: topCard.network,
-          };
+          if (await accept(vault)) return vault;
         }
       }
     }
@@ -131,6 +127,7 @@ export async function getActiveVault(
         chainId: targetChainId,
         collateral: options?.collateral,
         protocols: options?.protocols,
+        accept,
       });
       if (verified) return verified;
     } catch {
@@ -139,16 +136,17 @@ export async function getActiveVault(
   }
 
   // 3. Known canonical fallback vaults, returned only when their real collateral matches
-  const fallback = FALLBACK_VAULTS.find(
+  const fallbacks = FALLBACK_VAULTS.filter(
     (vault) =>
       vault.chainId === targetChainId &&
       vault.productType === productType &&
       isTokenMatch(vault.collateral, options?.collateral) &&
       isProtocolMatch(vault.protocol, options?.protocols),
   );
-  if (fallback) {
-    const { chainId: _chainId, productType: _productType, ...vault } = fallback;
-    return { ...vault, collateral: (options?.collateral ?? vault.collateral) as Token };
+  for (const fallback of fallbacks) {
+    const { chainId: _chainId, productType: _productType, ...rest } = fallback;
+    const vault = { ...rest, collateral: (options?.collateral ?? rest.collateral) as Token };
+    if (await accept(vault)) return vault;
   }
 
   throw new Error(
@@ -196,7 +194,12 @@ interface ProductDetailResponse {
 async function findVerifiedCatalogVault(
   request: APIRequestContext,
   productType: VerifiableProductType,
-  filters: { chainId?: string; collateral?: Token; protocols?: string },
+  filters: {
+    chainId?: string;
+    collateral?: Token;
+    protocols?: string;
+    accept: (vault: ActiveVaultResult) => Promise<boolean>;
+  },
 ): Promise<ActiveVaultResult | undefined> {
   const params = new URLSearchParams();
   const networkFilter = filters.chainId ? NETWORK_FILTER_IDS[filters.chainId] : undefined;
@@ -208,8 +211,10 @@ async function findVerifiedCatalogVault(
 
   const html = await pageResponse.text();
   const candidates = new Map<string, { protocol: string; chainId: string; marketId: string }>();
+  // Protocol slugs are camelCase (`aaveV3`); a market is one id (Morpho) or a dash-joined address
+  // triple (`<pool>-<collateral>-<debt>`, Aave/Spark)
   const linkRegex = new RegExp(
-    `/products/${productType}/([a-z0-9-]+)/(\\d+)/(0x[a-fA-F0-9-]+)`,
+    `/products/${productType}/([a-zA-Z0-9-]+)/(\\d+)/(0x[a-fA-F0-9]+(?:-0x[a-fA-F0-9]+)*)`,
     'g',
   );
   for (const [url, protocol, chainId, marketId] of html.matchAll(linkRegex)) {
@@ -231,13 +236,14 @@ async function findVerifiedCatalogVault(
     const collateral = product?.collateral_token;
     if (!isExactMatch || !collateral || !isTokenMatch(collateral, filters.collateral)) continue;
 
-    return {
+    const vault: ActiveVaultResult = {
       url,
       collateral: (filters.collateral ?? collateral) as Token,
       title: `${collateral}/${product?.debt_token ?? '?'} ${productType}`,
       protocol,
       network: networkFilter,
     };
+    if (await filters.accept(vault)) return vault;
   }
 
   return undefined;

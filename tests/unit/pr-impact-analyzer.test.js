@@ -101,7 +101,26 @@ function runTests() {
     console.log('  ✓ Test 9 Passed: tests/unit/ changes are excluded from targeted e2e runs');
   }
 
-  console.log('\n🎉 All 9 AI Change-Impact Analyzer tests passed successfully!\n');
+  // Test 10: Specs that need their own environment (fork, full stack) never join predictive runs
+  {
+    const stackOnly = analyzeImpact([
+      'tests/e2e/fullstack/openPosition.spec.ts',
+      'tests/e2e/anvil/openPosition.spec.ts',
+    ]);
+    assert.strictEqual(stackOnly.hasTargetedTests, false);
+    assert.deepStrictEqual(stackOnly.targetSpecs, []);
+
+    const mixed = analyzeImpact([
+      'tests/e2e/fullstack/openPosition.spec.ts',
+      'tests/e2e/no-wallet/vaultPages.spec.ts',
+    ]);
+    assert.deepStrictEqual(mixed.targetSpecs, ['tests/e2e/no-wallet/vaultPages.spec.ts']);
+    console.log(
+      '  ✓ Test 10 Passed: anvil/ and fullstack/ specs are excluded from predictive runs',
+    );
+  }
+
+  console.log('\n🎉 All 10 AI Change-Impact Analyzer tests passed successfully!\n');
 }
 
 runTests();
