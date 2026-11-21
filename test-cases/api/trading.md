@@ -35,18 +35,11 @@ and managing positions.
 ## API-TRADE-003: Fee entitlement is issued for a valid request
 
 - **Priority:** P1
-- **Automation:** planned
-- **Notes:** Returns `500 Failed to sign fee entitlement` on local `app:fork` without its signing key (sov-e2e-tests#73).
-
-**Steps**
-
-1. `POST /api/fee-entitlement` with a valid request for a known market and wallet
-2. Repeat with an invalid body and a foreign `Origin`
-
-**Expected result**
-
-- Valid request: 2xx with a signed entitlement
-- Invalid body / foreign origin: 4xx, no entitlement issued
+- **Automation:** automated
+- **Notes:** Runs on every chain with a FeeManager (Ethereum, Base, Arbitrum, Robinhood) with a
+  Tier 2 swap, so each chain's price lookup is exercised (a failed price silently means a 0
+  discount). Returns `503` when the signer key is not configured (local `app:fork`,
+  sov-e2e-tests#73).
 
 ## API-TRADE-004: CCTP relay accepts only valid deposit attestations
 
@@ -77,3 +70,49 @@ and managing positions.
 
 - Known coin: 200 with an image content type
 - Traversal / unknown icon: 4xx, never proxies arbitrary URLs
+
+## API-TRADE-006: Position swap fee tiers at each boundary
+
+- **Priority:** P1
+- **Automation:** automated
+- **Notes:** Profile 1, published schedule 30/25/15/5 bps at $0/100k/1M/10M
+  (`utils/constants/feeTiers.ts`). WETH amounts 2% below and above each boundary, priced with
+  `/api/token-prices/current` (the same DefiLlama price the server uses). Checks the fee charged,
+  `floor(baseFeeBps × (10000 − swapDiscountBps) / 10000)`, and that the discount is the smallest one
+  reaching the tier (e.g. 1334 for 25 bps).
+
+## API-TRADE-007: Refinance swap fee tiers at each boundary
+
+- **Priority:** P2
+- **Automation:** automated
+- **Notes:** Same as API-TRADE-006 on profile 6, schedule 15/10/5/2 bps at $0/1M/10M/100M.
+
+## API-TRADE-008: Fee entitlement rejects invalid requests
+
+- **Priority:** P2
+- **Automation:** automated
+- **Notes:** Malformed or non-object body, unsupported chain, invalid safe, missing swap context,
+  negative or non-integer amount, non-discountable profile → 400 with the exact error; invalid
+  bearer token → 401. No entitlement in any case.
+
+## API-TRADE-009: Unsupported sell token gets no fee discount
+
+- **Priority:** P2
+- **Automation:** automated
+- **Notes:** A token outside the app's registry cannot be priced, so even a huge amount gets a 0
+  discount (full fee).
+
+## API-TRADE-010: Fee entitlement accepts requests from any Origin
+
+- **Priority:** P3
+- **Automation:** automated
+- **Notes:** Public by design (aphelion-app ADR-0041): a permit is only redeemable on-chain by the
+  Safe it names, so a foreign `Origin` gets 200, not a 4xx.
+
+## API-TRADE-011: Fee tier applies to sell tokens with fewer decimals
+
+- **Priority:** P1
+- **Automation:** automated
+- **Notes:** USDC (6 decimals) and cbBTC (8 decimals) on Base, with a Tier 2 swap. The server reads
+  the token decimals on-chain to value `sellAmountWei`; wrong decimals would misprice the swap by
+  orders of magnitude and silently charge the full fee.

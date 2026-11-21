@@ -25,6 +25,11 @@ export const anvilAccount1Address: Address = '0x70997970C51812dc3A010C7d01b50e0d
 
 // Canonical token contracts
 export const wethMainnetAddress: Address = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+export const wethBaseAddress: Address = '0x4200000000000000000000000000000000000006';
+export const wethArbitrumAddress: Address = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
+export const wethRobinhoodAddress: Address = '0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73';
+export const usdcBaseAddress: Address = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+export const cbBtcBaseAddress: Address = '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf';
 
 export interface InvalidAddressCase {
   description: string;
