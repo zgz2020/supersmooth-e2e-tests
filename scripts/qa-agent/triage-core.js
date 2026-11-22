@@ -8,19 +8,26 @@
  */
 import https from 'node:https';
 import console from 'node:console';
+import process from 'node:process';
 import { Buffer } from 'node:buffer';
 import { URL } from 'node:url';
 
 export const CLASSES = ['DOM_SELECTOR_DRIFT', 'TRANSIENT_RPC', 'REGRESSION_DEFECT'];
 export const DEFAULT_GEMINI_MODEL = 'gemini-flash-latest';
 export const DEFAULT_TEMPERATURE = 0.1;
+/**
+ * Per-call timeout for Gemini. Flash thinks before it answers: on the paid tier answers took
+ * 6–14 s (p50 ~11 s), so the old 15 s limit cut off 43% of calls, mostly hard cases.
+ * Override with GEMINI_TIMEOUT_MS.
+ */
+export const DEFAULT_GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 60000;
 
 /**
  * Robust JSON POST helper:
  * - Uses native global fetch + AbortSignal.timeout on Node 18/20+ (.nvmrc)
  * - Gracefully falls back to node:https for legacy or un-aliased local runtimes (< v18)
  */
-export async function postJson(urlStr, data, timeoutMs = 15000) {
+export async function postJson(urlStr, data, timeoutMs = DEFAULT_GEMINI_TIMEOUT_MS) {
   if (typeof globalThis.fetch === 'function') {
     const res = await globalThis.fetch(urlStr, {
       method: 'POST',

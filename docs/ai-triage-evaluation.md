@@ -141,23 +141,30 @@ What it means:
 
 ### Gemini (`gemini-flash-latest`)
 
-**Not measured: no Gemini answer was obtained.** Two evaluation runs (3 repeats × 32 cases each)
-got **0 Gemini answers out of 192 calls**, all answered by the fallback:
+**Measured on 2026-11-22 with a paid key** (3 repeats × 32 cases, one call per second):
 
-| Run                     | Fallbacks | Reasons                                                                                        |
-| :---------------------- | :-------: | :--------------------------------------------------------------------------------------------- |
-| 1 (one call per second) |  96 / 96  | 76 × `http_429` (5 requests/minute), 10 × `http_503` (model overloaded), 10 × `timeout` (15 s) |
-| 2 (one call every 13 s) |  96 / 96  | 95 × `http_429` (daily quota: **20 requests per model per day**), 1 × `http_503`               |
+| Run                      | Accuracy | Easy  | Hard  | Consistency | Fallbacks         | Latency p50 / p95 |
+| :----------------------- | :------: | :---: | :---: | :---------: | :---------------- | :---------------- |
+| Keyword classifier       |  78.1%   | 100%  | 41.7% |     n/a     | n/a               | 0 ms              |
+| Gemini, 15 s timeout     |  81.3%   | 100%  | 50.0% |    93.8%    | 41 / 96 (timeout) | 12.8 s / 15.0 s   |
+| Gemini, **60 s timeout** |  81.3%   | 90.0% | 66.7% |    87.5%    | 4 / 96 (timeout)  | 12.9 s / 43.8 s   |
 
-The project's key is on the **Gemini free tier: 5 requests per minute and 20 per day per model**.
-This is a production finding, not only an evaluation problem: CI triage uses the same key, a
-nightly run triages up to 3 failures in each of several parallel jobs, and every PR run that
-fails triages too, so on a busy day **many "AI" triage answers are likely the keyword fallback**.
-Until now nothing showed it; the `source` field now does, so the real share can be measured from
-the triage reports.
+- **The 15 s timeout hid Gemini.** Flash thinks before it answers: answers took 6–44 s. At 15 s,
+  43% of calls fell back to keywords, mostly the hard cases (five hard cases never got a Gemini
+  answer). The timeout is now **60 s** (`GEMINI_TIMEOUT_MS` overrides it).
+- **Gemini's own answers** (60 s run): 73 / 92 right (79%). On hard cases **62–67% vs 42%** for
+  keywords; on easy cases it is **worse** (90% vs 100%): it calls a socket hang up (TRI-002) and a
+  renamed button label (TRI-012) a regression.
+- **Its confidence carries signal:** at ≥ 95% it was right 94% of the time; at 85–94%, 64%.
+- **Always wrong in all 3 runs:** TRI-001 (HTML 502 → regression), TRI-016 and TRI-019 (app
+  defects → drift), TRI-018 (slow RPC → drift).
+- **Next step:** a hybrid: keep the keyword answer when a rule clearly matches, ask Gemini only
+  when it does not, and trust Gemini only at ≥ 95% confidence. Not built yet.
 
-To measure Gemini, run `pnpm eval:triage --provider gemini --repeats 3` (or the workflow's manual
-dispatch) with a key whose quota covers ~100 calls, and add the numbers here.
+**Earlier, on the free tier, Gemini could not be measured:** two runs got **0 Gemini answers out
+of 192 calls**: 76 × `http_429` (5 requests/minute), 10 × `http_503`, 10 × `timeout`, then 95 ×
+`http_429` (daily quota: 20 requests per model per day). CI triage uses the same kind of key, so
+on the free tier many "AI" triage answers are the keyword fallback; the `source` field shows it.
 
 ## ⚖️ Decision rule: when a triage result may become a patch
 
