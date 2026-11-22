@@ -17,7 +17,7 @@ export const DEFAULT_GEMINI_MODEL = 'gemini-flash-latest';
 export const DEFAULT_TEMPERATURE = 0.1;
 /**
  * Per-call timeout for Gemini. Flash thinks before it answers: on the paid tier answers took
- * 6–14 s (p50 ~11 s), so the old 15 s limit cut off 43% of calls, mostly hard cases.
+ * 6–44 s (p50 ~13 s), so the old 15 s limit cut off 43% of calls, mostly hard cases.
  * Override with GEMINI_TIMEOUT_MS.
  */
 export const DEFAULT_GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 60000;
