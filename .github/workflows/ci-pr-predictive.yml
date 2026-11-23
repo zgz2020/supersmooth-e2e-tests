@@ -1,9 +1,10 @@
 name: 'Predictive PR CI'
 
 on:
-  pull_request:
-    branches:
-      - 'main'
+  # PR / push triggers paused for now; manual runs (workflow_dispatch) still work.
+  # pull_request:
+  #   branches:
+  #     - 'main'
   workflow_dispatch:
     inputs:
       files:
