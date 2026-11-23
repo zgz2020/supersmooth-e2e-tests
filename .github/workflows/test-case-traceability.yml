@@ -5,16 +5,17 @@ name: '🧾 Test Case Traceability'
 # marked `automated` has no linked test. Posts a coverage table to the job summary.
 # Only lists tests (`playwright test --list`): no browsers, wallets or network calls are needed.
 on:
-  pull_request:
-    paths:
-      - 'tests/**'
-      - 'test-cases/**'
-      - 'utils/testCase.ts'
-      - 'scripts/tc/**'
-      - 'playwright.config.ts'
-      - '.github/workflows/test-case-traceability.yml'
-  push:
-    branches: ['main']
+  # PR / push triggers paused for now; manual runs (workflow_dispatch) still work.
+  # pull_request:
+  #   paths:
+  #     - 'tests/**'
+  #     - 'test-cases/**'
+  #     - 'utils/testCase.ts'
+  #     - 'scripts/tc/**'
+  #     - 'playwright.config.ts'
+  #     - '.github/workflows/test-case-traceability.yml'
+  # push:
+  #   branches: ['main']
   workflow_dispatch:
 
 permissions:

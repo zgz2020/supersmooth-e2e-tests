@@ -3,15 +3,16 @@ name: 'Triage Classifier Evaluation'
 # Scores the AI triage classifier against the labelled dataset (tests/eval/triage/dataset) when the
 # classifier, its prompt or the dataset change. See docs/ai-triage-evaluation.md.
 on:
-  pull_request:
-    branches:
-      - 'main'
-    paths:
-      - 'scripts/qa-agent/triage-core.js'
-      - 'scripts/qa-agent/triage-agent.js'
-      - 'scripts/eval/**'
-      - 'tests/eval/triage/**'
-      - '.github/workflows/triage-eval.yml'
+  # PR / push triggers paused for now; manual runs (workflow_dispatch) still work.
+  # pull_request:
+  #   branches:
+  #     - 'main'
+  #   paths:
+  #     - 'scripts/qa-agent/triage-core.js'
+  #     - 'scripts/qa-agent/triage-agent.js'
+  #     - 'scripts/eval/**'
+  #     - 'tests/eval/triage/**'
+  #     - '.github/workflows/triage-eval.yml'
   workflow_dispatch:
     inputs:
       repeats:
