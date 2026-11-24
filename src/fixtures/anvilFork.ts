@@ -115,6 +115,9 @@ export function findAnvilBinary(): string {
 // Defaults away from 8545, which `pnpm app:fork` uses for its own shared Anvil node.
 // -----------------------------------------------------------------------------
 const DEFAULT_ANVIL_BASE_PORT = 8600;
+// The teardown revert can wait behind upstream fork fetches Anvil already queued during the test
+// (the page is closed by then, by the `app` fixture); 20 s was not always enough
+const REVERT_TIMEOUT_MS = 60_000;
 
 function assertPortFree(port: number): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -577,144 +580,153 @@ export const test = base.extend<TestFixtures & TestOptions, WorkerFixtures>({
   // Test-Scoped: EVM Snapshot before each test & EVM Revert after each test
   // Guarantees zero-pollution deterministic state resets
   // ---------------------------------------------------------------------------
-  anvilFork: async ({ anvilServer, page }, use) => {
-    // 1. Take baseline snapshot before test execution.
-    // evm_revert consumes the snapshot it reverts to, so the baseline is re-taken
-    // whenever a test reverts to it, keeping teardown's revert target valid.
-    let baselineId = await jsonRpc<string>(anvilServer.rpcUrl, 'evm_snapshot', []);
+  anvilFork: [
+    async ({ anvilServer, page }, use) => {
+      // 1. Take baseline snapshot before test execution.
+      // evm_revert consumes the snapshot it reverts to, so the baseline is re-taken
+      // whenever a test reverts to it, keeping teardown's revert target valid.
+      let baselineId = await jsonRpc<string>(anvilServer.rpcUrl, 'evm_snapshot', []);
 
-    const controller: AnvilForkController = {
-      port: anvilServer.port,
-      rpcUrl: anvilServer.rpcUrl,
-      chainId: anvilServer.chainId,
-      get snapshotId() {
-        return baselineId;
-      },
+      const controller: AnvilForkController = {
+        port: anvilServer.port,
+        rpcUrl: anvilServer.rpcUrl,
+        chainId: anvilServer.chainId,
+        get snapshotId() {
+          return baselineId;
+        },
 
-      rpc: <T = unknown>(method: string, params: unknown[] = []) =>
-        jsonRpc<T>(anvilServer.rpcUrl, method, params),
+        rpc: <T = unknown>(method: string, params: unknown[] = []) =>
+          jsonRpc<T>(anvilServer.rpcUrl, method, params),
 
-      snapshot: () => jsonRpc<string>(anvilServer.rpcUrl, 'evm_snapshot', []),
+        snapshot: () => jsonRpc<string>(anvilServer.rpcUrl, 'evm_snapshot', []),
 
-      revert: async (id?: string) => {
-        const target = id || baselineId;
-        const reverted = await jsonRpc<boolean>(anvilServer.rpcUrl, 'evm_revert', [target]);
-        if (reverted && target === baselineId) {
-          baselineId = await jsonRpc<string>(anvilServer.rpcUrl, 'evm_snapshot', []);
-        }
-        return reverted;
-      },
+        revert: async (id?: string) => {
+          const target = id || baselineId;
+          const reverted = await jsonRpc<boolean>(anvilServer.rpcUrl, 'evm_revert', [target]);
+          if (reverted && target === baselineId) {
+            baselineId = await jsonRpc<string>(anvilServer.rpcUrl, 'evm_snapshot', []);
+          }
+          return reverted;
+        },
 
-      setBalance: async (address: string, etherAmount: number | bigint | string) => {
-        await jsonRpc(anvilServer.rpcUrl, 'anvil_setBalance', [
-          address,
-          toHex(parseEther(String(etherAmount))),
-        ]);
-      },
+        setBalance: async (address: string, etherAmount: number | bigint | string) => {
+          await jsonRpc(anvilServer.rpcUrl, 'anvil_setBalance', [
+            address,
+            toHex(parseEther(String(etherAmount))),
+          ]);
+        },
 
-      impersonateAccount: async (address: string) => {
-        await jsonRpc(anvilServer.rpcUrl, 'anvil_impersonateAccount', [address]);
-      },
+        impersonateAccount: async (address: string) => {
+          await jsonRpc(anvilServer.rpcUrl, 'anvil_impersonateAccount', [address]);
+        },
 
-      stopImpersonatingAccount: async (address: string) => {
-        await jsonRpc(anvilServer.rpcUrl, 'anvil_stopImpersonatingAccount', [address]);
-      },
+        stopImpersonatingAccount: async (address: string) => {
+          await jsonRpc(anvilServer.rpcUrl, 'anvil_stopImpersonatingAccount', [address]);
+        },
 
-      fundToken: async ({ tokenAddress, recipient, amount, whale, decimals }) => {
-        const rpcUrl = anvilServer.rpcUrl;
-        const token = tokenAddress as Address;
-        const to = recipient as Address;
-        const tokenDecimals = decimals ?? (await erc20Decimals(rpcUrl, token));
-        const rawAmount = parseUnits(String(amount), tokenDecimals);
-        const balanceBefore = await erc20BalanceOf(rpcUrl, token, to);
+        fundToken: async ({ tokenAddress, recipient, amount, whale, decimals }) => {
+          const rpcUrl = anvilServer.rpcUrl;
+          const token = tokenAddress as Address;
+          const to = recipient as Address;
+          const tokenDecimals = decimals ?? (await erc20Decimals(rpcUrl, token));
+          const rawAmount = parseUnits(String(amount), tokenDecimals);
+          const balanceBefore = await erc20BalanceOf(rpcUrl, token, to);
 
-        if (token.toLowerCase() === wethMainnetAddress.toLowerCase()) {
-          // Wrap the recipient's own ETH via WETH.deposit() (sent with --auto-impersonate)
-          await sendAndConfirm(rpcUrl, {
-            from: to,
-            to: token,
-            value: toHex(rawAmount),
-            data: encodeFunctionData({ abi: wethDepositAbi, functionName: 'deposit' }),
-          });
-        } else {
-          if (!whale) {
+          if (token.toLowerCase() === wethMainnetAddress.toLowerCase()) {
+            // Wrap the recipient's own ETH via WETH.deposit() (sent with --auto-impersonate)
+            await sendAndConfirm(rpcUrl, {
+              from: to,
+              to: token,
+              value: toHex(rawAmount),
+              data: encodeFunctionData({ abi: wethDepositAbi, functionName: 'deposit' }),
+            });
+          } else {
+            if (!whale) {
+              throw new Error(
+                `fundToken: pass a \`whale\` that holds ${tokenAddress}; only WETH can be minted without one.`,
+              );
+            }
+            // Gas money for the whale, then transfer from it while impersonated
+            await jsonRpc(rpcUrl, 'anvil_setBalance', [whale, toHex(parseEther('10'))]);
+            await jsonRpc(rpcUrl, 'anvil_impersonateAccount', [whale]);
+            try {
+              await sendAndConfirm(rpcUrl, {
+                from: whale,
+                to: token,
+                data: encodeFunctionData({
+                  abi: erc20Abi,
+                  functionName: 'transfer',
+                  args: [to, rawAmount],
+                }),
+              });
+            } finally {
+              await jsonRpc(rpcUrl, 'anvil_stopImpersonatingAccount', [whale]);
+            }
+          }
+
+          // Some tokens return false instead of reverting, so confirm the balance really moved
+          const balanceAfter = await erc20BalanceOf(rpcUrl, token, to);
+          if (balanceAfter - balanceBefore !== rawAmount) {
             throw new Error(
-              `fundToken: pass a \`whale\` that holds ${tokenAddress}; only WETH can be minted without one.`,
+              `fundToken: ${recipient} balance of ${tokenAddress} changed by ${balanceAfter - balanceBefore}, expected ${rawAmount}.`,
             );
           }
-          // Gas money for the whale, then transfer from it while impersonated
-          await jsonRpc(rpcUrl, 'anvil_setBalance', [whale, toHex(parseEther('10'))]);
-          await jsonRpc(rpcUrl, 'anvil_impersonateAccount', [whale]);
-          try {
-            await sendAndConfirm(rpcUrl, {
-              from: whale,
-              to: token,
-              data: encodeFunctionData({
-                abi: erc20Abi,
-                functionName: 'transfer',
-                args: [to, rawAmount],
-              }),
+        },
+
+        simulateRpcRateLimit: async () => {
+          let hits = 0;
+          const pattern = appRpcProxyPattern(anvilServer.chainId);
+          const rateLimited = async (route: Route) => {
+            hits++;
+            await route.fulfill({
+              status: 429,
+              contentType: 'application/json',
+              headers: { 'Retry-After': '60' },
+              body: JSON.stringify({ error: 'Too many requests' }),
             });
-          } finally {
-            await jsonRpc(rpcUrl, 'anvil_stopImpersonatingAccount', [whale]);
-          }
-        }
+          };
+          // Registered after the fixture's forwarding route, so Playwright runs it first
+          await page.route(pattern, rateLimited);
+          return {
+            hits: () => hits,
+            // Lifts the rate limit; requests flow to Anvil again via the fixture's route
+            stop: () => page.unroute(pattern, rateLimited),
+          };
+        },
 
-        // Some tokens return false instead of reverting, so confirm the balance really moved
-        const balanceAfter = await erc20BalanceOf(rpcUrl, token, to);
-        if (balanceAfter - balanceBefore !== rawAmount) {
-          throw new Error(
-            `fundToken: ${recipient} balance of ${tokenAddress} changed by ${balanceAfter - balanceBefore}, expected ${rawAmount}.`,
-          );
-        }
-      },
+        increaseTime: async (seconds: number) => {
+          return await jsonRpc<number>(anvilServer.rpcUrl, 'evm_increaseTime', [seconds]);
+        },
 
-      simulateRpcRateLimit: async () => {
-        let hits = 0;
-        const pattern = appRpcProxyPattern(anvilServer.chainId);
-        const rateLimited = async (route: Route) => {
-          hits++;
-          await route.fulfill({
-            status: 429,
-            contentType: 'application/json',
-            headers: { 'Retry-After': '60' },
-            body: JSON.stringify({ error: 'Too many requests' }),
-          });
-        };
-        // Registered after the fixture's forwarding route, so Playwright runs it first
-        await page.route(pattern, rateLimited);
-        return {
-          hits: () => hits,
-          // Lifts the rate limit; requests flow to Anvil again via the fixture's route
-          stop: () => page.unroute(pattern, rateLimited),
-        };
-      },
+        mine: async (blocks = 1) => {
+          await jsonRpc(anvilServer.rpcUrl, 'anvil_mine', [toHex(blocks)]);
+        },
+      };
 
-      increaseTime: async (seconds: number) => {
-        return await jsonRpc<number>(anvilServer.rpcUrl, 'evm_increaseTime', [seconds]);
-      },
+      await use(controller);
 
-      mine: async (blocks = 1) => {
-        await jsonRpc(anvilServer.rpcUrl, 'anvil_mine', [toHex(blocks)]);
-      },
-    };
-
-    await use(controller);
-
-    // 2. Revert back to baseline after test execution (instant state reset).
-    // A failed revert would leak state into the next test, so it fails loudly.
-    // Skipped only when the Anvil process is already gone (nothing left to pollute).
-    if (anvilServer.process.exitCode !== null) {
-      return;
-    }
-    const reverted = await jsonRpc<boolean>(anvilServer.rpcUrl, 'evm_revert', [baselineId]);
-    if (!reverted) {
-      throw new Error(
-        `evm_revert to baseline snapshot ${baselineId} failed on port ${anvilServer.port}; ` +
-          'chain state would leak into the next test.',
+      // 2. Revert back to baseline after test execution (instant state reset).
+      // A failed revert would leak state into the next test, so it fails loudly.
+      // Skipped only when the Anvil process is already gone (nothing left to pollute).
+      if (anvilServer.process.exitCode !== null) {
+        return;
+      }
+      const reverted = await jsonRpc<boolean>(
+        anvilServer.rpcUrl,
+        'evm_revert',
+        [baselineId],
+        REVERT_TIMEOUT_MS,
       );
-    }
-  },
+      if (!reverted) {
+        throw new Error(
+          `evm_revert to baseline snapshot ${baselineId} failed on port ${anvilServer.port}; ` +
+            'chain state would leak into the next test.',
+        );
+      }
+    },
+    // Its own budget: the teardown revert (up to REVERT_TIMEOUT_MS) must not eat the test's timeout
+    { timeout: TIMEOUTS.anvil.fixture },
+  ],
 
   // ---------------------------------------------------------------------------
   // EIP-1193 Programmatic Controller Fixture

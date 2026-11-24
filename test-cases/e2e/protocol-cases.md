@@ -26,7 +26,7 @@ Wallet, network and RPC edge cases on a local Anvil fork with an EIP-1193 mock p
 
 - **Priority:** P1
 - **Automation:** automated
-- **Notes:** Expected failure (`knownAppBug`) until [aphelion-app#1667](https://github.com/Aphelion-Co/aphelion-app/issues/1667) is fixed.
+- **Notes:** Regression test for [aphelion-app#1667](https://github.com/Aphelion-Co/aphelion-app/issues/1667) (fixed; verified 2026-11-24). Recovery is checked by the header's market price, which stays a skeleton until the page's chain data loads, not by the wallet's deposit balance.
 
 ## E2E-PROTO-006: Open a Multiply position with a realistic deposit on the fork
 
