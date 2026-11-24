@@ -16,6 +16,39 @@ export function normalizeBaseUrl(url?: string, fallback: string = DEFAULT_BASE_U
   return base.replace(/\/+$/, '');
 }
 
+/**
+ * GraphQL endpoint of the Ponder indexer behind the app under test (read-only, no auth). Staging
+ * and production each have their own indexer, so the URL is picked from the app's host:
+ * `INDEXER_URL_STAGING` for `staging.*`, `INDEXER_URL_PRODUCTION` otherwise. `INDEXER_URL`, when
+ * set, overrides both (e.g. a local indexer). URLs are kept out of tracked files on purpose, and
+ * errors name the variable, never its value; see `.env.example`.
+ */
+export function indexerGraphqlUrl(
+  appBaseUrl: string = normalizeBaseUrl(process.env.BASE_URL),
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const variable = indexerUrlVariable(appBaseUrl, env);
+  const indexer = env[variable]?.trim();
+  if (!indexer) {
+    throw new Error(
+      `${variable} is not set: tests that list open positions need the indexer of ${appBaseUrl} ` +
+        '(see .env.example)',
+    );
+  }
+  return `${normalizeBaseUrl(indexer)}/graphql`;
+}
+
+/** The env variable that holds the indexer URL for `appBaseUrl`, to name it in errors. */
+export function indexerUrlVariable(
+  appBaseUrl: string = normalizeBaseUrl(process.env.BASE_URL),
+  env: NodeJS.ProcessEnv = process.env,
+): 'INDEXER_URL' | 'INDEXER_URL_STAGING' | 'INDEXER_URL_PRODUCTION' {
+  if (env.INDEXER_URL?.trim()) return 'INDEXER_URL';
+  return new URL(appBaseUrl).hostname.startsWith('staging.')
+    ? 'INDEXER_URL_STAGING'
+    : 'INDEXER_URL_PRODUCTION';
+}
+
 /** Canonical markets used as fallbacks when the vault API cannot provide an active vault. */
 export const FALLBACK_MARKETS = {
   /** Spark WETH/USDS on Ethereum Mainnet (chain 1) */

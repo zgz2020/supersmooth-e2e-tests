@@ -21,12 +21,20 @@ export class PositionPage {
   readonly page: Page;
   readonly rightSidePanel: RightSidePanel;
   readonly overviewLocator: Locator;
+  /**
+   * What the app renders instead of a position: the route's own `Invalid market identifier: …` /
+   * `Invalid position ID: …` message, or the app error page (always has `Report this error`).
+   */
+  readonly errorScreen: Locator;
   private readonly overviewFields: Record<keyof PositionOverviewValues, Locator>;
 
   constructor(page: Page) {
     this.page = page;
     this.rightSidePanel = new RightSidePanel(page);
     this.overviewLocator = this.page.getByRole('tabpanel', { name: 'Overview' });
+    this.errorScreen = this.page
+      .getByText(/Invalid (market identifier|position ID):/)
+      .or(this.page.getByRole('button', { name: 'Report this error' }));
     this.overviewFields = {
       multiple: this.overviewLocator
         .getByText('Multiple', { exact: true })
@@ -58,6 +66,59 @@ export class PositionPage {
   async openPage(url: string, props: WaitToBeStableProps) {
     await this.page.goto(url);
     await this.rightSidePanel.configurePosition.waitToBeStable(props);
+  }
+
+  /** Opens a position page by its URL, as when a user pastes or bookmarks it. */
+  @step
+  async goto(url: string) {
+    await this.page.goto(url);
+  }
+
+  /**
+   * The position page rendered its Position Overview instead of an error screen. Opening a
+   * position fetches it on-chain server-side, which takes up to ~30 s on staging, so this waits
+   * for whichever comes first and fails at once on an error screen instead of waiting it out.
+   */
+  @step
+  async shouldShowPositionOverview({ timeout = 60_000 } = {}) {
+    const overview = this.overviewLocator.getByText('Position Overview', { exact: true });
+    await expect(
+      overview.or(this.errorScreen).first(),
+      'position page should finish loading (Position Overview or an error screen)',
+    ).toBeVisible({ timeout });
+    await expect(this.errorScreen, 'position page should not show an error screen').toHaveCount(0);
+    await expect(overview, 'position page should show its Position Overview').toBeVisible();
+  }
+
+  /**
+   * Matches the Portfolio card's figures (whole USD): Borrow `Collateral Locked` (`< 0.01 WETH
+   * ($8.50)`) and `Borrowing` (`$1.01`). Within $1 (the card's rounding) or 2% (prices move
+   * between pages); retries while the page values load.
+   */
+  @step
+  async shouldShowBorrowAmounts(card: { collateral: number; debt: number }) {
+    await expectAmount(
+      this.overviewLocator
+        .getByText('Collateral Locked', { exact: true })
+        .locator('xpath=following-sibling::div[1]/p[last()]'),
+      approx(card.collateral, { relative: 0.02, min: 1 }),
+      'Collateral Locked (USD) should match the Portfolio card',
+    );
+    await expectAmount(
+      this.overviewMetric('Borrowing'),
+      approx(card.debt, { relative: 0.02, min: 1 }),
+      'Borrowing (USD) should match the Portfolio card',
+    );
+  }
+
+  /** Net Value matches the Portfolio card's (whole USD), within $1 or 2%; retries while loading. */
+  @step
+  async shouldShowNetValue(cardUsd: number) {
+    await expectAmount(
+      this.overviewFields.netValueUsd,
+      approx(cardUsd, { relative: 0.02, min: 1 }),
+      'Net Value should match the Portfolio card',
+    );
   }
 
   /** The position has loaded and is still open (its net value is above zero). */
