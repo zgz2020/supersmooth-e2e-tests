@@ -152,7 +152,7 @@ Located in `scripts/`. Utilities for test maintenance, local blockchain simulati
 | `pnpm eval:capture`           | Turns the last run's failures into labelled, scrubbed dataset cases                                     |
 | `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites               |
 | `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                                     |
-| `pnpm agent:crawl`            | Autonomously discovers dynamic pool routes and audits for 404 boundaries (Issue #1649)                  |
+| `pnpm agent:crawl`            | Discovers dynamic pool routes, audits them for 404s and checks each page loads in a browser (#1649)     |
 | `pnpm agent:crawl:all`        | Exhaustively crawls all table pages across products without pagination caps until the end               |
 | `pnpm test:unit`              | Runs helper unit tests in `tests/unit/` (getActiveVault, crawler, impact analyzer, snapshots)           |
 

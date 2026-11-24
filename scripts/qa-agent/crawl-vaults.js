@@ -72,9 +72,12 @@ export async function universalFetch(urlStr, options = {}) {
  * Ethereum (1), Base (8453), Robinhood (4663), and Arbitrum (42161).
  *
  * Verifies:
- *   1. HTTP 200 OK
- *   2. Absence of "Page not found" 404 boundaries and React error boundaries
- *   3. Zero unhandled server-side rendering crashes or missing assets
+ *   1. HTTP 200 OK, and no 404 / error text in the server-rendered HTML
+ *   2. The page actually loads in a browser (skip with --no-render): the server
+ *      HTML is only a skeleton, so a bad pool still returns 200 and shows its
+ *      error ("This page doesn't exist", an error boundary, ...) client-side.
+ *      A page counts as loaded when its "Open <Product> Position" heading and
+ *      its "Configure Position" side panel are visible.
  *
  * Generates:
  *   - ai-reports/route-health-audit.md
@@ -355,6 +358,390 @@ export async function auditAllRoutes(routes, options = {}) {
 }
 
 /**
+ * Rendered page-load check.
+ *
+ * Healthy vault pages (every product and protocol) show an "Open <Product>
+ * Position" heading and a "Configure Position" side-panel heading once they
+ * have loaded. That pair is the positive "page loaded" signal. Known error
+ * screens are only matched to fail fast and to name the cause; a page that
+ * shows neither the signal nor a known error still fails when time runs out.
+ */
+export const LOADED_HEADINGS = {
+  pageHeading: /^open .+ position$/i,
+  sidePanel: /^configure position$/i,
+};
+
+export const KNOWN_ERROR_SCREENS = [
+  {
+    kind: 'not-found',
+    pattern: /this page doesn['’]t exist|this page could not be found|page not found/i,
+  },
+  { kind: 'error-screen', pattern: /application error: a (client|server)-side exception/i },
+  { kind: 'error-screen', pattern: /something went wrong/i },
+  { kind: 'error-screen', pattern: /invalid market identifier/i },
+  { kind: 'error-screen', pattern: /internal server error/i },
+];
+
+/** Returns the line of `text` that matches `pattern`, trimmed for a report. */
+function matchingLine(text, pattern) {
+  const line = text.split('\n').find((l) => pattern.test(l)) || '';
+  const trimmed = line.trim();
+  return trimmed.length > 100 ? `${trimmed.slice(0, 100)}…` : trimmed;
+}
+
+/**
+ * Classifies one snapshot of a rendered page.
+ *
+ * @param {{ headings: string[], text: string, skeletonCount: number }} snapshot
+ *   Visible headings (h1-h3), visible body text and visible `.animate-pulse` skeletons.
+ * @param {{ final?: boolean, waitedMs?: number }} [options]
+ *   `final` is true once time has run out, so a page still without the loaded
+ *   signal is reported as stuck or incomplete instead of pending.
+ * @returns {{ state: 'loaded' | 'failed' | 'pending', kind?: string, reason: string }}
+ */
+export function classifyRenderedPage(snapshot, options = {}) {
+  const headings = (snapshot?.headings || []).map((h) => String(h).trim());
+  const text = String(snapshot?.text || '');
+  const skeletonCount = snapshot?.skeletonCount || 0;
+
+  const hasPageHeading = headings.some((h) => LOADED_HEADINGS.pageHeading.test(h));
+  const hasSidePanel = headings.some((h) => LOADED_HEADINGS.sidePanel.test(h));
+  if (hasPageHeading && hasSidePanel) {
+    return { state: 'loaded', reason: 'OK' };
+  }
+
+  // Error text in a heading counts at once (the app's not-found and error pages
+  // use an <h1>). Error text elsewhere only counts once the page has stopped
+  // loading (no skeletons left) or time has run out: "Something went wrong"
+  // can also be ordinary text (an FAQ, the simulation alert), and #1688's
+  // "Invalid market identifier" is plain text with no visible heading.
+  const settled = skeletonCount === 0 || options.final;
+  for (const screen of KNOWN_ERROR_SCREENS) {
+    const heading = headings.find((h) => screen.pattern.test(h));
+    const inText = !heading && settled && screen.pattern.test(text);
+    if (heading || inText) {
+      const shown = heading
+        ? matchingLine(heading, screen.pattern)
+        : matchingLine(text, screen.pattern);
+      const label = screen.kind === 'not-found' ? 'Not-found screen' : 'Error screen';
+      return {
+        state: 'failed',
+        kind: screen.kind,
+        reason: `${label} despite HTTP 200: "${shown}"`,
+      };
+    }
+  }
+
+  if (!options.final) {
+    return { state: 'pending', reason: 'Still loading' };
+  }
+
+  const waited = options.waitedMs ? ` after ${options.waitedMs}ms` : '';
+  if (skeletonCount > 0) {
+    return {
+      state: 'failed',
+      kind: 'stuck-loading',
+      reason: `Stuck on loading skeleton${waited} (${skeletonCount} placeholders still visible)`,
+    };
+  }
+
+  const missing = [
+    !hasPageHeading && '"Open … Position" heading',
+    !hasSidePanel && '"Configure Position" side panel',
+  ].filter(Boolean);
+  const seen = headings.length > 0 ? headings.slice(0, 3).join(' | ') : 'none';
+  return {
+    state: 'failed',
+    kind: 'missing-content',
+    reason: `Main content missing${waited}: no ${missing.join(' or ')} (headings: ${seen})`,
+  };
+}
+
+/** Runs in the browser: collects what classifyRenderedPage needs. */
+function collectPageSnapshot() {
+  const document = globalThis.document;
+  const isVisible = (el) =>
+    typeof el.checkVisibility === 'function' ? el.checkVisibility() : el.offsetParent !== null;
+  return {
+    headings: Array.from(document.querySelectorAll('h1, h2, h3'))
+      .filter(isVisible)
+      .map((el) => el.innerText.trim()),
+    text: (document.body?.innerText || '').slice(0, 20000),
+    skeletonCount: Array.from(document.querySelectorAll('.animate-pulse')).filter(isVisible).length,
+  };
+}
+
+/**
+ * Takes a page snapshot, giving up after `timeoutMs`: `page.evaluate` has no
+ * timeout of its own, so a tab hung by a script would block the worker forever.
+ * Returns `{ snapshot }`, `{ hung: true }`, or `{ error }` when the evaluate
+ * failed (e.g. the page navigated mid-call); callers treat that as still loading.
+ */
+async function takeSnapshot(page, timeoutMs) {
+  let timer;
+  const hung = new Promise((resolve) => {
+    timer = setTimeout(() => resolve({ hung: true }), timeoutMs);
+  });
+  try {
+    return await Promise.race([
+      page.evaluate(collectPageSnapshot).then(
+        (snapshot) => ({ snapshot }),
+        (error) => ({ error }),
+      ),
+      hung,
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Opens one route in a browser page and waits for it to load or fail.
+ *
+ * An error screen has to stay up for `errorSettleMs` before it counts, so a
+ * screen shown for a moment while data loads is not reported.
+ */
+export async function checkRenderedPage(page, fullUrl, options = {}) {
+  const timeoutMs = options.timeoutMs || 20000;
+  const pollMs = options.pollMs || 500;
+  const errorSettleMs = options.errorSettleMs ?? 1500;
+  const snapshotTimeoutMs = options.snapshotTimeoutMs || 5000;
+  const sleep = options.sleep || ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const now = options.now || Date.now;
+
+  let pageError = null;
+  page.on?.('pageerror', (err) => {
+    pageError = pageError || String(err?.message || err).split('\n')[0];
+  });
+
+  const start = now();
+  const withPageError = (result) =>
+    pageError && result.state === 'failed'
+      ? { ...result, reason: `${result.reason}; uncaught error: ${pageError.slice(0, 120)}` }
+      : result;
+
+  try {
+    await page.goto(fullUrl, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+  } catch (err) {
+    return {
+      state: 'failed',
+      kind: 'navigation',
+      reason: `Browser navigation failed: ${String(err?.message || err).split('\n')[0]}`,
+    };
+  }
+
+  const unresponsive = {
+    state: 'failed',
+    kind: 'unresponsive',
+    reason: `Page stopped responding (no snapshot within ${snapshotTimeoutMs}ms)`,
+  };
+
+  let failingSince = null;
+  let last = { state: 'pending', reason: 'Still loading' };
+  while (now() - start < timeoutMs) {
+    const taken = await takeSnapshot(page, snapshotTimeoutMs);
+    if (taken.hung) return withPageError(unresponsive);
+    if (taken.error) {
+      await sleep(pollMs);
+      continue;
+    }
+    last = classifyRenderedPage(taken.snapshot);
+    if (last.state === 'loaded') return last;
+    if (last.state === 'failed') {
+      failingSince = failingSince ?? now();
+      if (now() - failingSince >= errorSettleMs) return withPageError(last);
+    } else {
+      failingSince = null;
+    }
+    await sleep(pollMs);
+  }
+
+  const taken = await takeSnapshot(page, snapshotTimeoutMs);
+  if (taken.hung) return withPageError(unresponsive);
+  if (taken.error) {
+    return withPageError({
+      state: 'failed',
+      kind: 'render-error',
+      reason: `Could not read the page: ${String(taken.error?.message || taken.error).split('\n')[0]}`,
+    });
+  }
+  return withPageError(classifyRenderedPage(taken.snapshot, { final: true, waitedMs: timeoutMs }));
+}
+
+const BLOCKED_RESOURCE_TYPES = new Set(['image', 'media', 'font']);
+
+async function launchChromium() {
+  const { chromium } = await import('@playwright/test');
+  return chromium.launch();
+}
+
+/** Failures that cost the full timeout; many of them at once point to staging being down. */
+const SLOW_FAILURE_KINDS = new Set([
+  'stuck-loading',
+  'missing-content',
+  'unresponsive',
+  'navigation',
+]);
+
+/**
+ * Runs the rendered page-load check on every route that passed the HTTP
+ * check, and turns those that do not load into FAILs with a reason.
+ * Routes that already failed are returned unchanged.
+ *
+ * Staging slows down under many parallel renders, and pages then sit on their
+ * skeletons past the timeout. So concurrency is kept low (default 4) and pages
+ * that fail are checked once more, one at a time, before they are reported.
+ * A page that only loads on that second try passes with `renderRetried: true`.
+ *
+ * When staging itself is down (frontend up, data not loading) every page costs
+ * the full timeout, and checking and retrying them all would take hours. So:
+ *   - if the first `earlyStopAfter` pages (default 20) all fail slowly, the
+ *     check stops and the rest are reported as not checked;
+ *   - the retry is skipped when more than `maxRetryRate` (default 20%) of the
+ *     pages failed (and more than 10, so a small run still retries a flaky
+ *     page), and covers at most `maxRetries` pages (default 50).
+ */
+export async function auditRenderedRoutes(results, options = {}) {
+  const baseUrl = (options.baseUrl || 'https://staging.supersmooth.fi').replace(/\/$/, '');
+  const concurrency = options.concurrency || 4;
+  const retries = options.retries ?? 1;
+  const earlyStopAfter = options.earlyStopAfter ?? 20;
+  const maxRetryRate = options.maxRetryRate ?? 0.2;
+  const maxRetries = options.maxRetries ?? 50;
+  const launch = options.launchBrowser || launchChromium;
+  const toCheck = results.filter((r) => r.status === 'PASS');
+  if (toCheck.length === 0) return results;
+
+  const browser = await launch();
+
+  async function checkOne(context, result) {
+    const page = await context.newPage();
+    const start = Date.now();
+    let outcome;
+    try {
+      outcome = await checkRenderedPage(page, result.fullUrl || `${baseUrl}${result.url}`, {
+        timeoutMs: options.timeoutMs,
+        errorSettleMs: options.errorSettleMs,
+        snapshotTimeoutMs: options.snapshotTimeoutMs,
+      });
+    } catch (err) {
+      outcome = {
+        state: 'failed',
+        kind: 'render-error',
+        reason: `Render check crashed: ${err.message}`,
+      };
+    } finally {
+      await page.close().catch(() => {});
+    }
+    return { ...outcome, renderTimeMs: Date.now() - start };
+  }
+
+  // Checks `items`; with `watchForOutage`, stops once the first pages all fail slowly.
+  async function checkAll(items, workers, { watchForOutage = false } = {}) {
+    const outcomes = new Map();
+    const queue = [...items];
+    let completed = 0;
+    let slowFailures = 0;
+    let stopped = false;
+    async function worker() {
+      const context = await browser.newContext();
+      // Images, fonts and media do not decide whether the page loaded; skipping them saves time.
+      await context.route?.('**/*', (route) =>
+        BLOCKED_RESOURCE_TYPES.has(route.request().resourceType())
+          ? route.abort()
+          : route.fallback(),
+      );
+      try {
+        while (queue.length > 0 && !stopped) {
+          const result = queue.shift();
+          if (!result) break;
+          const outcome = await checkOne(context, result);
+          outcomes.set(result, outcome);
+          completed += 1;
+          if (outcome.state !== 'loaded' && SLOW_FAILURE_KINDS.has(outcome.kind)) slowFailures += 1;
+          if (
+            watchForOutage &&
+            earlyStopAfter > 0 &&
+            completed === earlyStopAfter &&
+            slowFailures === completed
+          ) {
+            stopped = true;
+          }
+        }
+      } finally {
+        await context.close().catch(() => {});
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(workers, items.length) }, () => worker()));
+    return { outcomes, stopped };
+  }
+
+  const final = new Map();
+  let notChecked = null;
+  let retryNote = null;
+  try {
+    const first = await checkAll(toCheck, concurrency, { watchForOutage: true });
+    for (const [result, outcome] of first.outcomes) final.set(result, { ...outcome, attempts: 1 });
+
+    if (first.stopped) {
+      notChecked = `Not checked: the first ${earlyStopAfter} pages all failed to load, so staging looks down`;
+    } else {
+      const failed = toCheck.filter((r) => final.get(r).state !== 'loaded');
+      const rate = failed.length / toCheck.length;
+      if (retries > 0 && failed.length > 0) {
+        if (rate > maxRetryRate && failed.length > 10) {
+          retryNote = `not retried: ${failed.length} of ${toCheck.length} pages failed (${Math.round(rate * 100)}%), staging looks down`;
+        } else {
+          const toRetry = failed.slice(0, maxRetries);
+          if (failed.length > toRetry.length) {
+            retryNote = `not retried: over the ${maxRetries}-page retry limit`;
+          }
+          const second = await checkAll(toRetry, 1);
+          for (const [result, outcome] of second.outcomes) {
+            final.set(result, { ...outcome, attempts: 2 });
+          }
+        }
+      }
+    }
+  } finally {
+    await browser.close().catch(() => {});
+  }
+
+  const checked = new Set(toCheck);
+  return results.map((r) => {
+    const outcome = final.get(r);
+    if (!outcome) {
+      if (!checked.has(r)) return r;
+      return {
+        ...r,
+        status: 'FAIL',
+        renderStatus: 'NOT_CHECKED',
+        failureKind: 'not-checked',
+        errorReason: notChecked,
+      };
+    }
+    const { renderTimeMs, attempts } = outcome;
+    if (outcome.state === 'loaded') {
+      return { ...r, renderStatus: 'LOADED', renderTimeMs, renderRetried: attempts > 1 };
+    }
+    let errorReason = outcome.reason;
+    if (attempts > 1) errorReason += ` (failed ${attempts} tries)`;
+    else if (retryNote) errorReason += ` (${retryNote})`;
+    return {
+      ...r,
+      status: 'FAIL',
+      renderStatus: 'FAILED',
+      renderTimeMs,
+      renderAttempts: attempts,
+      failureKind: outcome.kind,
+      has404Fallback: outcome.kind === 'not-found',
+      hasErrorBoundary: outcome.kind === 'error-screen',
+      errorReason,
+    };
+  });
+}
+
+/**
  * Builds the Markdown Route Health Audit Report
  */
 export function generateAuditReport(results, options = {}) {
@@ -375,10 +762,11 @@ export function generateAuditReport(results, options = {}) {
   let md = `# 🕷️ Autonomous Route Health Audit Report\n\n`;
   md += `> **Audit Executed:** ${new Date().toISOString()}  \n`;
   md += `> **Target Host:** \`${options.baseUrl || 'https://staging.supersmooth.fi'}\`  \n`;
-  md += `> **Coverage:** ${total} dynamic routes audited across ${Object.keys(chainBreakdown).length} networks  \n\n`;
+  md += `> **Coverage:** ${total} dynamic routes audited across ${Object.keys(chainBreakdown).length} networks  \n`;
+  md += `> **Checks:** ${options.render === false ? 'HTTP status and server HTML only (page-load check skipped)' : 'HTTP status, server HTML, and page load in a browser'}  \n\n`;
 
   md += `## 📊 Executive Summary\n\n`;
-  md += `| Total Routes | Passed (HTTP 200) | Failed (404/Error) | Route Health Score |\n`;
+  md += `| Total Routes | Passed | Failed | Route Health Score |\n`;
   md += `| :--- | :--- | :--- | :--- |\n`;
   md += `| **${total}** | **${passed}** | **${failed}** | **${passRate}%** |\n\n`;
 
@@ -402,15 +790,16 @@ export function generateAuditReport(results, options = {}) {
     md += `\n`;
   } else {
     md += `## ✅ Clean Route Audit\n\n`;
-    md += `Zero 404 boundaries or React rendering errors detected across all dynamic liquidity positions.\n\n`;
+    md += `Every route returned HTTP 200${options.render === false ? '' : ' and loaded in the browser'}.\n\n`;
   }
 
   md += `## 📋 Audited Route Catalog\n\n`;
-  md += `| Status | Product | Network | Protocol | Pool URL | Latency |\n`;
-  md += `| :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+  md += `| Status | Product | Network | Protocol | Pool URL | Latency | Page Load |\n`;
+  md += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`;
   for (const r of results) {
     const icon = r.status === 'PASS' ? '✅' : '❌';
-    md += `| ${icon} | ${r.productType} | ${r.networkName} | ${r.protocol} | \`${r.url}\` | ${r.responseTimeMs}ms |\n`;
+    const load = r.renderTimeMs !== undefined ? `${r.renderTimeMs}ms` : '—';
+    md += `| ${icon} | ${r.productType} | ${r.networkName} | ${r.protocol} | \`${r.url}\` | ${r.responseTimeMs}ms | ${load} |\n`;
   }
 
   return md;
@@ -579,6 +968,9 @@ Options:
   --all-pages          Crawl all paginated table pages until the catalog ends naturally
   --limit=<n>          Cap audit to first N discovered routes
   --top-cards-only     Only audit top-cards without crawling paginated tables
+  --no-render          Skip the browser page-load check (HTTP status and server HTML only)
+  --render-timeout=<ms> Time a page gets to load in the browser (default: 20000)
+  --render-concurrency=<n> Pages loaded in the browser at once (default: 4)
   --scaffold           Output auto-scaffolded Playwright spec
   --json               Output machine-readable JSON to stdout
   --help               Show this help message
@@ -601,6 +993,9 @@ Options:
   const topCardsOnly = hasFlag('top-cards-only');
   const doScaffold = hasFlag('scaffold');
   const asJson = hasFlag('json');
+  const render = !hasFlag('no-render');
+  const renderTimeoutMs = Number.parseInt(getArg('render-timeout', '20000'), 10) || 20000;
+  const renderConcurrency = Number.parseInt(getArg('render-concurrency', '4'), 10) || 4;
 
   let scopeLabel = 'Top Cards + Product Tables (First 10 Pages)';
   if (topCardsOnly) {
@@ -617,6 +1012,9 @@ Options:
     console.log(`   Chain Filter: ${chainFilter} (${CHAIN_NAMES[chainFilter] || 'Unknown'})`);
   if (productFilter) console.log(`   Product:      ${productFilter}`);
   if (limit) console.log(`   Audit Limit:  ${limit} routes`);
+  console.log(
+    `   Page Load:    ${render ? `browser check (${renderConcurrency} at once, timeout ${renderTimeoutMs}ms)` : 'skipped (--no-render)'}`,
+  );
 
   console.log(`🔍 Discovering active liquidity routes across Top Cards and product tables...`);
   let routes = await discoverAllRoutes({
@@ -643,7 +1041,21 @@ Options:
 
   // 3. Concurrently Audit Routes
   console.log(`⚡ Auditing route health across ${routes.length} targets...`);
-  const results = await auditAllRoutes(routes, { baseUrl, concurrency });
+  let results = await auditAllRoutes(routes, { baseUrl, concurrency });
+
+  if (render) {
+    const httpPassed = results.filter((r) => r.status === 'PASS').length;
+    console.log(`🖥️  Checking that ${httpPassed} pages load in the browser...`);
+    const renderStart = Date.now();
+    results = await auditRenderedRoutes(results, {
+      baseUrl,
+      concurrency: renderConcurrency,
+      timeoutMs: renderTimeoutMs,
+    });
+    const retried = results.filter((r) => r.renderRetried).length;
+    if (retried > 0) console.log(`   ${retried} pages only loaded on their second try`);
+    console.log(`   Page-load check took ${Math.round((Date.now() - renderStart) / 1000)}s`);
+  }
 
   const passed = results.filter((r) => r.status === 'PASS').length;
   const failed = results.filter((r) => r.status === 'FAIL').length;
@@ -659,7 +1071,7 @@ Options:
     fs.mkdirSync(reportsDir, { recursive: true });
   }
 
-  const markdownReport = generateAuditReport(results, { baseUrl });
+  const markdownReport = generateAuditReport(results, { baseUrl, render });
   const mdPath = path.join(reportsDir, 'route-health-audit.md');
   const jsonPath = path.join(reportsDir, 'latest-route-audit.json');
 
@@ -697,7 +1109,14 @@ Options:
   }
 
   if (failed > 0) {
-    console.error(`\n🚨 Route audit detected ${failed} broken routes (404 / Error Boundaries)!`);
+    console.error(`\n🚨 Route audit detected ${failed} broken routes:`);
+    const failures = results.filter((r) => r.status === 'FAIL');
+    for (const f of failures.slice(0, 30)) {
+      console.error(`   ❌ ${f.url}\n      ${f.errorReason}`);
+    }
+    if (failures.length > 30) {
+      console.error(`   … and ${failures.length - 30} more (see ai-reports/route-health-audit.md)`);
+    }
     process.exit(1);
   }
 }

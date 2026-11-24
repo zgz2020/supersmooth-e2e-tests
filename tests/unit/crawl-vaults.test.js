@@ -10,6 +10,9 @@ import {
   auditAllRoutes,
   generateAuditReport,
   scaffoldSpec,
+  classifyRenderedPage,
+  checkRenderedPage,
+  auditRenderedRoutes,
 } from '../../scripts/qa-agent/crawl-vaults.js';
 
 async function runTests() {
@@ -478,7 +481,402 @@ async function runTests() {
     console.log('  ✓ Test 17 Passed: scaffoldSpec generates clean Playwright test suite');
   }
 
-  console.log('\n🎉 All 17 Autonomous Route Crawler tests passed successfully!\n');
+  // --- SUITE 5: Rendered Page-Load Check ---
+  console.log('\n📦 Suite 5: Rendered Page-Load Check');
+
+  // What a loaded vault page shows (seen on staging for every product type).
+  const loadedSnapshot = {
+    headings: ['Open Borrow Position', 'USDT / K3 Capital Prime Market', 'Configure Position'],
+    text: 'Open Borrow Position\nUSDT / K3 Capital Prime Market\nConfigure Position',
+    skeletonCount: 0,
+  };
+  const notFoundSnapshot = {
+    headings: ["This page doesn't exist"],
+    text: "This page doesn't exist\n\nIt may have moved, or the link may be wrong.",
+    skeletonCount: 0,
+  };
+  const skeletonSnapshot = { headings: [], text: 'Back', skeletonCount: 58 };
+
+  // Fake Playwright page that returns the given snapshots in order (the last one repeats).
+  const fakePage = (snapshots, { pageError } = {}) => {
+    let i = 0;
+    const handlers = {};
+    return {
+      on: (event, fn) => {
+        handlers[event] = fn;
+      },
+      goto: async () => {
+        if (pageError) handlers.pageerror?.(new Error(pageError));
+      },
+      evaluate: async () => snapshots[Math.min(i++, snapshots.length - 1)],
+      close: async () => {},
+    };
+  };
+  // Fake clock: sleep() moves time forward instead of waiting.
+  const fakeClock = () => {
+    let t = 0;
+    return { now: () => t, sleep: async (ms) => void (t += ms) };
+  };
+
+  // Test 18: classifyRenderedPage passes a page showing both loaded headings
+  {
+    const result = classifyRenderedPage(loadedSnapshot);
+    assert.strictEqual(result.state, 'loaded');
+    for (const product of ['Multiply', 'Earn', 'Yield Loop']) {
+      const snap = {
+        ...loadedSnapshot,
+        headings: [`Open ${product} Position`, 'Configure Position'],
+      };
+      assert.strictEqual(classifyRenderedPage(snap).state, 'loaded', product);
+    }
+    console.log(
+      '  ✓ Test 18 Passed: classifyRenderedPage passes a page showing both loaded headings',
+    );
+  }
+
+  // Test 19: classifyRenderedPage names known error screens (#1688-style "Invalid market identifier")
+  {
+    const notFound = classifyRenderedPage(notFoundSnapshot);
+    assert.strictEqual(notFound.state, 'failed');
+    assert.strictEqual(notFound.kind, 'not-found');
+    assert.match(notFound.reason, /Not-found screen despite HTTP 200: "This page doesn't exist"/);
+
+    const invalidMarket = classifyRenderedPage({
+      headings: [],
+      text: 'Back\nInvalid market identifier: 0x056f-0x3136\nTry again',
+      skeletonCount: 0,
+    });
+    assert.strictEqual(invalidMarket.kind, 'error-screen');
+    assert.match(invalidMarket.reason, /"Invalid market identifier: 0x056f-0x3136"/);
+
+    const appError = classifyRenderedPage({
+      headings: [],
+      text: 'Application error: a client-side exception has occurred (see the browser console)',
+      skeletonCount: 0,
+    });
+    assert.strictEqual(appError.kind, 'error-screen');
+    console.log('  ✓ Test 19 Passed: classifyRenderedPage names known error screens');
+  }
+
+  // Test 20: the loaded signal wins over error-like text elsewhere on the page (e.g. an FAQ)
+  {
+    const snap = { ...loadedSnapshot, text: `${loadedSnapshot.text}\nFAQ: Something went wrong?` };
+    assert.strictEqual(classifyRenderedPage(snap).state, 'loaded');
+    console.log(
+      '  ✓ Test 20 Passed: loaded signal wins over error-like text elsewhere on the page',
+    );
+  }
+
+  // Test 21: without the loaded signal a page is pending, then stuck or missing content at the end
+  {
+    assert.strictEqual(classifyRenderedPage(skeletonSnapshot).state, 'pending');
+
+    const stuck = classifyRenderedPage(skeletonSnapshot, { final: true, waitedMs: 20000 });
+    assert.strictEqual(stuck.kind, 'stuck-loading');
+    assert.match(stuck.reason, /Stuck on loading skeleton after 20000ms \(58 placeholders/);
+
+    const noPanel = classifyRenderedPage(
+      {
+        headings: ['Open Borrow Position', 'USDT / K3 Capital Prime Market'],
+        text: '',
+        skeletonCount: 0,
+      },
+      { final: true },
+    );
+    assert.strictEqual(noPanel.kind, 'missing-content');
+    assert.match(noPanel.reason, /no "Configure Position" side panel/);
+    assert.doesNotMatch(noPanel.reason, /"Open … Position" heading/);
+
+    const blank = classifyRenderedPage(
+      { headings: [], text: '', skeletonCount: 0 },
+      { final: true },
+    );
+    assert.match(blank.reason, /heading or "Configure Position" side panel \(headings: none\)/);
+    console.log(
+      '  ✓ Test 21 Passed: pages without the loaded signal end as stuck or missing content',
+    );
+  }
+
+  // Test 22: checkRenderedPage waits through skeletons until the page loads
+  {
+    const clock = fakeClock();
+    const page = fakePage([skeletonSnapshot, skeletonSnapshot, loadedSnapshot]);
+    const result = await checkRenderedPage(page, 'https://x/products/borrow/a/1/0x1', {
+      ...clock,
+      timeoutMs: 5000,
+    });
+    assert.strictEqual(result.state, 'loaded');
+    console.log(
+      '  ✓ Test 22 Passed: checkRenderedPage waits through skeletons until the page loads',
+    );
+  }
+
+  // Test 23: an error screen must stay up before it counts; a brief one is ignored
+  {
+    const clock = fakeClock();
+    const flash = fakePage([notFoundSnapshot, skeletonSnapshot, loadedSnapshot]);
+    const ok = await checkRenderedPage(flash, 'https://x/p', { ...clock, errorSettleMs: 1500 });
+    assert.strictEqual(ok.state, 'loaded');
+
+    const clock2 = fakeClock();
+    const stays = fakePage([notFoundSnapshot], { pageError: 'TypeError: x is undefined\n at y' });
+    const failed = await checkRenderedPage(stays, 'https://x/p', {
+      ...clock2,
+      errorSettleMs: 1500,
+      timeoutMs: 20000,
+    });
+    assert.strictEqual(failed.kind, 'not-found');
+    assert.match(failed.reason, /uncaught error: TypeError: x is undefined$/);
+    assert.ok(clock2.now() < 5000, `failed fast, not at the timeout (${clock2.now()}ms)`);
+    console.log('  ✓ Test 23 Passed: a brief error screen is ignored, a lasting one fails fast');
+  }
+
+  // Test 24: checkRenderedPage reports a page stuck on skeletons at the timeout
+  {
+    const clock = fakeClock();
+    const result = await checkRenderedPage(fakePage([skeletonSnapshot]), 'https://x/p', {
+      ...clock,
+      timeoutMs: 3000,
+    });
+    assert.strictEqual(result.kind, 'stuck-loading');
+    assert.match(result.reason, /after 3000ms/);
+    console.log(
+      '  ✓ Test 24 Passed: checkRenderedPage reports a page stuck on skeletons at the timeout',
+    );
+  }
+
+  // Test 25: auditRenderedRoutes fails HTTP-200 routes that do not load and skips HTTP failures
+  {
+    const opened = [];
+    const snapshotsByUrl = {
+      '0xaaaa': [loadedSnapshot],
+      '0xbbbb': [notFoundSnapshot],
+    };
+    let closed = false;
+    const launchBrowser = async () => ({
+      newContext: async () => ({
+        newPage: async () => {
+          let current = [];
+          const page = fakePage([]);
+          return {
+            ...page,
+            goto: async (url) => {
+              opened.push(url);
+              current = snapshotsByUrl[url.slice(-6)];
+            },
+            evaluate: async () => current[0],
+          };
+        },
+        close: async () => {},
+      }),
+      close: async () => {
+        closed = true;
+      },
+    });
+    const httpResults = [
+      { url: '/products/earn/morpho/1/0xaaaa', status: 'PASS', networkName: 'Ethereum' },
+      { url: '/products/earn/morpho/1/0xbbbb', status: 'PASS', networkName: 'Ethereum' },
+      { url: '/products/earn/morpho/1/0xcccc', status: 'FAIL', errorReason: 'HTTP 404 Not Found' },
+    ];
+
+    const results = await auditRenderedRoutes(httpResults, {
+      baseUrl: 'https://staging.supersmooth.fi',
+      concurrency: 2,
+      errorSettleMs: 0,
+      launchBrowser,
+    });
+
+    assert.strictEqual(results.length, 3);
+    assert.strictEqual(opened.length, 3, 'HTTP failures not opened; the failing page retried once');
+    assert.ok(!opened.some((u) => u.endsWith('0xcccc')));
+    assert.strictEqual(results[0].status, 'PASS');
+    assert.strictEqual(results[0].renderStatus, 'LOADED');
+    assert.strictEqual(results[1].status, 'FAIL');
+    assert.strictEqual(results[1].failureKind, 'not-found');
+    assert.strictEqual(results[1].has404Fallback, true);
+    assert.match(results[1].errorReason, /Not-found screen despite HTTP 200.*\(failed 2 tries\)$/);
+    assert.strictEqual(results[1].renderAttempts, 2);
+    assert.strictEqual(results[2].errorReason, 'HTTP 404 Not Found');
+    assert.ok(closed, 'browser is closed');
+
+    const md = generateAuditReport(results, { baseUrl: 'https://staging.supersmooth.fi' });
+    assert.match(md, /page load in a browser/);
+    assert.match(md, /Not-found screen despite HTTP 200/);
+    console.log(
+      '  ✓ Test 25 Passed: auditRenderedRoutes fails HTTP-200 routes that do not load, skips HTTP failures',
+    );
+  }
+
+  // Test 26: a page that fails under load but loads on its retry passes, marked as retried
+  {
+    let visits = 0;
+    const launchBrowser = async () => ({
+      newContext: async () => ({
+        newPage: async () => ({
+          ...fakePage([]),
+          goto: async () => {
+            visits += 1;
+          },
+          evaluate: async () => (visits === 1 ? notFoundSnapshot : loadedSnapshot),
+        }),
+        close: async () => {},
+      }),
+      close: async () => {},
+    });
+    const [result] = await auditRenderedRoutes(
+      [{ url: '/products/earn/morpho/1/0xdddd', status: 'PASS' }],
+      { errorSettleMs: 0, launchBrowser },
+    );
+    assert.strictEqual(visits, 2);
+    assert.strictEqual(result.status, 'PASS');
+    assert.strictEqual(result.renderRetried, true);
+    console.log('  ✓ Test 26 Passed: a page that loads on its retry passes, marked as retried');
+  }
+
+  // Fake browser whose pages show `snapshotFor(url, visit)`; counts every page opened.
+  const fakeBrowser = (snapshotFor) => {
+    const visits = [];
+    return {
+      visits,
+      launchBrowser: async () => ({
+        newContext: async () => ({
+          newPage: async () => {
+            let url = '';
+            return {
+              ...fakePage([]),
+              goto: async (u) => {
+                url = u;
+                visits.push(u);
+              },
+              evaluate: async () => snapshotFor(url, visits.filter((v) => v === url).length),
+            };
+          },
+          close: async () => {},
+        }),
+        close: async () => {},
+      }),
+    };
+  };
+  const passingRoutes = (n) =>
+    Array.from({ length: n }, (_, i) => ({
+      url: `/products/earn/morpho/1/0x${String(i).padStart(4, '0')}`,
+      status: 'PASS',
+    }));
+
+  // Test 27: error-like text while skeletons are still up does not fail a slow healthy page
+  {
+    const loading = {
+      headings: [],
+      text: 'FAQs\nWhat if something went wrong with my deposit?',
+      skeletonCount: 40,
+    };
+    assert.strictEqual(classifyRenderedPage(loading).state, 'pending');
+
+    const clock = fakeClock();
+    const page = fakePage([loading, loading, loading, loading, loading, loadedSnapshot]);
+    const result = await checkRenderedPage(page, 'https://x/p', { ...clock, errorSettleMs: 1500 });
+    assert.strictEqual(result.state, 'loaded');
+
+    // Once no skeletons are left, the same text counts (e.g. #1688's plain-text error).
+    const settled = classifyRenderedPage({
+      headings: [],
+      text: 'Invalid market identifier: 0x1-0x2.',
+      skeletonCount: 0,
+    });
+    assert.strictEqual(settled.kind, 'error-screen');
+    // An error heading counts even while skeletons are still up.
+    const heading = classifyRenderedPage({
+      headings: ['Something went wrong'],
+      text: 'Something went wrong',
+      skeletonCount: 12,
+    });
+    assert.strictEqual(heading.kind, 'error-screen');
+    console.log(
+      '  ✓ Test 27 Passed: error-like text during loading does not fail a slow healthy page',
+    );
+  }
+
+  // Test 28: a tab whose script hangs fails as unresponsive instead of blocking the worker
+  {
+    const hungPage = { ...fakePage([]), evaluate: () => new Promise(() => {}) };
+    const result = await checkRenderedPage(hungPage, 'https://x/p', { snapshotTimeoutMs: 50 });
+    assert.strictEqual(result.kind, 'unresponsive');
+    assert.match(result.reason, /no snapshot within 50ms/);
+
+    // A failed evaluate (e.g. the page navigated mid-call) counts as still loading.
+    let calls = 0;
+    const flaky = {
+      ...fakePage([]),
+      evaluate: async () => {
+        calls += 1;
+        if (calls === 1) throw new Error('Execution context was destroyed');
+        return loadedSnapshot;
+      },
+    };
+    const ok = await checkRenderedPage(flaky, 'https://x/p', fakeClock());
+    assert.strictEqual(ok.state, 'loaded');
+    console.log(
+      '  ✓ Test 28 Passed: a hung tab fails as unresponsive; a failed snapshot is retried',
+    );
+  }
+
+  // Test 29: when the first pages all fail slowly, the check stops and the rest are not checked
+  {
+    const fake = fakeBrowser(() => skeletonSnapshot);
+    const results = await auditRenderedRoutes(passingRoutes(30), {
+      concurrency: 2,
+      timeoutMs: 1,
+      earlyStopAfter: 5,
+      launchBrowser: fake.launchBrowser,
+    });
+    assert.ok(fake.visits.length <= 6, `stopped early (${fake.visits.length} pages opened)`);
+    assert.ok(results.every((r) => r.status === 'FAIL'));
+    const notChecked = results.filter((r) => r.failureKind === 'not-checked');
+    assert.ok(notChecked.length >= 24);
+    assert.match(
+      notChecked[0].errorReason,
+      /first 5 pages all failed to load, so staging looks down/,
+    );
+    console.log('  ✓ Test 29 Passed: the check stops early when the first pages all fail slowly');
+  }
+
+  // Test 30: the retry is skipped when too many pages fail, and capped otherwise
+  {
+    // 12 of 30 fail (40% > 20%, and more than 10): no retry.
+    const many = fakeBrowser((url) =>
+      /00(0\d|1[01])$/.test(url) ? notFoundSnapshot : loadedSnapshot,
+    );
+    const results = await auditRenderedRoutes(passingRoutes(30), {
+      errorSettleMs: 0,
+      earlyStopAfter: 0,
+      launchBrowser: many.launchBrowser,
+    });
+    assert.strictEqual(many.visits.length, 30, 'no page opened twice');
+    const failed = results.filter((r) => r.status === 'FAIL');
+    assert.strictEqual(failed.length, 12);
+    assert.match(
+      failed[0].errorReason,
+      /not retried: 12 of 30 pages failed \(40%\), staging looks down/,
+    );
+
+    // 2 of 10 fail (20%): retried, but only 1 because of maxRetries.
+    const few = fakeBrowser((url) => (/000[0-1]$/.test(url) ? notFoundSnapshot : loadedSnapshot));
+    const capped = await auditRenderedRoutes(passingRoutes(10), {
+      errorSettleMs: 0,
+      earlyStopAfter: 0,
+      maxRetries: 1,
+      launchBrowser: few.launchBrowser,
+    });
+    assert.strictEqual(few.visits.length, 11);
+    const reasons = capped.filter((r) => r.status === 'FAIL').map((r) => r.errorReason);
+    assert.ok(reasons.some((r) => /\(failed 2 tries\)$/.test(r)));
+    assert.ok(reasons.some((r) => /over the 1-page retry limit/.test(r)));
+    console.log(
+      '  ✓ Test 30 Passed: the retry is skipped when too many pages fail, and capped otherwise',
+    );
+  }
+
+  console.log('\n🎉 All 30 Autonomous Route Crawler tests passed successfully!\n');
 }
 
 runTests().catch((err) => {
