@@ -2,8 +2,8 @@ name: 'Dynamic Route Health Crawler'
 
 on:
   schedule:
-    # Run twice per week: Tuesdays (2) and Fridays (5) at 04:00 UTC
-    - cron: '0 4 * * 2,5'
+    # Run once a week: Tuesdays (2) at 04:00 UTC. Each run checks every page.
+    - cron: '0 4 * * 2'
   workflow_dispatch:
     inputs:
       base_url:
