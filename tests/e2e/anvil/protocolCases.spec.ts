@@ -4,7 +4,6 @@ import { anvilAccount1Address, wethMainnetAddress } from '../../../utils/constan
 import { NETWORK_CHAIN_IDS } from '../../../utils/constants/networks';
 import { TIMEOUTS } from '../../../utils/constants/timeouts';
 import { FORK_AMOUNTS } from '../../../utils/constants/forkAmounts';
-import { knownAppBug } from '../../../src/fixtures/knownAppBug';
 import { tc } from '../../../utils/testCase';
 
 test.describe('Protocol Cases @regression @fork', () => {
@@ -118,11 +117,6 @@ test.describe('Protocol Cases @regression @fork', () => {
       'should recover the vault page once a temporary RPC rate limit lifts',
       tc('E2E-PROTO-005'),
       async ({ app, anvilFork }) => {
-        knownAppBug(
-          'https://github.com/Aphelion-Co/aphelion-app/issues/1667',
-          'vault page never retries after an RPC 429 (position-data chain-client has no fallback/retry)',
-        );
-
         const { url } = await getActiveVault(app.page.request, 'multiply', {
           network: 'Ethereum',
           collateral: 'ETH',
@@ -134,13 +128,17 @@ test.describe('Protocol Cases @regression @fork', () => {
         // The vault page loads its data from the browser through the proxy
         await app.vaultPage.openPage(url);
 
-        // Prove the app actually hit the rate limit, otherwise the test checks nothing
-        await expect.poll(rateLimit.hits).toBeGreaterThan(0);
+        // Prove the app hit the rate limit and retried (at least three hits), otherwise the test checks
+        // nothing. Waiting for the retries also means the page has had time to draw anything it
+        // could load without the RPC
+        await expect.poll(rateLimit.hits).toBeGreaterThan(2);
         await app.shouldNotShowErrorBoundary();
+        // ...so a missing price means the rate limit blocked the page, not that it was still loading
+        await app.vaultPage.shouldNotShowMarketPrice();
 
-        // Rate limit lifts: the page must recover and show the funded balance without a reload
+        // Rate limit lifts: the page must recover and show its data without a reload
         await rateLimit.stop();
-        await app.vaultPage.rightSidePanel.configurePosition.shouldShowPositiveDepositBalance();
+        await app.vaultPage.shouldShowMarketPrice();
       },
     );
   });

@@ -34,6 +34,12 @@ the page object to `getByTestId(...)` and remove its row here.
 | `overviewValue('Available to Withdraw')` (`overviewFields.availableToWithdraw`) | Available to Withdraw amount                  | label → `following-sibling::p[1]`                                 | `position-overview-available-to-withdraw`                                      |
 | `getBorrowAmountsUsd` (collateral)                                              | Borrow: Collateral Locked in USD (`($8.50)`)  | label `Collateral Locked` → `following-sibling::div[1]/p[last()]` | `position-overview-collateral-locked-usd` (and `-amount` for the token amount) |
 
+### Vault page: header ([`src/pages/vaultPage.ts`](../src/pages/vaultPage.ts))
+
+| Page object › locator                          | Element                                                                                              | Current XPath                                                       | Suggested `data-testid` |
+| :--------------------------------------------- | :--------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------ | :---------------------- |
+| `marketPriceLocator` (`shouldShowMarketPrice`) | `<token> Market Price` value in the header (e.g. `1,667.04`, or `1.1377 cbETH/WETH` on a yield loop) | label `/ Market Price$/` (first) → `following-sibling::div[1]/p[1]` | `market-price-value`    |
+
 ### Portfolio page: position cards ([`src/pages/portfolioPage.ts`](../src/pages/portfolioPage.ts))
 
 | Page object › locator                                                                                                              | Element                       | Current XPath                                                                                                     | Suggested `data-testid`                                                                                                        |
