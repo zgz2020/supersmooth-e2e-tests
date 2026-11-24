@@ -161,7 +161,8 @@ The **Autonomous Route Crawler** (`scripts/qa-agent/crawl-vaults.js`) addresses 
 ### 🎯 Key Capabilities:
 
 - **Comprehensive Route Discovery:** Discovers active liquidity pool routes from both top-cards endpoints (`/api/product-table/top-cards`) AND the **full product tables below top-cards** across all catalog pages (`/products/multiply`, `/products/borrow`, `/products/earn`), strategy views (`?strategy=yield-loops`, `?strategy=automated-strategies`), and table pagination pages across Ethereum (`1`), Base (`8453`), Robinhood (`4663`), and Arbitrum (`42161`).
-- **404 & Error Boundary Detection:** Concurrently verifies every route for HTTP 200, absence of `"Page not found"` fallback boundaries, and absence of unhandled React error boundary crashes.
+- **404 & Error Boundary Detection:** Concurrently verifies every route for HTTP 200, absence of `"Page not found"` fallback boundaries, and absence of unhandled React error boundary crashes in the server HTML.
+- **Page-Load Check (browser):** The server HTML of a vault page is only a skeleton, so a broken pool still returns 200 and shows its error client-side (e.g. a bad pool ID shows "This page doesn't exist"; aphelion-app#1688 showed "Invalid market identifier"). Every route that passes the HTTP check is opened in headless Chromium and passes only once its `Open <Product> Position` heading and `Configure Position` side panel are visible. Otherwise it fails with a reason: a not-found or error screen (named, and failing fast once it has stayed up 1.5s), stuck on loading skeletons, or main content missing. Staging slows down under many parallel renders, so pages load 4 at a time (`--render-concurrency=<n>`) and a page that fails is checked once more, alone, before it is reported. When staging itself is down, the check does not run for hours: if the first 20 pages all fail to load it stops and reports the rest as not checked; the retry is skipped when more than 20% of pages (and more than 10) fail, and covers at most 50 pages. A tab whose script hangs fails as unresponsive after 5s. Error text in a heading fails a page at once; error text elsewhere only once its loading skeletons are gone, so ordinary text such as an FAQ cannot fail a slow page. Skip with `--no-render`; change the per-page time with `--render-timeout=<ms>` (default 20000).
 - **Automated Route Health Audit:** Generates markdown (`ai-reports/route-health-audit.md`) and JSON (`ai-reports/latest-route-audit.json`) audit reports with network-by-network health scores.
 - **Auto-Scaffolder (`--scaffold`):** Generates boilerplate Playwright specs following repository POM conventions for newly launched pools.
 
@@ -186,6 +187,9 @@ pnpm agent:crawl --product=yieldLoop
 # Cap audit to first N routes or adjust pagination depth:
 pnpm agent:crawl --limit=50
 pnpm agent:crawl --max-pages=5
+
+# HTTP status and server HTML only (no browser, faster):
+pnpm agent:crawl --no-render
 
 # Audit only top-cards without paginating tables:
 pnpm agent:crawl --top-cards-only

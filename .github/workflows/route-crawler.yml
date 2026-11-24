@@ -45,6 +45,8 @@ jobs:
   crawl-and-audit:
     name: '🕷️ Dynamic Route Health Crawler'
     runs-on: 'ubuntu-latest'
+    # A normal run takes ~20-35 min; the crawler stops early when staging is down.
+    timeout-minutes: 120
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
@@ -60,6 +62,9 @@ jobs:
 
       - name: 'Install dependencies'
         run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Install Chromium for the page-load check'
+        run: 'pnpm exec playwright install --with-deps chromium'
 
       - name: 'Execute Autonomous Route Crawler'
         env:

@@ -143,7 +143,7 @@ pnpm agent:crawl
 - **Autonomous Self-Healing PRs:** In CI (or via `--create-pr`), verified fixes are committed to dedicated branches and opened as PRs with `ai-self-heal` labels.
 - **Batch Safety & Branch Retention:** Atomic `SnapshotRegistry` prevents state corruption during multi-failure repairs, and automated maintenance (`agent:cleanup-branches`) prunes stale/merged repair branches.
 - **Predictive CI Acceleration:** Analyzes PR git diffs against component dependency graphs to execute only impacted specs (cutting CI duration by 35–70%) and skips non-code documentation changes entirely.
-- **Dynamic Route Health Auditing:** Autonomously crawls live pools across Ethereum, Base, Robinhood, and Arbitrum to detect 404 boundaries and unhandled exceptions (resolving Issue #1649).
+- **Dynamic Route Health Auditing:** Autonomously crawls live pools across Ethereum, Base, Robinhood, and Arbitrum to detect 404 boundaries, unhandled exceptions, and pages that return 200 but do not load in a browser (resolving Issue #1649).
 - **Sticky GitHub PR Bot:** In-place updates existing diagnostic comments on pull requests using `actions/github-script`.
 - **Ready-to-Paste PR Comments:** Saved to `ai-reports/latest-github-comment-[suite].md` with GitHub alerts and diffs.
 - **Discord Webhook Alerts:** Dispatches instant rich diagnostic cards to mobile/desktop Discord channels.
