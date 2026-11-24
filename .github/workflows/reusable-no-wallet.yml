@@ -52,6 +52,9 @@ jobs:
       - name: 'Run tests'
         env:
           BASE_URL: "${{ inputs.baseUrl != '' && inputs.baseUrl || vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
+          # The tests pick the indexer matching BASE_URL
+          INDEXER_URL_STAGING: ${{ secrets.INDEXER_URL_STAGING }}
+          INDEXER_URL_PRODUCTION: ${{ secrets.INDEXER_URL_PRODUCTION }}
         run: 'pnpm "${{ inputs.script }}"'
 
       - name: '🤖 AI Agent Test Triage'

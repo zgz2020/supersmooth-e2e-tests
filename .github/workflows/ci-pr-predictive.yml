@@ -106,6 +106,9 @@ jobs:
           BASE_URL: "${{ vars.DEFAULT_BASE_URL || 'https://staging.supersmooth.fi' }}"
           TEST_WALLET_PK: ${{ secrets.TEST_WALLET_PK }}
           TEST_WALLET_ADDRESS: ${{ secrets.TEST_WALLET_ADDRESS }}
+          # Specs that list open positions (getOpenPositions) read the indexer of BASE_URL
+          INDEXER_URL_STAGING: ${{ secrets.INDEXER_URL_STAGING }}
+          INDEXER_URL_PRODUCTION: ${{ secrets.INDEXER_URL_PRODUCTION }}
           REPORT_FOLDER: 'pr-predictive'
           CI: 'true'
           # No HEADLESS here: Synpress then launches Chrome with --headless=new, and the MetaMask

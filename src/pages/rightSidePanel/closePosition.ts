@@ -1,6 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { step } from '../../fixtures';
-import { expectAmount } from '../../../utils/amount';
+import { expectAmount, type ApproxAmount } from '../../../utils/amount';
 import type { Token } from '../../../utils/types/e2e/common';
 
 type SummaryChange = {
@@ -47,6 +47,19 @@ export class ClosePosition {
   @step
   async shouldReceive(expected: string | RegExp) {
     await expect(this.rowValue('You will receive')).toHaveText(expected);
+  }
+
+  /** Picks what the position is closed to, e.g. `USDC` (the debt token) or `ETH`. */
+  @step
+  async selectCloseTo(token: Token) {
+    await this.panelLocator.getByRole('tab', { name: token, exact: true }).click();
+    await this.shouldHaveCloseToSelected(token);
+  }
+
+  /** `You will receive` is within tolerance of `expected` (retries while the quote loads). */
+  @step
+  async shouldReceiveAmount(expected: ApproxAmount, label = 'You will receive') {
+    await expectAmount(this.rowValue('You will receive'), expected, label);
   }
 
   @step

@@ -31,13 +31,13 @@ expected result behind each link. Highest priority first.
 | [E2E-AUTO-014](e2e/automations.md#e2e-auto-014-take-profit-executes-on-base-compound-v3)                                 | Take Profit executes on Base: Compound V3                                  | P1       | manual | `e2e/automations.md` |
 | [E2E-AUTO-015](e2e/automations.md#e2e-auto-015-take-profit-executes-on-arbitrum-aave-v3)                                 | Take Profit executes on Arbitrum: Aave V3                                  | P1       | manual | `e2e/automations.md` |
 
-## 🗺️ Planned cases (47)
+## 🗺️ Planned cases (46)
 
 Cases with no test yet: the automation backlog. Each one becomes `automated` together with its
 test.
 
 <details>
-<summary>Show the 47 planned cases</summary>
+<summary>Show the 46 planned cases</summary>
 
 | ID                                                                                                            | Case                                                             | Priority | File                    |
 | :------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------- | :------- | :---------------------- |
@@ -82,7 +82,6 @@ test.
 | [E2E-MIGR-001](e2e/migrate.md#e2e-migr-001-migrate-page-lists-adoptable-safes)                                | Migrate page lists adoptable Safes                               | P1       | `e2e/migrate.md`        |
 | [E2E-MIGR-002](e2e/migrate.md#e2e-migr-002-start-a-migration-and-reject-the-transaction)                      | Start a migration and reject the transaction                     | P1       | `e2e/migrate.md`        |
 | [E2E-PORT-001](e2e/portfolio.md#e2e-port-001-portfolio-lists-the-wallets-open-positions)                      | Portfolio lists the wallet's open positions                      | P1       | `e2e/portfolio.md`      |
-| [E2E-PORT-002](e2e/portfolio.md#e2e-port-002-open-a-position-page-from-portfolio)                             | Open a position page from Portfolio                              | P1       | `e2e/portfolio.md`      |
 | [E2E-PORT-003](e2e/portfolio.md#e2e-port-003-empty-portfolio-state)                                           | Empty portfolio state                                            | P3       | `e2e/portfolio.md`      |
 | [E2E-PROTO-007](e2e/protocol-cases.md#e2e-proto-007-server-side-and-browser-data-come-from-the-same-fork)     | Server-side and browser data come from the same fork             | P2       | `e2e/protocol-cases.md` |
 | [E2E-TRADE-001](e2e/trade.md#e2e-trade-001-perps-and-spot-trade-pages-load-their-markets)                     | Perps and spot trade pages load their markets                    | P1       | `e2e/trade.md`          |
@@ -95,11 +94,11 @@ test.
 
 | Status          |   Cases |
 | :-------------- | ------: |
-| automated       |     134 |
+| automated       |     139 |
 | manual          |      12 |
-| planned         |      47 |
+| planned         |      46 |
 | not-automatable |       0 |
-| **Total**       | **193** |
+| **Total**       | **197** |
 
 <!-- tc-index:end -->
 

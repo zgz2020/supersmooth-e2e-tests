@@ -58,10 +58,48 @@ export class PortfolioPage {
     ).toBeVisible(args);
   }
 
-  /** The card's Net Value, in whole USD (NaN while it shows `—`). */
+  /** The position page URL the card links to (the app builds it; no API returns it). */
+  @step
+  async getPositionUrl(safe: string): Promise<string> {
+    const href = await this.positionCard(safe).getAttribute('href');
+    expect(href, `Portfolio card of Safe ${safe} should link to its position page`).toBeTruthy();
+    return href!;
+  }
+
+  /** Opens the position page from its card, as a user would (the card links to the page). */
+  @step
+  async openPosition(safe: string) {
+    await this.positionCard(safe).click();
+  }
+
+  /**
+   * A card stat in USD, read once: the card is built from the `/api/portfolio/safes` response that
+   * `openPage` waits for, so it is final as soon as the card shows. Portfolio only lists open,
+   * non-empty positions, so a stat without a number (`—`) fails right away.
+   */
+  private async cardStatUsd(safe: string, title: string): Promise<number> {
+    const text = await this.cardStat(safe, title).innerText();
+    const usd = parseAmount(text);
+    expect(
+      usd,
+      `Portfolio card of Safe ${safe} should show a number for ${title}, not "${text}"`,
+    ).not.toBeNaN();
+    return usd;
+  }
+
+  /** A Borrow card's `Coll. Locked` and `Total Debt`, in whole USD (`<$1` reads as 1). */
+  @step
+  async getBorrowAmountsUsd(safe: string): Promise<{ collateral: number; debt: number }> {
+    return {
+      collateral: await this.cardStatUsd(safe, 'Coll. Locked'),
+      debt: await this.cardStatUsd(safe, 'Total Debt'),
+    };
+  }
+
+  /** The card's Net Value, in whole USD. */
   @step
   async getNetValueUsd(safe: string): Promise<number> {
-    return parseAmount(await this.cardStat(safe, 'Net Value').innerText());
+    return this.cardStatUsd(safe, 'Net Value');
   }
 
   /** The card shows `usd` as its Net Value; the card rounds to whole dollars, hence ±$1. */
