@@ -8,6 +8,8 @@ on:
   #   paths:
   #     - 'utils/getActiveVault.ts'
   #     - 'utils/constants/urls.ts'
+  #     - 'utils/constants/fork*'
+  #     - 'scripts/anvil-move-pin.js'
   #     - 'utils/types/api/productTableTopCards.ts'
   #     - 'scripts/qa-agent/**'
   #     - 'scripts/tc/**'

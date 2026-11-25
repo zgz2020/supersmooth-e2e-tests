@@ -24,6 +24,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import process from 'node:process';
 import { URL } from 'node:url';
+import { FORK_UPSTREAM_RPCS, resolveForkBlock, servesStateAt } from '../../utils/constants/fork';
 
 // -----------------------------------------------------------------------------
 // Canonical Anvil Account #0 & Viem Signer Setup
@@ -65,20 +66,8 @@ function signerFor(address: unknown): LocalAccount {
   return account;
 }
 
-// -----------------------------------------------------------------------------
-// Curated Archive RPC Endpoints
-// (Public RPCs verified to support archive storage reads without token requirements)
-// -----------------------------------------------------------------------------
-const ARCHIVE_RPCS: Record<number, string[]> = {
-  1: [
-    'https://gateway.tenderly.co/public/mainnet',
-    'https://ethereum-rpc.publicnode.com',
-    'https://rpc.mevblocker.io',
-    'https://eth.drpc.org',
-  ],
-  8453: ['https://mainnet.base.org', 'https://base.llamarpc.com', 'https://1rpc.io/base'],
-  42161: ['https://arb1.arbitrum.io/rpc', 'https://arbitrum.llamarpc.com', 'https://1rpc.io/arb'],
-};
+// Upstream archive RPCs per chain: FORK_UPSTREAM_RPCS (utils/constants/fork.js), shared with
+// `pnpm app:fork` and `pnpm anvil:move-pin`.
 
 // -----------------------------------------------------------------------------
 // Binary Detection for Anvil
@@ -115,6 +104,14 @@ export function findAnvilBinary(): string {
 // Defaults away from 8545, which `pnpm app:fork` uses for its own shared Anvil node.
 // -----------------------------------------------------------------------------
 const DEFAULT_ANVIL_BASE_PORT = 8600;
+
+// Cache warm-up run (`ANVIL_CACHE_WARMUP=1`, used by `pnpm anvil:move-pin --verify`). Anvil saves
+// the upstream state it fetched to its disk cache on exit, but `evm_revert` discards whatever was
+// fetched since the snapshot, so a normal run (revert after every test) never fills the cache.
+// A warm-up run skips that revert, and waits for slow upstream fetches instead of dropping them
+// after 10 s (the app's ~166-call balance multicall takes ~30 s cold).
+const CACHE_WARMUP = process.env.ANVIL_CACHE_WARMUP === '1';
+const FORWARD_TIMEOUT_MS = CACHE_WARMUP ? 60_000 : 10_000;
 // The teardown revert can wait behind upstream fork fetches Anvil already queued during the test
 // (the page is closed by then, by the `app` fixture); 20 s was not always enough
 const REVERT_TIMEOUT_MS = 60_000;
@@ -142,8 +139,9 @@ function stopProcess(child: ChildProcess): Promise<void> {
     return Promise.resolve();
   }
   return new Promise((resolve) => {
-    // Escalate if Anvil ignores SIGTERM, so teardown can never hang
-    const forceKill = setTimeout(() => child.kill('SIGKILL'), 5_000);
+    // Escalate if Anvil ignores SIGTERM, so teardown can never hang. Generous, because Anvil
+    // writes its whole state cache to disk on exit and a SIGKILL would cut that write short.
+    const forceKill = setTimeout(() => child.kill('SIGKILL'), 15_000);
     child.once('exit', () => {
       clearTimeout(forceKill);
       resolve();
@@ -229,7 +227,7 @@ function forwardToAnvil(rpcUrl: string, postData: string): Promise<string> {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData),
         },
-        timeout: 10000,
+        timeout: FORWARD_TIMEOUT_MS,
       },
       (res) => {
         let data = '';
@@ -314,18 +312,23 @@ function createAnvilRpcHandler(rpcUrl: string) {
       return;
     }
 
+    let reply: { status: number; body: string };
     try {
-      const responseData = await forwardToAnvil(rpcUrl, postData);
-      await route.fulfill({ status: 200, contentType: 'application/json', body: responseData });
+      reply = { status: 200, body: await forwardToAnvil(rpcUrl, postData) };
     } catch (err) {
-      await route.fulfill({
+      reply = {
         status: 502,
-        contentType: 'application/json',
         body: JSON.stringify({
           error: `Anvil fork at ${rpcUrl} unreachable: ${(err as Error).message}`,
         }),
-      });
+      };
     }
+    // The browser may have cancelled the request meanwhile (its RPC client gives up after 10 s,
+    // while a warm-up run waits up to 60 s for Anvil). Replying to it is harmless; any other
+    // error replying is a fixture bug and must surface, not end as a vague RPC timeout.
+    await route.fulfill({ ...reply, contentType: 'application/json' }).catch((err: unknown) => {
+      if (!route.request().failure()) throw err;
+    });
   };
 }
 
@@ -453,7 +456,12 @@ export const test = base.extend<TestFixtures & TestOptions, WorkerFixtures>({
 
       const candidateRpcs = process.env.ANVIL_FORK_URL
         ? [process.env.ANVIL_FORK_URL]
-        : ARCHIVE_RPCS[chainId] || ['https://ethereum-rpc.publicnode.com'];
+        : FORK_UPSTREAM_RPCS[chainId] || ['https://ethereum-rpc.publicnode.com'];
+
+      // Pinned per chain (utils/constants/forkBlocks.json), so Anvil reuses its disk cache of
+      // upstream state; ANVIL_FORK_BLOCK overrides it (a block number, or `latest`). Read once,
+      // before anything is started, so a bad override fails without leaving a process behind.
+      const forkBlock = resolveForkBlock(chainId, process.env.ANVIL_FORK_BLOCK);
 
       const anvilBin = findAnvilBinary();
 
@@ -473,6 +481,13 @@ export const test = base.extend<TestFixtures & TestOptions, WorkerFixtures>({
       process.on('exit', killActive);
 
       for (const upstreamRpc of candidateRpcs) {
+        // On a pinned fork, every uncached read asks upstream for state at the pin. The health
+        // check below can't tell (the slot it reads may be cached), so skip RPCs that refuse it.
+        if (forkBlock !== null && !(await servesStateAt(upstreamRpc, forkBlock))) {
+          lastErrorOutput = `${upstreamRpc} does not serve state at block ${forkBlock}`;
+          continue;
+        }
+
         // Fail fast instead of letting the health check succeed against someone else's node
         await assertPortFree(port);
 
@@ -498,8 +513,8 @@ export const test = base.extend<TestFixtures & TestOptions, WorkerFixtures>({
           '1000',
         ];
 
-        if (process.env.ANVIL_FORK_BLOCK) {
-          anvilArgs.push('--fork-block-number', process.env.ANVIL_FORK_BLOCK);
+        if (forkBlock !== null) {
+          anvilArgs.push('--fork-block-number', String(forkBlock));
         }
 
         let currentStderr = '';
@@ -709,6 +724,11 @@ export const test = base.extend<TestFixtures & TestOptions, WorkerFixtures>({
       // A failed revert would leak state into the next test, so it fails loudly.
       // Skipped only when the Anvil process is already gone (nothing left to pollute).
       if (anvilServer.process.exitCode !== null) {
+        return;
+      }
+      // A cache warm-up run keeps what the test fetched, so Anvil can save it (see CACHE_WARMUP).
+      // Its tests share state; it only fills the cache, its results don't count.
+      if (CACHE_WARMUP) {
         return;
       }
       const reverted = await jsonRpc<boolean>(

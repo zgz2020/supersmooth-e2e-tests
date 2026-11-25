@@ -105,6 +105,9 @@ jobs:
         working-directory: sov-e2e-tests
         env:
           ANVIL_FORK_CHAIN: ${{ inputs.forkChainId }}
+          # Unpinned in CI for now: the pinned block (utils/constants/forkBlocks.json) is set up
+          # locally first; CI needs its Anvil state cache and app server checked before it pins
+          ANVIL_FORK_BLOCK: 'latest'
         run: pnpm "${{ inputs.script }}"
 
       - name: '🤖 AI Agent Test Triage'

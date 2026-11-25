@@ -71,8 +71,9 @@ The script guides you through:
 
 1. Entering your `aphelion-app` directory (suggests `../aphelion-app` by default).
 2. Choosing the network to fork (**Ethereum Mainnet**, **Base**, or **Arbitrum One**).
-3. Optional block height pinning (press `Enter` to use the latest live block).
-4. Optional custom token funding.
+3. Optional custom token funding.
+
+The fork starts at the block pinned in [`utils/constants/forkBlocks.json`](../utils/constants/forkBlocks.json), the same one the Anvil tests use (see [Pinned Fork Block](anvil-fork-playwright-testing.md#pinned-fork-block)). Pass `--block=<number>`, or `--block=latest` for the live block, to fork elsewhere.
 
 Once initialized, Anvil runs on `http://127.0.0.1:8545` and `aphelion-app` opens on `http://localhost:3000`.
 
@@ -87,8 +88,9 @@ pnpm app:fork --app-dir=../aphelion-app
 # Fork Base network with a custom RPC:
 pnpm app:fork --chain=8453 --fork-url=https://mainnet.base.org
 
-# Pin a specific block height:
+# Fork at another block than the pinned one, or at the live block:
 pnpm app:fork --chain=1 --block=21000000
+pnpm app:fork --chain=1 --block=latest
 
 # Pre-fund extra custom tokens (format: "0xToken:Amount" or "0xToken:Amount:WhaleAddress"):
 pnpm app:fork --tokens="0xTokenAddress:5000"

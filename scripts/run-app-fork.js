@@ -30,6 +30,7 @@ import process from 'node:process';
 import readline from 'node:readline';
 import { setTimeout } from 'node:timers';
 import { URL } from 'node:url';
+import { FORK_UPSTREAM_RPCS, resolveForkBlock, servesStateAt } from '../utils/constants/fork.js';
 
 // -----------------------------------------------------------------------------
 // Terminal Colors & Formatting
@@ -116,13 +117,7 @@ const RPC_REGISTRY = {
   1: {
     name: 'Ethereum Mainnet',
     currency: 'ETH',
-    defaultBlock: null,
-    rpcs: [
-      'https://gateway.tenderly.co/public/mainnet',
-      'https://ethereum-rpc.publicnode.com',
-      'https://rpc.mevblocker.io',
-      'https://eth.drpc.org',
-    ],
+    rpcs: FORK_UPSTREAM_RPCS[1],
     tokens: [
       {
         symbol: 'USDC',
@@ -164,8 +159,7 @@ const RPC_REGISTRY = {
   8453: {
     name: 'Base',
     currency: 'ETH',
-    defaultBlock: null,
-    rpcs: ['https://mainnet.base.org', 'https://base.llamarpc.com', 'https://1rpc.io/base'],
+    rpcs: FORK_UPSTREAM_RPCS[8453],
     tokens: [
       {
         symbol: 'USDC',
@@ -193,8 +187,7 @@ const RPC_REGISTRY = {
   42161: {
     name: 'Arbitrum One',
     currency: 'ETH',
-    defaultBlock: null,
-    rpcs: ['https://arb1.arbitrum.io/rpc', 'https://arbitrum.llamarpc.com', 'https://1rpc.io/arb'],
+    rpcs: FORK_UPSTREAM_RPCS[42161],
     tokens: [
       {
         symbol: 'USDC',
@@ -359,7 +352,8 @@ ${colors.bold}Options:${colors.reset}
   --app-dir=<path>    Path to aphelion-app frontend repository
   --chain=<id>        Chain ID to fork: 1 (Ethereum), 8453 (Base), 42161 (Arbitrum)
   --fork-url=<url>    Custom RPC endpoint for state forking
-  --block=<number>    Pin fork at specific block number
+  --block=<number>    Fork at this block instead of the pinned one (utils/constants/forkBlocks.json),
+                      or --block=latest for the live block
   --tokens=<list>     Extra tokens to fund (format: "0xToken:Amount,0xToken2:Amount")
   --help, -h          Show this help message
     `);
@@ -489,14 +483,14 @@ ${colors.cyan}${colors.bold}====================================================
     // -------------------------------------------------------------------------
     // 3 & 4. Resolve Candidate RPCs & Block Height Pinning
     // -------------------------------------------------------------------------
-    let blockNumber = cliArgs.block;
-    if (blockNumber === undefined) {
-      const blockInput = await askQuestion(
-        rl,
-        `\nPin block number for deterministic state? [Press Enter for latest live block]: `,
-      );
-      blockNumber = blockInput.trim() || null;
-    }
+    // Same pin as the test fixture's fork (utils/constants/forkBlocks.json), so the app server and
+    // the browser start from the same chain state. --block= / ANVIL_FORK_BLOCK override it.
+    const blockNumber = resolveForkBlock(chainId, cliArgs.block ?? getEnv('ANVIL_FORK_BLOCK'));
+    log.info(
+      blockNumber === null
+        ? `Fork block: latest live block`
+        : `Fork block: ${blockNumber} ${colors.dim}(--block=latest for the live block)${colors.reset}`,
+    );
 
     const candidateRpcs =
       cliArgs.forkUrl || getEnv('ANVIL_FORK_URL') || getEnv('FORK_RPC_URL')
@@ -521,6 +515,13 @@ ${colors.cyan}${colors.bold}====================================================
     let successfulRpc = '';
 
     for (const rpcUrl of candidateRpcs) {
+      // A pinned fork reads uncached state at the pin from upstream: skip RPCs that refuse it
+      if (blockNumber !== null && !(await servesStateAt(rpcUrl, blockNumber))) {
+        log.warn(
+          `RPC ${rpcUrl} does not serve state at block ${blockNumber}. Trying next candidate...`,
+        );
+        continue;
+      }
       log.info(`Attempting Anvil fork using: ${colors.dim}${rpcUrl}${colors.reset}...`);
 
       const anvilArgs = [
