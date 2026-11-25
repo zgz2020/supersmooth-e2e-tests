@@ -141,20 +141,21 @@ Located in `tests/performance`. High-throughput benchmark suites with tiered tag
 
 Located in `scripts/`. Utilities for test maintenance, local blockchain simulation, flakiness verification, and AI failure diagnosis.
 
-| Script                        | Description                                                                                             |
-| :---------------------------- | :------------------------------------------------------------------------------------------------------ |
-| `pnpm app:fork`               | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH (optional `--seed-tokens`) |
-| `pnpm test:repeat`            | Interactive utility to execute a test suite multiple times in a loop to detect flakiness                |
-| `pnpm agent:triage`           | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs                   |
-| `pnpm agent:heal`             | Reads proposed patches, applies selector updates, and validates fixes in Playwright                     |
-| `pnpm agent:heal:pr`          | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR                 |
-| `pnpm eval:triage`            | Scores the triage classifier on the labelled dataset ([guide](ai-triage-evaluation.md))                 |
-| `pnpm eval:capture`           | Turns the last run's failures into labelled, scrubbed dataset cases                                     |
-| `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites               |
-| `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                                     |
-| `pnpm agent:crawl`            | Discovers dynamic pool routes, audits them for 404s and checks each page loads in a browser (#1649)     |
-| `pnpm agent:crawl:all`        | Exhaustively crawls all table pages across products without pagination caps until the end               |
-| `pnpm test:unit`              | Runs helper unit tests in `tests/unit/` (getActiveVault, crawler, impact analyzer, snapshots)           |
+| Script                        | Description                                                                                                    |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------------- |
+| `pnpm app:fork`               | Launches `aphelion-app` locally against Anvil state fork with pre-funded ETH (optional `--seed-tokens`)        |
+| `pnpm anvil:move-pin`         | Moves the Anvil fork pin (`utils/constants/forkBlocks.json`) to a checked block; `--verify` proves it's stable |
+| `pnpm test:repeat`            | Interactive utility to execute a test suite multiple times in a loop to detect flakiness                       |
+| `pnpm agent:triage`           | Diagnoses failed runs, isolates RPC flakiness from regressions, and drafts code diffs                          |
+| `pnpm agent:heal`             | Reads proposed patches, applies selector updates, and validates fixes in Playwright                            |
+| `pnpm agent:heal:pr`          | Applies verified self-healing patch, commits to dedicated branch, and opens a GitHub PR                        |
+| `pnpm eval:triage`            | Scores the triage classifier on the labelled dataset ([guide](ai-triage-evaluation.md))                        |
+| `pnpm eval:capture`           | Turns the last run's failures into labelled, scrubbed dataset cases                                            |
+| `pnpm agent:impact`           | Analyzes PR git diffs against component dependency graphs to assemble targeted sub-suites                      |
+| `pnpm agent:cleanup-branches` | Scans and prunes stale or merged `ai-heal/*` remote repair branches                                            |
+| `pnpm agent:crawl`            | Discovers dynamic pool routes, audits them for 404s and checks each page loads in a browser (#1649)            |
+| `pnpm agent:crawl:all`        | Exhaustively crawls all table pages across products without pagination caps until the end                      |
+| `pnpm test:unit`              | Runs helper unit tests in `tests/unit/` (getActiveVault, crawler, impact analyzer, snapshots)                  |
 
 ### CLI Usage:
 

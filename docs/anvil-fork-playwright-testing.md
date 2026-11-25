@@ -261,6 +261,24 @@ test('sample fork test', async ({ app, anvilFork }) => {
    - `await anvilFork.increaseTime(86400)` (time travel)
    - `await anvilFork.mine(10)`
 
+### Pinned Fork Block
+
+Both forks, the fixture's (browser) and `pnpm app:fork`'s (app server), start at the block pinned per chain in [`utils/constants/forkBlocks.json`](../utils/constants/forkBlocks.json).
+
+- **Why:** Anvil caches the state it fetches upstream in `~/.foundry/cache/rpc/<chain>/<block>/` and reuses it only for the same block. On a fork of "latest" (a new block every run), the app's first wallet-balance multicall (~166 token contracts) takes ~30 s to fetch, longer than the browser's 10 s RPC timeout, so the deposit balance never shows. From the cache it takes ~15 ms.
+- **Filling the cache (once per machine and pin):** a normal run never fills it. Each test runs between `evm_snapshot` and `evm_revert`, and the revert also discards the upstream state fetched since the snapshot, so it never reaches the disk cache. A **warm-up run** (`ANVIL_CACHE_WARMUP=1`, one worker) skips that revert and waits up to 60 s for slow upstream fetches, so what the tests touch is saved when Anvil exits. One worker, because Anvils that exit at the same moment overwrite each other's cache writes (exits one after another merge). Its tests share state, so its results don't count. `pnpm anvil:move-pin --verify` runs one for you. On a new machine, or after the cache folder is deleted, run `pnpm anvil:move-pin --verify` once (with `pnpm app:fork` running). Without a warm cache the pinned suite is as slow as an unpinned one.
+- **Upstream RPCs:** a pinned fork reads every uncached account or slot at the pin from the upstream RPC, so that RPC must still serve state at the pin. Some public RPCs only serve the newest blocks (publicnode refuses older state without a token). The fixture and `app:fork` skip an RPC that doesn't serve the pinned block, and fail with that reason if none does.
+- **Override:** `ANVIL_FORK_BLOCK=<block>` (fixture and `app:fork`) or `pnpm app:fork --block=<block>`. Use `latest` to fork the live chain head, e.g. `ANVIL_FORK_BLOCK=latest pnpm test:anvil`.
+- **Moving the pin:** use `pnpm anvil:move-pin`, in its own PR:
+  1. `pnpm anvil:move-pin` pins the chain to the upstream RPC's latest finalized block. `--block=<n>` pins block `<n>` instead, after checking it is a block number, exists, is finalized (not reorg-able) and which upstream RPCs still serve its state (at least one must). It refuses the block that is already pinned, and warns when moving back to an older block. `--chain=<id>` picks the chain (default `ANVIL_FORK_CHAIN`, else 1).
+  2. Restart `pnpm app:fork` so the app server forks the new block.
+  3. `pnpm anvil:move-pin --verify` checks `app:fork` is on the pin and which upstream RPCs serve it, runs one warm-up run to fill Anvil's cache (slow, and its failures don't count), then `--repeat-each 3`, which must pass. Run it again later to check an old pin still works.
+  4. Open a PR with `forkBlocks.json` alone.
+
+  Vaults deployed after the pinned block don't exist on the fork until the pin moves.
+
+- **Clock:** the fork's chain time starts at the pinned block's timestamp, so it is behind real time by the block's age. Tests that need "now" on-chain should set it themselves (`anvilFork.increaseTime`).
+
 ---
 
 ## 🤖 GitHub Actions CI Workflow
@@ -306,21 +324,24 @@ Once both exist, enable the job by setting the repository variable `RUN_ANVIL_NI
 
 ### Key Environment Variables (`.env`)
 
-| Variable              | Default                               | Purpose                                                     |
-| :-------------------- | :------------------------------------ | :---------------------------------------------------------- |
-| `FORK_BASE_URL`       | `http://localhost:3000`               | Target URL for Anvil Playwright project                     |
-| `APHELION_APP_DIR`    | `../aphelion-app` (prompted if unset) | Path to local frontend repo for `pnpm app:fork`             |
-| `ANVIL_BASE_PORT`     | `8600`                                | Base port for worker-isolated Anvil instances (not 8545)    |
-| `ANVIL_FORK_CHAIN`    | `1`                                   | Default chain ID (1: Ethereum, 8453: Base, 42161: Arbitrum) |
-| `TEST_WALLET_ADDRESS` | `0x44E361c3...F4d5`                   | Pre-funded test wallet address                              |
+| Variable              | Default                               | Purpose                                                      |
+| :-------------------- | :------------------------------------ | :----------------------------------------------------------- |
+| `FORK_BASE_URL`       | `http://localhost:3000`               | Target URL for Anvil Playwright project                      |
+| `APHELION_APP_DIR`    | `../aphelion-app` (prompted if unset) | Path to local frontend repo for `pnpm app:fork`              |
+| `ANVIL_BASE_PORT`     | `8600`                                | Base port for worker-isolated Anvil instances (not 8545)     |
+| `ANVIL_FORK_CHAIN`    | `1`                                   | Default chain ID (1: Ethereum, 8453: Base, 42161: Arbitrum)  |
+| `ANVIL_FORK_BLOCK`    | pinned block (`forkBlocks.json`)      | Fork block override: a block number, or `latest`             |
+| `ANVIL_CACHE_WARMUP`  | unset                                 | `1`: warm-up run that fills Anvil's state cache (no reverts) |
+| `TEST_WALLET_ADDRESS` | `0x44E361c3...F4d5`                   | Pre-funded test wallet address                               |
 
 ### Command Reference
 
-| Command                      | Description                                                         |
-| :--------------------------- | :------------------------------------------------------------------ |
-| `pnpm app:fork`              | Interactive launcher for Anvil + `aphelion-app`                     |
-| `pnpm test:anvil`            | Runs Playwright Anvil fork test suite (headless)                    |
-| `pnpm test:anvil:headed`     | Runs Playwright Anvil fork test suite (headed browser)              |
-| `pnpm test:anvil:regression` | Runs only `@regression` tagged Anvil fork tests                     |
-| `pnpm ci:anvil`              | CI runner command (native headless Linux, zero display/xvfb needed) |
-| `pnpm ci:anvil:regression`   | CI regression runner for `@regression` tagged fork tests            |
+| Command                      | Description                                                           |
+| :--------------------------- | :-------------------------------------------------------------------- |
+| `pnpm app:fork`              | Interactive launcher for Anvil + `aphelion-app`                       |
+| `pnpm anvil:move-pin`        | Moves the fork pin (`forkBlocks.json`); `--verify` proves it's stable |
+| `pnpm test:anvil`            | Runs Playwright Anvil fork test suite (headless)                      |
+| `pnpm test:anvil:headed`     | Runs Playwright Anvil fork test suite (headed browser)                |
+| `pnpm test:anvil:regression` | Runs only `@regression` tagged Anvil fork tests                       |
+| `pnpm ci:anvil`              | CI runner command (native headless Linux, zero display/xvfb needed)   |
+| `pnpm ci:anvil:regression`   | CI regression runner for `@regression` tagged fork tests              |

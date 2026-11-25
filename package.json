@@ -67,6 +67,7 @@
     "test:local-node": "docker compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from e2e-runner",
     "test:repeat": "node scripts/repeat-tests.js",
     "app:fork": "node scripts/run-app-fork.js",
+    "anvil:move-pin": "node scripts/anvil-move-pin.js",
     "// --- TEST CASE MANAGEMENT ---": "",
     "tc:check": "node scripts/tc/check-traceability.js",
     "tc:index": "node scripts/tc/case-index.js",
