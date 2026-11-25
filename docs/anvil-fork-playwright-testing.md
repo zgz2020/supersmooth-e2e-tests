@@ -260,6 +260,7 @@ test('sample fork test', async ({ app, anvilFork }) => {
    - `await anvilFork.fundToken({ tokenAddress, recipient, amount, whale })`
    - `await anvilFork.increaseTime(86400)` (time travel)
    - `await anvilFork.mine(10)`
+   - `await anvilFork.getActiveVault('multiply', { network: 'Ethereum', collateral: 'ETH' })` (only vaults deployed at the fork block)
 
 ### Pinned Fork Block
 
@@ -275,7 +276,7 @@ Both forks, the fixture's (browser) and `pnpm app:fork`'s (app server), start at
   3. `pnpm anvil:move-pin --verify` checks `app:fork` is on the pin and which upstream RPCs serve it, runs one warm-up run to fill Anvil's cache (slow, and its failures don't count), then `--repeat-each 3`, which must pass. Run it again later to check an old pin still works.
   4. Open a PR with `forkBlocks.json` alone.
 
-  Vaults deployed after the pinned block don't exist on the fork until the pin moves.
+  Vaults deployed after the pinned block don't exist on the fork until the pin moves. Anvil tests therefore pick vaults with `anvilFork.getActiveVault(...)` (same options as `getActiveVault`), which passes over a vault that doesn't exist at the fork block, notes it on the test (`vault not on fork`), and fails with the fork block and a "move the pin" hint when no matching vault exists at it. A vault counts as missing when a contract its URL names (pool, tokens, Earn vault) has no code on the fork, or, for Aave V3, Aave V3 Lido and Spark, when its collateral or debt token isn't listed on the pool (`getReservesList()`), which catches a new market added to an existing pool. If a check itself fails (an RPC error, say), the test fails instead of quietly picking another vault. Not caught: Morpho markets, whose id isn't an address, and, for other protocols (Fluid, Compound, …), a new market on contracts that already existed at the pin. Such a vault reaches the test and fails there.
 
 - **Clock:** the fork's chain time starts at the pinned block's timestamp, so it is behind real time by the block's age. Tests that need "now" on-chain should set it themselves (`anvilFork.increaseTime`).
 

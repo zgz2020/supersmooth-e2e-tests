@@ -7,6 +7,7 @@ on:
   # pull_request:
   #   paths:
   #     - 'utils/getActiveVault.ts'
+  #     - 'utils/vaultContracts.ts'
   #     - 'utils/constants/urls.ts'
   #     - 'utils/constants/fork*'
   #     - 'scripts/anvil-move-pin.js'
