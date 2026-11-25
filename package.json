@@ -81,7 +81,7 @@
     "agent:crawl:all": "node scripts/qa-agent/crawl-vaults.js --all-pages",
     "eval:triage": "node scripts/eval/triage-eval.js",
     "eval:capture": "node scripts/eval/capture-case.js",
-    "test:unit": "REPORT_FOLDER=unit playwright test --project=unit && node tests/unit/pr-impact-analyzer.test.js && node tests/unit/batch-safety-and-retention.test.js && node tests/unit/crawl-vaults.test.js && node tests/unit/tc-traceability.test.js && node tests/unit/quality-metrics.test.js && node tests/unit/triage-eval.test.js",
+    "test:unit": "REPORT_FOLDER=unit playwright test --project=unit && node tests/unit/pr-impact-analyzer.test.js && node tests/unit/batch-safety-and-retention.test.js && node tests/unit/crawl-vaults.test.js && node tests/unit/anvil-pin-reminder.test.js && node tests/unit/tc-traceability.test.js && node tests/unit/quality-metrics.test.js && node tests/unit/triage-eval.test.js",
     "// --- QUALITY METRICS ---": "",
     "metrics:collect": "node scripts/metrics/collect-run.js",
     "metrics:dashboard": "node scripts/metrics/build-dashboard.js",

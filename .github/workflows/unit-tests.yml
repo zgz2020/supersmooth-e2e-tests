@@ -11,6 +11,7 @@ on:
   #     - 'utils/constants/urls.ts'
   #     - 'utils/constants/fork*'
   #     - 'scripts/anvil-move-pin.js'
+  #     - 'scripts/anvil-pin-reminder.js'
   #     - 'utils/types/api/productTableTopCards.ts'
   #     - 'scripts/qa-agent/**'
   #     - 'scripts/tc/**'

@@ -278,6 +278,21 @@ Both forks, the fixture's (browser) and `pnpm app:fork`'s (app server), start at
 
   Vaults deployed after the pinned block don't exist on the fork until the pin moves. Anvil tests therefore pick vaults with `anvilFork.getActiveVault(...)` (same options as `getActiveVault`), which passes over a vault that doesn't exist at the fork block, notes it on the test (`vault not on fork`), and fails with the fork block and a "move the pin" hint when no matching vault exists at it. A vault counts as missing when a contract its URL names (pool, tokens, Earn vault) has no code on the fork, or, for Aave V3, Aave V3 Lido and Spark, when its collateral or debt token isn't listed on the pool (`getReservesList()`), which catches a new market added to an existing pool. If a check itself fails (an RPC error, say), the test fails instead of quietly picking another vault. Not caught: Morpho markets, whose id isn't an address, and, for other protocols (Fluid, Compound, …), a new market on contracts that already existed at the pin. Such a vault reaches the test and fails there.
 
+- **When to move the pin (owner: QA Engineer):**
+  - when a test needs a vault or contract newer than the pin (the `vault not on fork` note or a "move the pin" failure says so);
+  - when the pin is more than 30 days old, so the fork stays close to the live app;
+  - never per test, and never to fix one flaky test.
+
+  A reminder is posted to the QA Discord channel on the 1st of each month ([`anvil-pin-reminder.yml`](../.github/workflows/anvil-pin-reminder.yml), via `DISCORD_WEBHOOK_URL`), with each pin's age. A pin is flagged "due for a move" at the reminder closest to its 30th day (reminders are 28–31 days apart, so waiting until it's over 30 days could leave it nearly 60 days old), and at every reminder after that. On a month with no move, still run `pnpm anvil:move-pin --verify` to check the pin works (upstream RPCs can stop serving old state). Preview the reminder with `node scripts/anvil-pin-reminder.js --dry-run`.
+
+- **What may break after a move:** if `--verify` fails on the new pin, check these before blaming the move:
+  - **Live vault selection:** the app may now offer a vault the old pin passed over (or stop offering one a test relied on). `anvilFork.getActiveVault` picks again on every run.
+  - **Mocked off-chain responses:** mocks such as `/api/swap-quote` must still fit the pools at the new block, or swaps revert on slippage.
+  - **Clock gap:** the fork's chain time jumps to the new block's timestamp. Tests that set the time themselves still work; anything that assumed the old time doesn't.
+  - **Oracles and signed data:** price-feed and timestamp checks run against the new block. A pull oracle update signed at real time is still "in the future" for the fork.
+  - **Server data vs fork data:** APY, TVL and caps come from the app's server, positions from the fork. A move changes the fork side only, so don't assert they agree.
+  - **Cold cache:** the first run at a new block fetches everything upstream and is slow. `--verify` runs the warm-up for you; on another machine run it once.
+
 - **Clock:** the fork's chain time starts at the pinned block's timestamp, so it is behind real time by the block's age. Tests that need "now" on-chain should set it themselves (`anvilFork.increaseTime`).
 
 ---
@@ -337,12 +352,13 @@ Once both exist, enable the job by setting the repository variable `RUN_ANVIL_NI
 
 ### Command Reference
 
-| Command                      | Description                                                           |
-| :--------------------------- | :-------------------------------------------------------------------- |
-| `pnpm app:fork`              | Interactive launcher for Anvil + `aphelion-app`                       |
-| `pnpm anvil:move-pin`        | Moves the fork pin (`forkBlocks.json`); `--verify` proves it's stable |
-| `pnpm test:anvil`            | Runs Playwright Anvil fork test suite (headless)                      |
-| `pnpm test:anvil:headed`     | Runs Playwright Anvil fork test suite (headed browser)                |
-| `pnpm test:anvil:regression` | Runs only `@regression` tagged Anvil fork tests                       |
-| `pnpm ci:anvil`              | CI runner command (native headless Linux, zero display/xvfb needed)   |
-| `pnpm ci:anvil:regression`   | CI regression runner for `@regression` tagged fork tests              |
+| Command                                        | Description                                                           |
+| :--------------------------------------------- | :-------------------------------------------------------------------- |
+| `pnpm app:fork`                                | Interactive launcher for Anvil + `aphelion-app`                       |
+| `pnpm anvil:move-pin`                          | Moves the fork pin (`forkBlocks.json`); `--verify` proves it's stable |
+| `node scripts/anvil-pin-reminder.js --dry-run` | Prints the monthly pin reminder (the workflow posts it to Discord)    |
+| `pnpm test:anvil`                              | Runs Playwright Anvil fork test suite (headless)                      |
+| `pnpm test:anvil:headed`                       | Runs Playwright Anvil fork test suite (headed browser)                |
+| `pnpm test:anvil:regression`                   | Runs only `@regression` tagged Anvil fork tests                       |
+| `pnpm ci:anvil`                                | CI runner command (native headless Linux, zero display/xvfb needed)   |
+| `pnpm ci:anvil:regression`                     | CI regression runner for `@regression` tagged fork tests              |

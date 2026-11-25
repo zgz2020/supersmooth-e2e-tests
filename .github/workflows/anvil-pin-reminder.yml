@@ -1,0 +1,43 @@
+name: '🗓️ Anvil Fork Pin Reminder'
+
+# Monthly reminder to the QA Engineer (pin owner) to check or move the Anvil fork pin
+# (utils/constants/forkBlocks.json). Posts to Discord through DISCORD_WEBHOOK_URL.
+on:
+  schedule:
+    - cron: '0 8 1 * *' # 1st of each month at 08:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Print the reminder in the log instead of posting it'
+        type: 'boolean'
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  remind:
+    name: 'Post pin reminder'
+    runs-on: 'ubuntu-24.04'
+    timeout-minutes: 5
+
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@v4'
+        with:
+          node-version-file: '.nvmrc'
+
+      # Built-in Node modules only: no install needed
+      - name: 'Post reminder'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            node scripts/anvil-pin-reminder.js --dry-run
+          else
+            node scripts/anvil-pin-reminder.js
+          fi
