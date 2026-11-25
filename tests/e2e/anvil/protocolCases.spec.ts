@@ -1,5 +1,4 @@
 import { test, expect, defaultAnvilAddress } from '../../../src/fixtures/anvilFork';
-import { getActiveVault } from '../../../utils/getActiveVault';
 import { anvilAccount1Address, wethMainnetAddress } from '../../../utils/constants/addresses';
 import { NETWORK_CHAIN_IDS } from '../../../utils/constants/networks';
 import { TIMEOUTS } from '../../../utils/constants/timeouts';
@@ -11,8 +10,8 @@ test.describe('Protocol Cases @regression @fork', () => {
     test.use({ termsSigned: false });
     let targetVaultUrl: string;
 
-    test.beforeEach(async ({ app, anvilFork }) => {
-      const { url } = await getActiveVault(app.page.request, 'multiply', {
+    test.beforeEach(async ({ anvilFork }) => {
+      const { url } = await anvilFork.getActiveVault('multiply', {
         network: 'Ethereum',
         collateral: 'ETH',
       });
@@ -117,7 +116,7 @@ test.describe('Protocol Cases @regression @fork', () => {
       'should recover the vault page once a temporary RPC rate limit lifts',
       tc('E2E-PROTO-005'),
       async ({ app, anvilFork }) => {
-        const { url } = await getActiveVault(app.page.request, 'multiply', {
+        const { url } = await anvilFork.getActiveVault('multiply', {
           network: 'Ethereum',
           collateral: 'ETH',
         });

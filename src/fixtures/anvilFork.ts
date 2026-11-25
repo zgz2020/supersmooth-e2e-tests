@@ -25,6 +25,13 @@ import os from 'node:os';
 import process from 'node:process';
 import { URL } from 'node:url';
 import { FORK_UPSTREAM_RPCS, resolveForkBlock, servesStateAt } from '../../utils/constants/fork';
+import {
+  getActiveVault,
+  type ActiveVaultResult,
+  type GetActiveVaultOptions,
+} from '../../utils/getActiveVault';
+import { poolReserveMarket, vaultContractAddresses } from '../../utils/vaultContracts';
+import type { TopCardsProductType } from '../../utils/types/api/productTableTopCards';
 
 // -----------------------------------------------------------------------------
 // Canonical Anvil Account #0 & Viem Signer Setup
@@ -335,6 +342,17 @@ function createAnvilRpcHandler(rpcUrl: string) {
 // -----------------------------------------------------------------------------
 // ERC-20 / Transaction Helpers for Fork Funding
 // -----------------------------------------------------------------------------
+/** Aave V3 (and forks) pool: every token listed as a reserve */
+const poolReservesAbi = [
+  {
+    type: 'function',
+    name: 'getReservesList',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'address[]' }],
+  },
+] as const;
+
 const wethDepositAbi = [
   { type: 'function', name: 'deposit', stateMutability: 'payable', inputs: [], outputs: [] },
 ] as const;
@@ -403,6 +421,20 @@ export interface AnvilForkController {
    */
   simulateRpcRateLimit(): Promise<{ hits: () => number; stop: () => Promise<void> }>;
   mine(blocks?: number): Promise<void>;
+  /**
+   * {@link getActiveVault}, limited to vaults that exist on this fork. Vaults come from the live
+   * app, but the fork is pinned to a block (utils/constants/forkBlocks.json), so a newer vault may
+   * not exist here: it is passed over (and noted on the test) for the next one. A vault is missing
+   * when a contract its URL names has no code, or, for Aave V3 / Aave V3 Lido / Spark, when its
+   * collateral or debt token isn't listed on the pool. Not caught: Morpho markets (the id isn't an
+   * address) and, for other protocols, a new market on contracts that already existed. Fails,
+   * naming the fork block, when no matching vault exists at it, and fails outright when a check
+   * itself errors, rather than quietly picking another vault.
+   */
+  getActiveVault(
+    productType: TopCardsProductType,
+    options?: GetActiveVaultOptions,
+  ): Promise<ActiveVaultResult>;
 }
 
 export interface EIP1193Controller {
@@ -715,6 +747,108 @@ export const test = base.extend<TestFixtures & TestOptions, WorkerFixtures>({
 
         mine: async (blocks = 1) => {
           await jsonRpc(anvilServer.rpcUrl, 'anvil_mine', [toHex(blocks)]);
+        },
+
+        getActiveVault: async (productType, options = {}) => {
+          const notOnFork: string[] = [];
+          // getActiveVault treats any error in `accept` as "try the next way of finding a vault",
+          // which would silently swap the vault; so a failed lookup is kept and fails the test
+          let lookupError: { url: string; error: unknown } | undefined;
+
+          /** Why `vault` doesn't exist at the fork block, or null when it does. */
+          const missingOnFork = async (vault: ActiveVaultResult): Promise<string | null> => {
+            const noCode: string[] = [];
+            for (const address of vaultContractAddresses(vault.url)) {
+              const code = await jsonRpc<string>(anvilServer.rpcUrl, 'eth_getCode', [
+                address,
+                'latest',
+              ]);
+              if (!code || code === '0x') noCode.push(address);
+            }
+            if (noCode.length > 0) return `no contract at ${noCode.join(', ')}`;
+
+            // A market added to an existing pool uses contracts that already had code: only the
+            // pool's reserve list tells whether the market existed at the fork block
+            const market = poolReserveMarket(vault.url);
+            if (market) {
+              const listed = decodeFunctionResult({
+                abi: poolReservesAbi,
+                functionName: 'getReservesList',
+                data: await jsonRpc<Hex>(anvilServer.rpcUrl, 'eth_call', [
+                  {
+                    to: market.pool,
+                    data: encodeFunctionData({
+                      abi: poolReservesAbi,
+                      functionName: 'getReservesList',
+                    }),
+                  },
+                  'latest',
+                ]),
+              }).map((token) => token.toLowerCase());
+              const unlisted = market.tokens.filter(
+                (token) => !listed.includes(token.toLowerCase()),
+              );
+              if (unlisted.length > 0) {
+                return `${unlisted.join(', ')} not listed on pool ${market.pool}`;
+              }
+            }
+            return null;
+          };
+
+          // getActiveVault can offer the same vault at more than one step: check each once
+          const checked = new Map<string, boolean>();
+          const onFork = async (vault: ActiveVaultResult): Promise<boolean> => {
+            if (lookupError) return false;
+            const known = checked.get(vault.url);
+            if (known !== undefined) return known;
+            let missing: string | null;
+            try {
+              missing = await missingOnFork(vault);
+            } catch (error) {
+              lookupError = { url: vault.url, error };
+              return false;
+            }
+            checked.set(vault.url, missing === null);
+            if (missing === null) return true;
+            const note = `${vault.url} (${missing})`;
+            notOnFork.push(note);
+            base.info().annotations.push({ type: 'vault not on fork', description: note });
+            return false;
+          };
+
+          const failOnLookupError = () => {
+            if (!lookupError) return;
+            const { url, error } = lookupError;
+            throw new Error(
+              `Could not check whether vault ${url} exists on the fork: ${(error as Error)?.message ?? error}`,
+              { cause: error },
+            );
+          };
+
+          let vault: ActiveVaultResult;
+          try {
+            vault = await getActiveVault(page.request, productType, {
+              ...options,
+              accept: async (candidate) =>
+                (await onFork(candidate)) && (options.accept ? options.accept(candidate) : true),
+            });
+          } catch (err) {
+            failOnLookupError();
+            if (notOnFork.length === 0) throw err;
+            const info = await jsonRpc<{ forkConfig?: { forkBlockNumber?: number } }>(
+              anvilServer.rpcUrl,
+              'anvil_nodeInfo',
+            ).catch(() => undefined);
+            const block = info?.forkConfig?.forkBlockNumber ?? 'unknown';
+            throw new Error(
+              `${(err as Error).message}. ${notOnFork.length} vault(s) were passed over because ` +
+                `they don't exist at fork block ${block}: ${notOnFork.join('; ')}. If the app ` +
+                `offers them, move the pin forward (pnpm anvil:move-pin).`,
+              { cause: err },
+            );
+          }
+          failOnLookupError();
+          return vault;
         },
       };
 
